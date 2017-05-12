@@ -82,6 +82,8 @@ func printPacketInfo(packet gopacket.Packet) {
 }
 
 var delta_t time.Duration = 300 * time.Millisecond
+var window time.Duration = 15 * time.Second
+var window_arr_len = int(window.Seconds()/delta_t.Seconds())
 var time_counter time.Time
 
 type PacketData struct{
@@ -98,17 +100,17 @@ func Preprocess(ch chan PacketData, acc chan PacketAcc, quit chan int){
 		case pd := <- ch:
 			packet_time := pd.metadata.Timestamp
 			if time_counter.IsZero() {
-				//fmt.Println("Initialize Time")
+				fmt.Println("Initialize Time")
 				time_counter = packet_time
 			} else if packet_time.Before(time_counter.Add(delta_t)) || packet_time.Equal(time_counter.Add(delta_t)) {
-				//fmt.Println("packet_time <= time_counter")
+				fmt.Println("packet_time <= time_counter")
 				if tmp == nil{
 					tmp = []PacketData{pd}
 				} else if tmp != nil {
 					tmp = append(tmp, pd)
 				}
 			} else if packet_time.After(time_counter.Add(delta_t)) {
-				//fmt.Println("packet_time > time_counter")
+				fmt.Println("packet_time > time_counter")
 				acc <- tmp
 				tmp = nil
 				time_counter = time_counter.Add(delta_t)
@@ -122,14 +124,19 @@ func Preprocess(ch chan PacketData, acc chan PacketAcc, quit chan int){
 }
 
 func WindowTimeSlide(acc chan PacketAcc){
-	var arr [15]PacketAcc
-	packet_acc := <- acc
-	if len(arr) != 15 {
-		arr[len(arr) - 1] = packet_acc
-	} else {
-		arr[0] = packet_acc
+	//arr := make([]PacketAcc, window_arr_len)
+	for{
+		select{
+		case packet_acc := <- acc:
+			fmt.Println(packet_acc)
+			//if len(arr) != window_arr_len {
+			//	arr[len(arr) - 1] = packet_acc
+			//} else {
+			//	arr[0] = packet_acc
+			//}
+			//fmt.Println(arr[0][0].data)
+		}
 	}
-	fmt.Println(arr[0][0].data)
 }
 
 func main() {
