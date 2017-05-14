@@ -93,33 +93,53 @@ type PacketData struct{
 	metadata gopacket.CaptureInfo
 }
 
-type DeltaPacketFeature struct{
-	nbPacket, nbDstPort, nbSrcPort, nbDsts, nbSrcs  int
-	perSyn, perAck, perRST, perFIN, perCWR, perURG, avgPktSize, simIPsrc,
-	simIPdst, minTTL, perICMPRed, perICMPTime, perICMPUnr, perICMPOther float64
-}
-
 type PacketAcc []PacketFeature
 
-func ExtractDeltaPacketFeature(feature_packets PacketAcc) DeltaPacketFeature{
-	delta_packet_feature := DeltaPacketFeature{}
-	nbSYN, nbACK, nbRST, nbFIN, nbCWR, nbURG := 0,0,0,0,0,0
-	var totalPktSize uint16
-	var totalTTL uint8
-	nbPacket := len(feature_packets)
-	delta_packet_feature.nbPacket = nbPacket
+func UniqFloat64(input []float64) []float64 {
+	u := make([]float64, 0, len(input))
+	m := make(map[float64]struct{})
+
+	for _, val := range input {
+		if _, ok := m[val]; !ok {
+			m[val] = struct{}{}
+			u = append(u, val)
+		}
+	}
+	return u
+}
+
+func UniqString(input []string) []string {
+	u := make([]string, 0, len(input))
+	m := make(map[string]struct{})
+
+	for _, val := range input {
+		if _, ok := m[val]; !ok {
+			m[val] = struct{}{}
+			u = append(u, val)
+		}
+	}
+	return u
+}
+
+func ExtractDeltaPacketFeature(feature_packets PacketAcc) []float64{
+	nbSYN, nbACK, nbRST, nbFIN, nbCWR, nbURG, totalPktSize, totalTTL  := 0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+	srcPorts := []float64{}
+	dstPorts := []float64{}
+	srcIPs := []string{}
+	dstIPs := []string{}
+
 	for _, fp := range feature_packets{
 		if fp.SrcPort != 0 {
-			delta_packet_feature.nbSrcPort++
+			srcPorts = append(srcPorts, float64(fp.SrcPort))
 		}
 		if fp.DstPort != 0 {
-			delta_packet_feature.nbDstPort++
+			dstPorts = append(dstPorts, float64(fp.DstPort))
 		}
 		if fp.SrcIP != nil {
-			delta_packet_feature.nbSrcs++
+			srcIPs = append(srcIPs, string(fp.SrcIP))
 		}
 		if fp.DstIP != nil {
-			delta_packet_feature.nbDsts++
+			dstIPs = append(dstIPs, string(fp.DstIP))
 		}
 		if fp.SYN == true{
 			nbSYN++
@@ -139,17 +159,25 @@ func ExtractDeltaPacketFeature(feature_packets PacketAcc) DeltaPacketFeature{
 		if fp.URG == true{
 			nbURG++
 		}
-		totalPktSize += fp.length
-		totalTTL += fp.TTL
+		totalPktSize += float64(fp.length)
+		totalTTL += float64(fp.TTL)
 	}
-	delta_packet_feature.perSyn = float64(nbSYN)/float64(nbPacket)*100
-	delta_packet_feature.perAck = float64(nbACK)/float64(nbPacket)*100
-	delta_packet_feature.perRST = float64(nbRST)/float64(nbPacket)*100
-	delta_packet_feature.perFIN = float64(nbFIN)/float64(nbPacket)*100
-	delta_packet_feature.perCWR = float64(nbCWR)/float64(nbPacket)*100
-	delta_packet_feature.perURG = float64(nbURG)/float64(nbPacket)*100
-	delta_packet_feature.avgPktSize = float64(totalPktSize)/float64(nbPacket)
-	return delta_packet_feature
+	x := []float64{}
+	nbPacket := float64(len(feature_packets))
+	nbSrcPort := float64(len(UniqFloat64(srcPorts)))
+	nbDstPort := float64(len(UniqFloat64(dstPorts)))
+	nbSrcs := float64(len(UniqString(srcIPs)))
+	nbDsts := float64(len(UniqString(dstIPs)))
+	perSyn := nbSYN/nbPacket*100
+	perAck := nbACK/nbPacket*100
+	perRST := nbRST/nbPacket*100
+	perFIN := nbFIN/nbPacket*100
+	perCWR := nbCWR/nbPacket*100
+	perURG := nbURG/nbPacket*100
+	avgPktSize := totalPktSize/nbPacket
+	meanTTL := totalTTL/nbPacket
+	x = append(x, nbPacket, nbSrcPort, nbDstPort, nbSrcs, nbDsts, perSyn, perAck, perRST, perFIN, perCWR, perURG, avgPktSize, meanTTL)
+	return x
 }
 
 func WindowTimeSlide(ch chan PacketData, acc chan PacketAcc, quit chan int){
@@ -186,7 +214,7 @@ func WindowTimeSlide(ch chan PacketData, acc chan PacketAcc, quit chan int){
 }
 
 func UpdateFS(acc chan PacketAcc){
-	arr := []DeltaPacketFeature{}
+	arr := [][]float64{}
 	for{
 		select{
 		case packet_acc := <- acc:
@@ -228,7 +256,6 @@ func main() {
 		} else {
 			packet := gopacket.NewPacket(data, layers.LayerTypeEthernet, gopacket.Default)
 			ch <- PacketData{packet, ci}
-			// printPacketInfo(packet)
 		}
 	}
 
