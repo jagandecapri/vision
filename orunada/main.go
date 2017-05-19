@@ -213,20 +213,62 @@ func WindowTimeSlide(ch chan PacketData, acc chan PacketAcc, quit chan int){
 	}
 }
 
+type ColMinMax struct{
+	Min, Max float64
+}
+func Normalize(mat [][]float64) [][]float64{
+	rows := len(mat)
+	cols := len(mat[0])
+
+	min_max := []ColMinMax{}
+	for c := 0; c < cols; c++ {
+		min := mat[0][c]
+		max := mat[0][c]
+		for j := 0; j < rows; j++{
+			val := mat[j][c]
+			if val < min{
+				min = val
+			} else if  val > max{
+				max = val
+			}
+		}
+		min_max = append(min_max, ColMinMax{min, max})
+	}
+
+	for i := 0; i < rows; i++{
+		for j := 0; j < cols; j++{
+			col_min := min_max[j].Min
+			col_max := min_max[j].Max
+			elem := mat[i][j]
+			if col_min == 0 && col_max == 0{
+				mat[i][j] = elem
+			} else {
+				mat[i][j] = (elem - col_min)/(col_max - col_min)
+			}
+
+		}
+	}
+	return mat
+}
 func UpdateFS(acc chan PacketAcc){
-	arr := [][]float64{}
+	base_matrix := [][]float64{}
 	for{
 		select{
 		case packet_acc := <- acc:
 			fmt.Print(".")
 			x := ExtractDeltaPacketFeature(packet_acc)
-			if len(arr) != window_arr_len{
-				arr = append(arr, x)
+			if len(base_matrix) < window_arr_len{
+				base_matrix = append(base_matrix, x)
+			} else if len(base_matrix) == window_arr_len{
+				base_matrix = append(base_matrix, x)
+				norm_mat := Normalize(base_matrix)
+				fmt.Println(norm_mat)
+				//x_new := x
+				///*x_old*/_, x_update := arr[0], arr[1:]
+				//arr = append(x_update, x_new)
+				// fmt.Println(base_matrix)
 			} else {
-				x_new := x
-				/*x_old*/_, x_update := arr[0], arr[1:]
-				arr = append(x_update, x_new)
-				fmt.Println(arr)
+
 			}
 
 		}
