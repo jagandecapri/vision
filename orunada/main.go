@@ -213,14 +213,17 @@ func WindowTimeSlide(ch chan PacketData, acc chan PacketAcc, quit chan int){
 	}
 }
 
-type ColMinMax struct{
+type DimMinMax struct{
 	Min, Max float64
+	Range float64
+	ID int
 }
-func Normalize(mat [][]float64) [][]float64{
+
+func Normalize(mat [][]float64) ([][]float64, []DimMinMax){
 	rows := len(mat)
 	cols := len(mat[0])
 
-	min_max := []ColMinMax{}
+	dim_min_max := []DimMinMax{}
 	for c := 0; c < cols; c++ {
 		min := mat[0][c]
 		max := mat[0][c]
@@ -232,13 +235,14 @@ func Normalize(mat [][]float64) [][]float64{
 				max = val
 			}
 		}
-		min_max = append(min_max, ColMinMax{min, max})
+		range_ := max - min
+		dim_min_max = append(dim_min_max, DimMinMax{min, max, range_, c})
 	}
 
 	for i := 0; i < rows; i++{
 		for j := 0; j < cols; j++{
-			col_min := min_max[j].Min
-			col_max := min_max[j].Max
+			col_min := dim_min_max[j].Min
+			col_max := dim_min_max[j].Max
 			elem := mat[i][j]
 			if col_min == 0 && col_max == 0{
 				mat[i][j] = elem
@@ -248,7 +252,7 @@ func Normalize(mat [][]float64) [][]float64{
 
 		}
 	}
-	return mat
+	return mat, dim_min_max
 }
 func UpdateFS(acc chan PacketAcc){
 	base_matrix := [][]float64{}
@@ -261,20 +265,83 @@ func UpdateFS(acc chan PacketAcc){
 				base_matrix = append(base_matrix, x)
 			} else if len(base_matrix) == window_arr_len{
 				base_matrix = append(base_matrix, x)
-				norm_mat := Normalize(base_matrix)
-				fmt.Println(norm_mat)
-				//x_new := x
-				///*x_old*/_, x_update := arr[0], arr[1:]
-				//arr = append(x_update, x_new)
-				// fmt.Println(base_matrix)
+				//TODO: normalization need to be done here, x_old and x_new will be what here?
 			} else {
-
+				base_matrix = append(base_matrix, x)
+				norm_mat, dim_min_max := Normalize(base_matrix)
+				x_old, x_update, x_new := [][]float64{norm_mat[0]}, norm_mat[1:len(norm_mat)-2], [][]float64{norm_mat[len(norm_mat)-1]}
+				buildGrid(x_old, x_update, x_new, dim_min_max)
+				//base_matrix = base_matrix[1:]
 			}
 
 		}
 	}
 }
 
+type Point struct{
+	vec []float64
+	unit_id int
+}
+
+type Interval struct{
+	range_ []float64
+}
+type Unit struct{
+	id int
+	intervals []Interval
+	density int
+	points []Point
+}
+
+type Grid struct{
+	units []Unit
+}
+
+func (g *Grid) intersect(x []float64) *Unit{
+		// for each unit, find whether point is inside unit
+		for i := 0; i < len(g.units); i++{
+			unit := &g.units[i]
+			inside_interval_ctr := 1
+			for j := 0; j < len(x); j++{
+				lower_bound := unit.intervals[j].range_[0]
+				upper_bound := unit.intervals[j].range_[1]
+
+				//TODO: Last interval might not needs to be [l,h] instead of [l,h)
+				if x[i] >= lower_bound && x[i] < upper_bound {
+					inside_interval_ctr++
+				}
+			}
+			if inside_interval_ctr == len(x){
+				return unit
+			}
+		}
+	return nil
+}
+
+var interval_l float64 = 0.1
+
+func buildGrid(x_old, x_update, x_new [][]float64, dim_min_max []DimMinMax){
+	grid := Grid{}
+	unit_id := 0
+	for i := interval_l; i < 1; i += interval_l {
+		unit := Unit{}
+		unit_id += 1
+		unit.id = unit_id
+		for i := 0; i < len(dim_min_max); i++ {
+			interval := Interval{}
+			range_ := dim_min_max[i].Range
+			lower_bound := interval_l * range_
+			upper_bound := (float64(i) + interval_l) * range_
+			interval.range_ = []float64{lower_bound, upper_bound}
+			unit.intervals = append(unit.intervals, interval)
+		}
+		grid.units = append(grid.units, unit)
+	}
+
+	//for _, elem := range x_old{
+	//
+	//}
+}
 func main() {
 	handleRead, err := pcap.OpenOffline("C:\\Users\\Jack\\Downloads\\201705021400.pcap")
 	ch := make(chan PacketData)
