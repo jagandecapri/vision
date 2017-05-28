@@ -1,15 +1,15 @@
 package main
 
 import (
-	"github.com/google/gopacket/pcap"
-	"log"
-	"io"
-	"fmt"
-	"github.com/google/gopacket"
-	"github.com/google/gopacket/layers"
-	"time"
 	"net"
+	"github.com/google/gopacket/layers"
+	"github.com/google/gopacket"
+	"time"
+	"fmt"
+	"github.com/cockroachdb/apd"
+	"strconv"
 )
+
 
 type PacketFeature struct{
 	SrcIP, DstIP net.IP
@@ -270,7 +270,7 @@ func UpdateFS(acc chan PacketAcc){
 				base_matrix = append(base_matrix, x)
 				norm_mat, dim_min_max := Normalize(base_matrix)
 				x_old, x_update, x_new := [][]float64{norm_mat[0]}, norm_mat[1:len(norm_mat)-2], [][]float64{norm_mat[len(norm_mat)-1]}
-				buildGrid(x_old, x_update, x_new, dim_min_max)
+				build2Dgrid(x_old, x_update, x_new, dim_min_max)
 				//base_matrix = base_matrix[1:]
 			}
 
@@ -297,75 +297,119 @@ type Grid struct{
 	units []Unit
 }
 
-func (g *Grid) intersect(x []float64) *Unit{
-		// for each unit, find whether point is inside unit
+func (g *Grid) intersect(vec []float64) *Unit{
 		for i := 0; i < len(g.units); i++{
 			unit := &g.units[i]
-			inside_interval_ctr := 1
-			for j := 0; j < len(x); j++{
-				lower_bound := unit.intervals[j].range_[0]
-				upper_bound := unit.intervals[j].range_[1]
-
-				//TODO: Last interval might not needs to be [l,h] instead of [l,h)
-				if x[i] >= lower_bound && x[i] < upper_bound {
-					inside_interval_ctr++
+			inside_interval_ctr := false
+			lower_bound_x := unit.intervals[0].range_[0]
+			upper_bound_x := unit.intervals[0].range_[1]
+			lower_bound_y := unit.intervals[1].range_[0]
+			upper_bound_y := unit.intervals[1].range_[1]
+			if i == len(g.units) - 1{
+				if vec[0] >= lower_bound_x && vec[0] <= upper_bound_x && vec[1] >= lower_bound_y && vec[1] <= upper_bound_y {
+					inside_interval_ctr = true
+				}
+			} else {
+				if vec[0] >= lower_bound_x && vec[0] < upper_bound_x && vec[1] >= lower_bound_y && vec[1] < upper_bound_y {
+					inside_interval_ctr = true
 				}
 			}
-			if inside_interval_ctr == len(x){
+			if inside_interval_ctr == true{
+				fmt.Println("Intersected", unit)
 				return unit
 			}
 		}
 	return nil
 }
 
-var interval_l float64 = 0.1
-
-func buildGrid(x_old, x_update, x_new [][]float64, dim_min_max []DimMinMax){
+func build2Dgrid(x_old, x_update, x_new [][]float64, dim_min_max []DimMinMax){
 	grid := Grid{}
 	unit_id := 0
-	for i := interval_l; i < 1; i += interval_l {
-		unit := Unit{}
-		unit_id += 1
-		unit.id = unit_id
-		for i := 0; i < len(dim_min_max); i++ {
+	ctx := apd.BaseContext.WithPrecision(6)
+	dim_x := []Interval{}
+	dim_j := []Interval{}
+	for j := 0; j < len(dim_min_max); j++ {
+		interval_l, _, _ := apd.NewFromString("0.1")
+		incr, _, _ := apd.NewFromString("0.0")
+		for i := 0; i < 10; i++ {
 			interval := Interval{}
-			range_ := dim_min_max[i].Range
-			lower_bound := interval_l * range_
-			upper_bound := (float64(i) + interval_l) * range_
+			range_, _, _:= apd.NewFromString(strconv.FormatFloat(dim_min_max[j].Range, 'f', -1, 64))
+			// interval_l here is the same number
+			min, _, _ := apd.NewFromString(strconv.FormatFloat(dim_min_max[j].Min, 'f', -1, 64))
+			lb := new(apd.Decimal)
+			ctx.Mul(lb,incr,range_)
+			ctx.Add(lb, lb, min)
+			lower_bound, _ := lb.Float64()
+			ub := new(apd.Decimal)
+			ctx.Add(ub, incr, interval_l)
+			ctx.Mul(ub, ub, range_)
+			ctx.Add(ub, ub, min)
+			upper_bound, _ := ub.Float64()
 			interval.range_ = []float64{lower_bound, upper_bound}
-			unit.intervals = append(unit.intervals, interval)
+			if j == 0 {
+				dim_x = append(dim_x, interval)
+			} else {
+				dim_j = append(dim_j, interval)
+			}
+			ctx.Add(incr, incr, interval_l)
 		}
-		grid.units = append(grid.units, unit)
+
 	}
 
-	//for _, elem := range x_old{
-	//
-	//}
+	for i := 0; i < len(dim_x); i++{
+		for j := 0; j < len(dim_j); j++{
+			unit := Unit{}
+			unit_id += 1
+			unit.id = unit_id
+			unit.intervals = append(unit.intervals, dim_x[i], dim_j[j])
+			grid.units = append(grid.units, unit)
+		}
+	}
+
+	fmt.Println(grid.units)
+	for _, elem := range x_old{
+		fmt.Println(elem)
+		grid.intersect(elem)
+		//fmt.Println(*val)
+	}
 }
 func main() {
-	handleRead, err := pcap.OpenOffline("C:\\Users\\Jack\\Downloads\\201705021400.pcap")
-	ch := make(chan PacketData)
-	acc := make(chan PacketAcc)
-	quit := make(chan int)
-	go WindowTimeSlide(ch, acc, quit)
-	go UpdateFS(acc)
-
-	if(err != nil){
-		log.Fatal(err)
-	}
-
-	for {
-		data, ci, err := handleRead.ReadPacketData()
-		if err != nil && err != io.EOF {
-			quit <- 0
-			log.Fatal(err)
-		} else if err == io.EOF {
-			quit <- 0
-			break
-		} else {
-			packet := gopacket.NewPacket(data, layers.LayerTypeEthernet, gopacket.Default)
-			ch <- PacketData{packet, ci}
-		}
-	}
+	//handleRead, err := pcap.OpenOffline("C:\\Users\\Jack\\Downloads\\201705021400.pcap")
+	//ch := make(chan PacketData)
+	//acc := make(chan PacketAcc)
+	//quit := make(chan int)
+	//go WindowTimeSlide(ch, acc, quit)
+	//go UpdateFS(acc)
+	//
+	//if(err != nil){
+	//	log.Fatal(err)
+	//}
+	//
+	//for {
+	//	data, ci, err := handleRead.ReadPacketData()
+	//	if err != nil && err != io.EOF {
+	//		quit <- 0
+	//		log.Fatal(err)
+	//	} else if err == io.EOF {
+	//		quit <- 0
+	//		break
+	//	} else {
+	//		packet := gopacket.NewPacket(data, layers.LayerTypeEthernet, gopacket.Default)
+	//		ch <- PacketData{packet, ci}
+	//	}
+	//}
+	dim_min_max := []DimMinMax{{
+		Min: 1.003,
+		Max: 10.0004,
+		ID: 1,
+	},{
+		Min: 1.003,
+		Max: 10.0004,
+		ID: 1,
+	}}
+	x_old := [][]float64{{1.12344123141234123,2.000012341234123234123},{1.12344123141234123,2.000012341234123234123}}
+	dim_min_max[0].Range = dim_min_max[0].Max - dim_min_max[0].Min
+	dim_min_max[1].Range = dim_min_max[1].Max - dim_min_max[1].Min
+	build2Dgrid(x_old, [][]float64{}, [][]float64{}, dim_min_max)
 
 }
