@@ -8,6 +8,10 @@ import (
 	"fmt"
 	"github.com/cockroachdb/apd"
 	"strconv"
+	"sort"
+	"github.com/google/gopacket/pcap"
+	"log"
+	"io"
 )
 
 
@@ -121,7 +125,7 @@ func UniqString(input []string) []string {
 	return u
 }
 
-func ExtractDeltaPacketFeature(feature_packets PacketAcc) []float64{
+func ExtractDeltaPacketFeature(feature_packets PacketAcc) (map[string]float64, []string){
 	nbSYN, nbACK, nbRST, nbFIN, nbCWR, nbURG, totalPktSize, totalTTL  := 0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
 	srcPorts := []float64{}
 	dstPorts := []float64{}
@@ -162,7 +166,7 @@ func ExtractDeltaPacketFeature(feature_packets PacketAcc) []float64{
 		totalPktSize += float64(fp.length)
 		totalTTL += float64(fp.TTL)
 	}
-	x := []float64{}
+
 	nbPacket := float64(len(feature_packets))
 	nbSrcPort := float64(len(UniqFloat64(srcPorts)))
 	nbDstPort := float64(len(UniqFloat64(dstPorts)))
@@ -176,8 +180,28 @@ func ExtractDeltaPacketFeature(feature_packets PacketAcc) []float64{
 	perURG := nbURG/nbPacket*100
 	avgPktSize := totalPktSize/nbPacket
 	meanTTL := totalTTL/nbPacket
-	x = append(x, nbPacket, nbSrcPort, nbDstPort, nbSrcs, nbDsts, perSyn, perAck, perRST, perFIN, perCWR, perURG, avgPktSize, meanTTL)
-	return x
+	x := map[string]float64{
+		"nbPacket": nbPacket,
+		"nbSrcPort": nbSrcPort,
+		"nbDstPort": nbDstPort,
+		"nbSrcs": nbSrcs,
+		"nbDsts": nbDsts,
+		"perSyn": perSyn,
+		"perAck": perAck,
+		"perRST": perRST,
+		"perFIN": perFIN,
+		"perCWR": perCWR,
+		"perURG": perURG,
+		"avgPktSize": avgPktSize,
+		"meanTTL": meanTTL,
+	}
+
+	sorter := []string{}
+	for k := range x{
+		sorter = append(sorter, k)
+	}
+	sort.Strings(sorter)
+	return x, sorter
 }
 
 func WindowTimeSlide(ch chan PacketData, acc chan PacketAcc, quit chan int){
@@ -216,15 +240,14 @@ func WindowTimeSlide(ch chan PacketData, acc chan PacketAcc, quit chan int){
 type DimMinMax struct{
 	Min, Max float64
 	Range float64
-	ID int
 }
 
-func Normalize(mat [][]float64) ([][]float64, []DimMinMax){
+func Normalize(mat []map[string]float64, sorter []string) ([]map[string]float64, map[string]DimMinMax){
 	rows := len(mat)
-	cols := len(mat[0])
+	//cols := len(mat[0])
 
-	dim_min_max := []DimMinMax{}
-	for c := 0; c < cols; c++ {
+	dim_min_max := map[string]DimMinMax{}
+	for _,c := range sorter {
 		min := mat[0][c]
 		max := mat[0][c]
 		for j := 0; j < rows; j++{
@@ -236,31 +259,50 @@ func Normalize(mat [][]float64) ([][]float64, []DimMinMax){
 			}
 		}
 		range_ := max - min
-		dim_min_max = append(dim_min_max, DimMinMax{min, max, range_, c})
+		dim_min_max[c] = DimMinMax{min, max, range_}
 	}
 
 	for i := 0; i < rows; i++{
-		for j := 0; j < cols; j++{
-			col_min := dim_min_max[j].Min
-			col_max := dim_min_max[j].Max
-			elem := mat[i][j]
+		for _,c := range sorter{
+			col_min := dim_min_max[c].Min
+			col_max := dim_min_max[c].Max
+			elem := mat[i][c]
 			if col_min == 0 && col_max == 0{
-				mat[i][j] = elem
+				mat[i][c] = elem
 			} else {
-				mat[i][j] = (elem - col_min)/(col_max - col_min)
+				mat[i][c] = (elem - col_min)/(col_max - col_min)
 			}
 
 		}
 	}
 	return mat, dim_min_max
 }
+
+func comb(n, m int, emit func([]int)) {
+	s := make([]int, m)
+	last := m - 1
+	var rc func(int, int)
+	rc = func(i, next int) {
+		for j := next; j < n; j++ {
+			s[i] = j
+			if i == last {
+				emit(s)
+			} else {
+				rc(i+1, j+1)
+			}
+		}
+		return
+	}
+	rc(0, 0)
+}
+
 func UpdateFS(acc chan PacketAcc){
-	base_matrix := [][]float64{}
+	base_matrix := []map[string]float64{}
 	for{
 		select{
 		case packet_acc := <- acc:
 			fmt.Print(".")
-			x := ExtractDeltaPacketFeature(packet_acc)
+			x, sorter := ExtractDeltaPacketFeature(packet_acc)
 			if len(base_matrix) < window_arr_len{
 				base_matrix = append(base_matrix, x)
 			} else if len(base_matrix) == window_arr_len{
@@ -268,9 +310,10 @@ func UpdateFS(acc chan PacketAcc){
 				//TODO: normalization need to be done here, x_old and x_new will be what here?
 			} else {
 				base_matrix = append(base_matrix, x)
-				norm_mat, dim_min_max := Normalize(base_matrix)
-				x_old, x_update, x_new := [][]float64{norm_mat[0]}, norm_mat[1:len(norm_mat)-2], [][]float64{norm_mat[len(norm_mat)-1]}
-				build2Dgrid(x_old, x_update, x_new, dim_min_max)
+				Normalize(base_matrix, sorter)
+				//norm_mat, dim_min_max := Normalize(base_matrix, sorter)
+				//x_old, x_update, x_new := [][]float64{norm_mat[0]}, norm_mat[1:len(norm_mat)-2], [][]float64{norm_mat[len(norm_mat)-1]}
+				//build2Dgrid(x_old, x_update, x_new, dim_min_max)
 				//base_matrix = base_matrix[1:]
 			}
 
@@ -374,42 +417,40 @@ func build2Dgrid(x_old, x_update, x_new [][]float64, dim_min_max []DimMinMax){
 	}
 }
 func main() {
-	//handleRead, err := pcap.OpenOffline("C:\\Users\\Jack\\Downloads\\201705021400.pcap")
-	//ch := make(chan PacketData)
-	//acc := make(chan PacketAcc)
-	//quit := make(chan int)
-	//go WindowTimeSlide(ch, acc, quit)
-	//go UpdateFS(acc)
-	//
-	//if(err != nil){
-	//	log.Fatal(err)
-	//}
-	//
-	//for {
-	//	data, ci, err := handleRead.ReadPacketData()
-	//	if err != nil && err != io.EOF {
-	//		quit <- 0
-	//		log.Fatal(err)
-	//	} else if err == io.EOF {
-	//		quit <- 0
-	//		break
-	//	} else {
-	//		packet := gopacket.NewPacket(data, layers.LayerTypeEthernet, gopacket.Default)
-	//		ch <- PacketData{packet, ci}
-	//	}
-	//}
-	dim_min_max := []DimMinMax{{
-		Min: 1.003,
-		Max: 10.0004,
-		ID: 1,
-	},{
-		Min: 1.003,
-		Max: 10.0004,
-		ID: 1,
-	}}
-	x_old := [][]float64{{1.12344123141234123,2.000012341234123234123},{1.12344123141234123,2.000012341234123234123}}
-	dim_min_max[0].Range = dim_min_max[0].Max - dim_min_max[0].Min
-	dim_min_max[1].Range = dim_min_max[1].Max - dim_min_max[1].Min
-	build2Dgrid(x_old, [][]float64{}, [][]float64{}, dim_min_max)
+	handleRead, err := pcap.OpenOffline("C:\\Users\\Jack\\Downloads\\201705021400.pcap")
+	ch := make(chan PacketData)
+	acc := make(chan PacketAcc)
+	quit := make(chan int)
+	go WindowTimeSlide(ch, acc, quit)
+	go UpdateFS(acc)
+
+	if(err != nil){
+		log.Fatal(err)
+	}
+
+	for {
+		data, ci, err := handleRead.ReadPacketData()
+		if err != nil && err != io.EOF {
+			quit <- 0
+			log.Fatal(err)
+		} else if err == io.EOF {
+			quit <- 0
+			break
+		} else {
+			packet := gopacket.NewPacket(data, layers.LayerTypeEthernet, gopacket.Default)
+			ch <- PacketData{packet, ci}
+		}
+	}
+	//dim_min_max := []DimMinMax{{
+	//	Min: 1.003,
+	//	Max: 10.0004,
+	//},{
+	//	Min: 1.003,
+	//	Max: 10.0004,
+	//}}
+	//x_old := [][]float64{{1.12344123141234123,2.000012341234123234123},{1.12344123141234123,2.000012341234123234123}}
+	//dim_min_max[0].Range = dim_min_max[0].Max - dim_min_max[0].Min
+	//dim_min_max[1].Range = dim_min_max[1].Max - dim_min_max[1].Min
+	//build2Dgrid(x_old, [][]float64{}, [][]float64{}, dim_min_max)
 
 }
