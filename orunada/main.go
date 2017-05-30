@@ -12,6 +12,7 @@ import (
 	"github.com/google/gopacket/pcap"
 	"log"
 	"io"
+	"os"
 )
 
 
@@ -272,9 +273,19 @@ func Normalize(mat []map[string]float64, sorter []string) ([]map[string]float64,
 			} else {
 				mat[i][c] = (elem - col_min)/(col_max - col_min)
 			}
-
 		}
 	}
+
+	//Assign normalized min-max
+	for _,c := range sorter{
+		norm_col_min := 0.0
+		tmp := dim_min_max[c]
+		tmp.Min = norm_col_min
+		norm_col_max := 1.0
+		tmp.Max = norm_col_max
+		dim_min_max[c] = tmp
+	}
+
 	return mat, dim_min_max
 }
 
@@ -296,6 +307,34 @@ func comb(n, m int, emit func([]int)) {
 	rc(0, 0)
 }
 
+func getSubspaceKey(sorter []string, feature_cnt int) [][]string {
+	all := [][]string{}
+	comb(len(sorter), feature_cnt, func (c []int){
+		tmp := []string{}
+		for _, v := range c {
+			tmp = append(tmp, sorter[v])
+		}
+		all = append(all, tmp)
+	})
+	return all
+}
+
+func getSubspace(subspace_keys [][]string, mat []map[string]float64) map[[2]string][][]float64{
+	subspaces := map[[2]string][][]float64{}
+	for _, subspace_k := range subspace_keys{
+		for _, m:= range mat{
+			subspace := []float64{}
+			key := [2]string{}
+			for i := 0; i < len(subspace_k); i++{
+				subspace = append(subspace, m[subspace_k[i]])
+				key[i] = subspace_k[i]
+			}
+			subspaces[key] = append(subspaces[key], subspace)
+		}
+	}
+	return subspaces
+}
+
 func UpdateFS(acc chan PacketAcc){
 	base_matrix := []map[string]float64{}
 	for{
@@ -303,18 +342,26 @@ func UpdateFS(acc chan PacketAcc){
 		case packet_acc := <- acc:
 			fmt.Print(".")
 			x, sorter := ExtractDeltaPacketFeature(packet_acc)
-			if len(base_matrix) < window_arr_len{
+			if len(base_matrix) < window_arr_len - 1{
 				base_matrix = append(base_matrix, x)
-			} else if len(base_matrix) == window_arr_len{
+			} else if len(base_matrix) == window_arr_len - 1{
 				base_matrix = append(base_matrix, x)
 				//TODO: normalization need to be done here, x_old and x_new will be what here?
 			} else {
 				base_matrix = append(base_matrix, x)
-				Normalize(base_matrix, sorter)
-				//norm_mat, dim_min_max := Normalize(base_matrix, sorter)
-				//x_old, x_update, x_new := [][]float64{norm_mat[0]}, norm_mat[1:len(norm_mat)-2], [][]float64{norm_mat[len(norm_mat)-1]}
-				//build2Dgrid(x_old, x_update, x_new, dim_min_max)
-				//base_matrix = base_matrix[1:]
+				norm_mat, dim_min_max := Normalize(base_matrix, sorter)
+				subspace_keys := getSubspaceKey(sorter, 2)
+				subspaces := getSubspace(subspace_keys, norm_mat)
+				for keys, subspace := range subspaces{
+					dims := map[string]DimMinMax{}
+					for _, key := range keys{
+						dims[key] = dim_min_max[key]
+					}
+					x_old, x_update, x_new := [][]float64{subspace[0]}, subspace[1:len(subspace)-2], [][]float64{subspace[len(subspace)-1]}
+					build2Dgrid(x_old, x_update, x_new, dims)
+					os.Exit(2)
+				}
+				base_matrix = base_matrix[1:]
 			}
 
 		}
@@ -365,20 +412,22 @@ func (g *Grid) intersect(vec []float64) *Unit{
 	return nil
 }
 
-func build2Dgrid(x_old, x_update, x_new [][]float64, dim_min_max []DimMinMax){
+func build2Dgrid(x_old, x_update, x_new [][]float64, dim_min_max map[string]DimMinMax){
 	grid := Grid{}
 	unit_id := 0
 	ctx := apd.BaseContext.WithPrecision(6)
 	dim_x := []Interval{}
 	dim_j := []Interval{}
-	for j := 0; j < len(dim_min_max); j++ {
+	for _, dim := range dim_min_max {
 		interval_l, _, _ := apd.NewFromString("0.1")
 		incr, _, _ := apd.NewFromString("0.0")
+		axis := 0
 		for i := 0; i < 10; i++ {
 			interval := Interval{}
-			range_, _, _:= apd.NewFromString(strconv.FormatFloat(dim_min_max[j].Range, 'f', -1, 64))
+			//TODO: Range here only need to be 1
+			range_, _, _:= apd.NewFromString(strconv.FormatFloat(dim.Range, 'f', -1, 64))
 			// interval_l here is the same number
-			min, _, _ := apd.NewFromString(strconv.FormatFloat(dim_min_max[j].Min, 'f', -1, 64))
+			min, _, _ := apd.NewFromString(strconv.FormatFloat(dim.Min, 'f', -1, 64))
 			lb := new(apd.Decimal)
 			ctx.Mul(lb,incr,range_)
 			ctx.Add(lb, lb, min)
@@ -389,14 +438,14 @@ func build2Dgrid(x_old, x_update, x_new [][]float64, dim_min_max []DimMinMax){
 			ctx.Add(ub, ub, min)
 			upper_bound, _ := ub.Float64()
 			interval.range_ = []float64{lower_bound, upper_bound}
-			if j == 0 {
+			if axis == 0 {
 				dim_x = append(dim_x, interval)
 			} else {
 				dim_j = append(dim_j, interval)
 			}
 			ctx.Add(incr, incr, interval_l)
 		}
-
+		axis += 1
 	}
 
 	for i := 0; i < len(dim_x); i++{
@@ -409,12 +458,13 @@ func build2Dgrid(x_old, x_update, x_new [][]float64, dim_min_max []DimMinMax){
 		}
 	}
 
+	fmt.Println(dim_min_max)
 	fmt.Println(grid.units)
-	for _, elem := range x_old{
-		fmt.Println(elem)
-		grid.intersect(elem)
-		//fmt.Println(*val)
-	}
+	//for _, elem := range x_old{
+	//	//fmt.Println(elem)
+	//	grid.intersect(elem)
+	//	//fmt.Println(*val)
+	//}
 }
 func main() {
 	handleRead, err := pcap.OpenOffline("C:\\Users\\Jack\\Downloads\\201705021400.pcap")
