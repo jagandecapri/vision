@@ -359,9 +359,9 @@ func UpdateFS(acc chan PacketAcc){
 					}
 					x_old, x_update, x_new := [][]float64{subspace[0]}, subspace[1:len(subspace)-2], [][]float64{subspace[len(subspace)-1]}
 					build2Dgrid(x_old, x_update, x_new, dims)
-					os.Exit(2)
 				}
 				base_matrix = base_matrix[1:]
+				os.Exit(2)
 			}
 
 		}
@@ -388,22 +388,48 @@ type Grid struct{
 }
 
 func (g *Grid) intersect(vec []float64) *Unit{
-		for i := 0; i < len(g.units); i++{
+	ctx := apd.BaseContext.WithPrecision(6)
+	for i := 0; i < len(g.units); i++{
 			unit := &g.units[i]
 			inside_interval_ctr := false
 			lower_bound_x := unit.intervals[0].range_[0]
 			upper_bound_x := unit.intervals[0].range_[1]
 			lower_bound_y := unit.intervals[1].range_[0]
 			upper_bound_y := unit.intervals[1].range_[1]
+
+			lb_x, _ := new(apd.Decimal).SetFloat64(lower_bound_x)
+			ub_x, _ := new(apd.Decimal).SetFloat64(upper_bound_x)
+			lb_y, _ := new(apd.Decimal).SetFloat64(lower_bound_y)
+			ub_y, _ := new(apd.Decimal).SetFloat64(upper_bound_y)
+
+			vec_0, _ := new(apd.Decimal).SetFloat64(vec[0])
+			vec_1, _ := new(apd.Decimal).SetFloat64(vec[1])
+
+			cmp_vec_0_lb_x := new(apd.Decimal)
+			cmp_vec_0_ub_x := new(apd.Decimal)
+			ctx.Cmp(cmp_vec_0_lb_x, vec_0, lb_x)
+			ctx.Cmp(cmp_vec_0_ub_x, vec_0, ub_x)
+
+			cmp_vec_1_lb_y := new(apd.Decimal)
+			cmp_vec_1_ub_y := new(apd.Decimal)
+			ctx.Cmp(cmp_vec_1_lb_y, vec_1, lb_y)
+			ctx.Cmp(cmp_vec_1_ub_y, vec_1, ub_y)
+
+			int_cmp_vec_0_lb_x, _ := cmp_vec_0_lb_x.Int64()
+			int_cmp_vec_0_ub_x, _ := cmp_vec_0_ub_x.Int64()
+			int_cmp_vec_1_lb_y, _ := cmp_vec_1_lb_y.Int64()
+			int_cmp_vec_1_ub_y, _ := cmp_vec_1_ub_y.Int64()
+
 			if i == len(g.units) - 1{
-				if vec[0] >= lower_bound_x && vec[0] <= upper_bound_x && vec[1] >= lower_bound_y && vec[1] <= upper_bound_y {
+				if (int_cmp_vec_0_lb_x == 1 || int_cmp_vec_0_lb_x == 0) && (int_cmp_vec_0_ub_x == -1 || int_cmp_vec_0_ub_x == 0) && (int_cmp_vec_1_lb_y == 1 || int_cmp_vec_1_lb_y == 0) && (int_cmp_vec_1_ub_y == -1 || int_cmp_vec_1_ub_y == 0){
 					inside_interval_ctr = true
 				}
 			} else {
-				if vec[0] >= lower_bound_x && vec[0] < upper_bound_x && vec[1] >= lower_bound_y && vec[1] < upper_bound_y {
+				if (int_cmp_vec_0_lb_x == 1 || int_cmp_vec_0_lb_x == 0) && (int_cmp_vec_0_ub_x == -1) && (int_cmp_vec_1_lb_y == 1 || int_cmp_vec_1_lb_y == 0) && (int_cmp_vec_1_ub_y == -1){
 					inside_interval_ctr = true
 				}
 			}
+
 			if inside_interval_ctr == true{
 				fmt.Println("Intersected", unit)
 				return unit
@@ -418,18 +444,19 @@ func build2Dgrid(x_old, x_update, x_new [][]float64, dim_min_max map[string]DimM
 	ctx := apd.BaseContext.WithPrecision(6)
 	dim_x := []Interval{}
 	dim_j := []Interval{}
+	fmt.Println(len(dim_min_max))
+	axis := 0
 	for _, dim := range dim_min_max {
-		interval_l, _, _ := apd.NewFromString("0.1")
-		incr, _, _ := apd.NewFromString("0.0")
-		axis := 0
+		interval_l, _ := new(apd.Decimal).SetFloat64(0.1)
+		incr, _ := new(apd.Decimal).SetFloat64(0.0)
+		range_, _ := new(apd.Decimal).SetFloat64(1.0)
 		for i := 0; i < 10; i++ {
 			interval := Interval{}
 			//TODO: Range here only need to be 1
-			range_, _, _:= apd.NewFromString(strconv.FormatFloat(dim.Range, 'f', -1, 64))
+			//range_, _, _:= apd.NewFromString(strconv.FormatFloat(dim.Range, 'f', -1, 64))
 			// interval_l here is the same number
 			min, _, _ := apd.NewFromString(strconv.FormatFloat(dim.Min, 'f', -1, 64))
 			lb := new(apd.Decimal)
-			ctx.Mul(lb,incr,range_)
 			ctx.Add(lb, lb, min)
 			lower_bound, _ := lb.Float64()
 			ub := new(apd.Decimal)
@@ -458,13 +485,13 @@ func build2Dgrid(x_old, x_update, x_new [][]float64, dim_min_max map[string]DimM
 		}
 	}
 
-	fmt.Println(dim_min_max)
-	fmt.Println(grid.units)
-	//for _, elem := range x_old{
-	//	//fmt.Println(elem)
-	//	grid.intersect(elem)
-	//	//fmt.Println(*val)
-	//}
+	for _, elem := range x_old{
+		grid.intersect(elem)
+	}
+
+	for _, elem := range x_update{
+		grid.intersect(elem)
+	}
 }
 func main() {
 	handleRead, err := pcap.OpenOffline("C:\\Users\\Jack\\Downloads\\201705021400.pcap")
