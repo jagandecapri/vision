@@ -6,13 +6,15 @@ import (
 	"github.com/google/gopacket"
 	"time"
 	"fmt"
-	"github.com/cockroachdb/apd"
-	"strconv"
+	//"github.com/cockroachdb/apd"
+	//"strconv"
 	"sort"
 	"github.com/google/gopacket/pcap"
 	"log"
 	"io"
 	"os"
+	"github.com/cockroachdb/apd"
+	"strconv"
 )
 
 
@@ -243,16 +245,16 @@ type DimMinMax struct{
 	Range float64
 }
 
-func Normalize(mat []map[string]float64, sorter []string) ([]map[string]float64, map[string]DimMinMax){
+func Normalize(mat []Point, sorter []string) ([]Point, map[string]DimMinMax){
 	rows := len(mat)
 	//cols := len(mat[0])
 
 	dim_min_max := map[string]DimMinMax{}
 	for _,c := range sorter {
-		min := mat[0][c]
-		max := mat[0][c]
+		min := mat[0].vec[c]
+		max := mat[0].vec[c]
 		for j := 0; j < rows; j++{
-			val := mat[j][c]
+			val := mat[j].vec[c]
 			if val < min{
 				min = val
 			} else if  val > max{
@@ -264,14 +266,14 @@ func Normalize(mat []map[string]float64, sorter []string) ([]map[string]float64,
 	}
 
 	for i := 0; i < rows; i++{
-		for _,c := range sorter{
+		for _, c := range sorter{
 			col_min := dim_min_max[c].Min
 			col_max := dim_min_max[c].Max
-			elem := mat[i][c]
+			elem := mat[i].vec[c]
 			if col_min == 0 && col_max == 0{
-				mat[i][c] = elem
+				mat[i].norm_vec[c] = elem
 			} else {
-				mat[i][c] = (elem - col_min)/(col_max - col_min)
+				mat[i].norm_vec[c] = (elem - col_min)/(col_max - col_min)
 			}
 		}
 	}
@@ -319,36 +321,45 @@ func getSubspaceKey(sorter []string, feature_cnt int) [][]string {
 	return all
 }
 
-func getSubspace(subspace_keys [][]string, mat []map[string]float64) map[[2]string][][]float64{
-	subspaces := map[[2]string][][]float64{}
+func getSubspace(subspace_keys [][]string, mat []Point) map[[2]string][]Point{
+	subspaces := map[[2]string][]Point{}
 	for _, subspace_k := range subspace_keys{
-		for _, m:= range mat{
-			subspace := []float64{}
-			key := [2]string{}
+		key := [2]string{}
+		copy(key[:], subspace_k)
+		subspace := []Point{}
+		for _, p:= range mat{
+			sub_point := Point{id: p.id}
+			tmp := make(map[string]float64)
 			for i := 0; i < len(subspace_k); i++{
-				subspace = append(subspace, m[subspace_k[i]])
-				key[i] = subspace_k[i]
+				key := subspace_k[i]
+				tmp[key] = p.norm_vec[key]
 			}
-			subspaces[key] = append(subspaces[key], subspace)
+			sub_point.norm_vec = tmp
+			subspace = append(subspace, sub_point)
 		}
+		subspaces[key] = subspace
 	}
 	return subspaces
 }
 
+var point_ctr int = 0
+
 func UpdateFS(acc chan PacketAcc){
-	base_matrix := []map[string]float64{}
+	base_matrix := []Point{}
 	for{
 		select{
 		case packet_acc := <- acc:
 			fmt.Print(".")
 			x, sorter := ExtractDeltaPacketFeature(packet_acc)
+			point_ctr += 1
+			p := Point{id: point_ctr, vec: x, norm_vec: make(map[string]float64)}
 			if len(base_matrix) < window_arr_len - 1{
-				base_matrix = append(base_matrix, x)
+				base_matrix = append(base_matrix, p)
 			} else if len(base_matrix) == window_arr_len - 1{
-				base_matrix = append(base_matrix, x)
+				base_matrix = append(base_matrix, p)
 				//TODO: normalization need to be done here, x_old and x_new will be what here?
 			} else {
-				base_matrix = append(base_matrix, x)
+				base_matrix = append(base_matrix, p)
 				norm_mat, dim_min_max := Normalize(base_matrix, sorter)
 				subspace_keys := getSubspaceKey(sorter, 2)
 				subspaces := getSubspace(subspace_keys, norm_mat)
@@ -357,7 +368,7 @@ func UpdateFS(acc chan PacketAcc){
 					for _, key := range keys{
 						dims[key] = dim_min_max[key]
 					}
-					x_old, x_update, x_new := [][]float64{subspace[0]}, subspace[1:len(subspace)-2], [][]float64{subspace[len(subspace)-1]}
+					x_old, x_update, x_new := []Point{subspace[0]}, subspace[1:len(subspace)-2], []Point{subspace[len(subspace)-1]}
 					build2Dgrid(x_old, x_update, x_new, dims)
 				}
 				base_matrix = base_matrix[1:]
@@ -369,7 +380,9 @@ func UpdateFS(acc chan PacketAcc){
 }
 
 type Point struct{
-	vec []float64
+	id int
+	vec map[string]float64
+	norm_vec map[string]float64
 	unit_id int
 }
 
@@ -387,58 +400,59 @@ type Grid struct{
 	units []Unit
 }
 
-func (g *Grid) intersect(vec []float64) *Unit{
-	ctx := apd.BaseContext.WithPrecision(6)
-	for i := 0; i < len(g.units); i++{
-			unit := &g.units[i]
-			inside_interval_ctr := false
-			lower_bound_x := unit.intervals[0].range_[0]
-			upper_bound_x := unit.intervals[0].range_[1]
-			lower_bound_y := unit.intervals[1].range_[0]
-			upper_bound_y := unit.intervals[1].range_[1]
+//func (g *Grid) intersect(p Point) *Unit{
+//	vec := p.vec
+//	ctx := apd.BaseContext.WithPrecision(6)
+//	for i := 0; i < len(g.units); i++{
+//			unit := &g.units[i]
+//			inside_interval_ctr := false
+//			lower_bound_x := unit.intervals[0].range_[0]
+//			upper_bound_x := unit.intervals[0].range_[1]
+//			lower_bound_y := unit.intervals[1].range_[0]
+//			upper_bound_y := unit.intervals[1].range_[1]
+//
+//			lb_x, _ := new(apd.Decimal).SetFloat64(lower_bound_x)
+//			ub_x, _ := new(apd.Decimal).SetFloat64(upper_bound_x)
+//			lb_y, _ := new(apd.Decimal).SetFloat64(lower_bound_y)
+//			ub_y, _ := new(apd.Decimal).SetFloat64(upper_bound_y)
+//
+//			vec_0, _ := new(apd.Decimal).SetFloat64(vec[0])
+//			vec_1, _ := new(apd.Decimal).SetFloat64(vec[1])
+//
+//			cmp_vec_0_lb_x := new(apd.Decimal)
+//			cmp_vec_0_ub_x := new(apd.Decimal)
+//			ctx.Cmp(cmp_vec_0_lb_x, vec_0, lb_x)
+//			ctx.Cmp(cmp_vec_0_ub_x, vec_0, ub_x)
+//
+//			cmp_vec_1_lb_y := new(apd.Decimal)
+//			cmp_vec_1_ub_y := new(apd.Decimal)
+//			ctx.Cmp(cmp_vec_1_lb_y, vec_1, lb_y)
+//			ctx.Cmp(cmp_vec_1_ub_y, vec_1, ub_y)
+//
+//			int_cmp_vec_0_lb_x, _ := cmp_vec_0_lb_x.Int64()
+//			int_cmp_vec_0_ub_x, _ := cmp_vec_0_ub_x.Int64()
+//			int_cmp_vec_1_lb_y, _ := cmp_vec_1_lb_y.Int64()
+//			int_cmp_vec_1_ub_y, _ := cmp_vec_1_ub_y.Int64()
+//
+//			if i == len(g.units) - 1{
+//				if (int_cmp_vec_0_lb_x == 1 || int_cmp_vec_0_lb_x == 0) && (int_cmp_vec_0_ub_x == -1 || int_cmp_vec_0_ub_x == 0) && (int_cmp_vec_1_lb_y == 1 || int_cmp_vec_1_lb_y == 0) && (int_cmp_vec_1_ub_y == -1 || int_cmp_vec_1_ub_y == 0){
+//					inside_interval_ctr = true
+//				}
+//			} else {
+//				if (int_cmp_vec_0_lb_x == 1 || int_cmp_vec_0_lb_x == 0) && (int_cmp_vec_0_ub_x == -1) && (int_cmp_vec_1_lb_y == 1 || int_cmp_vec_1_lb_y == 0) && (int_cmp_vec_1_ub_y == -1){
+//					inside_interval_ctr = true
+//				}
+//			}
+//
+//			if inside_interval_ctr == true{
+//				fmt.Println("Intersected", unit)
+//				return unit
+//			}
+//		}
+//	return nil
+//}
 
-			lb_x, _ := new(apd.Decimal).SetFloat64(lower_bound_x)
-			ub_x, _ := new(apd.Decimal).SetFloat64(upper_bound_x)
-			lb_y, _ := new(apd.Decimal).SetFloat64(lower_bound_y)
-			ub_y, _ := new(apd.Decimal).SetFloat64(upper_bound_y)
-
-			vec_0, _ := new(apd.Decimal).SetFloat64(vec[0])
-			vec_1, _ := new(apd.Decimal).SetFloat64(vec[1])
-
-			cmp_vec_0_lb_x := new(apd.Decimal)
-			cmp_vec_0_ub_x := new(apd.Decimal)
-			ctx.Cmp(cmp_vec_0_lb_x, vec_0, lb_x)
-			ctx.Cmp(cmp_vec_0_ub_x, vec_0, ub_x)
-
-			cmp_vec_1_lb_y := new(apd.Decimal)
-			cmp_vec_1_ub_y := new(apd.Decimal)
-			ctx.Cmp(cmp_vec_1_lb_y, vec_1, lb_y)
-			ctx.Cmp(cmp_vec_1_ub_y, vec_1, ub_y)
-
-			int_cmp_vec_0_lb_x, _ := cmp_vec_0_lb_x.Int64()
-			int_cmp_vec_0_ub_x, _ := cmp_vec_0_ub_x.Int64()
-			int_cmp_vec_1_lb_y, _ := cmp_vec_1_lb_y.Int64()
-			int_cmp_vec_1_ub_y, _ := cmp_vec_1_ub_y.Int64()
-
-			if i == len(g.units) - 1{
-				if (int_cmp_vec_0_lb_x == 1 || int_cmp_vec_0_lb_x == 0) && (int_cmp_vec_0_ub_x == -1 || int_cmp_vec_0_ub_x == 0) && (int_cmp_vec_1_lb_y == 1 || int_cmp_vec_1_lb_y == 0) && (int_cmp_vec_1_ub_y == -1 || int_cmp_vec_1_ub_y == 0){
-					inside_interval_ctr = true
-				}
-			} else {
-				if (int_cmp_vec_0_lb_x == 1 || int_cmp_vec_0_lb_x == 0) && (int_cmp_vec_0_ub_x == -1) && (int_cmp_vec_1_lb_y == 1 || int_cmp_vec_1_lb_y == 0) && (int_cmp_vec_1_ub_y == -1){
-					inside_interval_ctr = true
-				}
-			}
-
-			if inside_interval_ctr == true{
-				fmt.Println("Intersected", unit)
-				return unit
-			}
-		}
-	return nil
-}
-
-func build2Dgrid(x_old, x_update, x_new [][]float64, dim_min_max map[string]DimMinMax){
+func build2Dgrid(x_old, x_update, x_new []Point, dim_min_max map[string]DimMinMax){
 	grid := Grid{}
 	unit_id := 0
 	ctx := apd.BaseContext.WithPrecision(6)
@@ -485,13 +499,22 @@ func build2Dgrid(x_old, x_update, x_new [][]float64, dim_min_max map[string]DimM
 		}
 	}
 
-	for _, elem := range x_old{
-		grid.intersect(elem)
-	}
-
-	for _, elem := range x_update{
-		grid.intersect(elem)
-	}
+	//for _, elem := range x_old{
+	//	unit := grid.intersect(elem)
+	//	elem.unit_id = unit.id
+	//	unit.points = append(unit.points, elem)
+	//
+	//}
+	//
+	//for _, elem := range x_update{
+	//	unit := grid.intersect(elem)
+	//	unit.points = append(unit.points, elem)
+	//}
+	//
+	//for _, elem := range x_new{
+	//	unit := grid.intersect(elem)
+	//	unit.points = append(unit.points, elem)
+	//}
 }
 func main() {
 	handleRead, err := pcap.OpenOffline("C:\\Users\\Jack\\Downloads\\201705021400.pcap")
