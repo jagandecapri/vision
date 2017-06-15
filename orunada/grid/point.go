@@ -1,9 +1,9 @@
 package grid
 
 type Point struct{
-	id int
-	vec map[string]float64
-	norm_vec map[string]float64
-	unit_id int
-	sorter [2]string
+	Id int
+	Vec map[string]float64
+	Norm_vec map[string]float64
+	Unit_id int
+	Sorter [2]string
 }

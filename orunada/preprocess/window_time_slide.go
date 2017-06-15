@@ -18,18 +18,18 @@ func WindowTimeSlide(ch chan PacketData, acc chan PacketAcc, quit chan int){
 	for{
 		select{
 		case pd := <- ch:
-			packet_time := pd.metadata.Timestamp
+			packet_time := pd.Metadata.Timestamp
 			if time_counter.IsZero() {
 				//fmt.Println("Initialize Time")
 				time_counter = packet_time
-				pf := new(PacketFeature)
-				pf.ExtractFeature(pd.data)
+				pf := PacketFeature{}
+				pf.ExtractFeature(pd.Data)
 				initializePacketAcc()
 				tmp = append(tmp, pf)
 			} else if packet_time.Before(time_counter.Add(delta_t)) || packet_time.Equal(time_counter.Add(delta_t)) {
 				//fmt.Println("packet_time <= time_counter")
-				pf := new(PacketFeature)
-				pf.ExtractFeature(pd.data)
+				pf := PacketFeature{}
+				pf.ExtractFeature(pd.Data)
 				tmp = append(tmp, pf)
 			} else if packet_time.After(time_counter.Add(delta_t)) {
 				//fmt.Println("packet_time > time_counter")

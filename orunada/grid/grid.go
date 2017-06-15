@@ -43,7 +43,7 @@ func (g *Grid) Build2DGrid(axes []string, ctx *apd.Context) *Grid{
 }
 
 func (g *Grid) intersect(p Point) *Unit{
-	vec := p.norm_vec
+	vec := p.Norm_vec
 	ctx := apd.BaseContext.WithPrecision(6)
 	for i := 0; i < len(g.units); i++{
 		unit := &g.units[i]
@@ -87,11 +87,25 @@ func (g *Grid) intersect(p Point) *Unit{
 		}
 
 		if inside_interval_ctr == true{
-			fmt.Println("Intersected", unit)
+			//fmt.Println("Intersected", unit)
 			return unit
 		}
 	}
 	return nil
+}
+
+/* Return updated points */
+func (g *Grid) Assign(pts []Point){
+	for _,p := range pts{
+		u := g.intersect(p)
+		//This will fail is u happens to be nil, no intersection which should NEVER be the case
+		if u != nil{
+			p.Unit_id = u.id
+			u.points = append(u.points, p)
+		} else {
+			fmt.Println(p)
+		}
+	}
 }
 
 func (g *Grid) calculateListOfDenseUnits(){

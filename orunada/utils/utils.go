@@ -43,3 +43,15 @@ func UniqString(input []string) []string {
 	}
 	return u
 }
+
+func GetKeyComb(sorter []string, feature_cnt int) [][]string {
+	all := [][]string{}
+	Comb(len(sorter), feature_cnt, func (c []int){
+		tmp := []string{}
+		for _, v := range c {
+			tmp = append(tmp, sorter[v])
+		}
+		all = append(all, tmp)
+	})
+	return all
+}
