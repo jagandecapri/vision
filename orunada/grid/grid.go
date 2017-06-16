@@ -8,11 +8,14 @@ import (
 type Grid struct{
 	units []Unit
 	axes [2]string
+	dim_min float64
+	dim_max float64
 }
 
 func (g *Grid) Build2DGrid(axes []string, ctx *apd.Context) *Grid{
 	copy(g.axes[:], axes)
-	//ctx := apd.BaseContext.WithPrecision(6)
+	g.dim_min = 0.0
+	g.dim_max = 1.0
 	dim := []Interval{}
 	for range axes {
 		interval_l, _ := new(apd.Decimal).SetFloat64(0.1)
@@ -58,8 +61,10 @@ func (g *Grid) intersect(p Point) *Unit{
 		lb_y, _ := new(apd.Decimal).SetFloat64(lower_bound_y)
 		ub_y, _ := new(apd.Decimal).SetFloat64(upper_bound_y)
 
-		vec_0, _ := new(apd.Decimal).SetFloat64(vec[g.axes[0]])
-		vec_1, _ := new(apd.Decimal).SetFloat64(vec[g.axes[1]])
+		tmp1 := vec[g.axes[0]]
+		tmp2 := vec[g.axes[1]]
+		vec_0, _ := new(apd.Decimal).SetFloat64(tmp1)
+		vec_1, _ := new(apd.Decimal).SetFloat64(tmp2)
 
 		cmp_vec_0_lb_x := new(apd.Decimal)
 		cmp_vec_0_ub_x := new(apd.Decimal)
@@ -76,7 +81,7 @@ func (g *Grid) intersect(p Point) *Unit{
 		int_cmp_vec_1_lb_y, _ := cmp_vec_1_lb_y.Int64()
 		int_cmp_vec_1_ub_y, _ := cmp_vec_1_ub_y.Int64()
 
-		if i == len(g.units) - 1{
+		if tmp1 == 1.0 || tmp2 == 1.0{
 			if (int_cmp_vec_0_lb_x == 1 || int_cmp_vec_0_lb_x == 0) && (int_cmp_vec_0_ub_x == -1 || int_cmp_vec_0_ub_x == 0) && (int_cmp_vec_1_lb_y == 1 || int_cmp_vec_1_lb_y == 0) && (int_cmp_vec_1_ub_y == -1 || int_cmp_vec_1_ub_y == 0){
 				inside_interval_ctr = true
 			}
@@ -87,7 +92,6 @@ func (g *Grid) intersect(p Point) *Unit{
 		}
 
 		if inside_interval_ctr == true{
-			//fmt.Println("Intersected", unit)
 			return unit
 		}
 	}
@@ -103,7 +107,7 @@ func (g *Grid) Assign(pts []Point){
 			p.Unit_id = u.id
 			u.points = append(u.points, p)
 		} else {
-			fmt.Println(p)
+			fmt.Println("INTERSECTION FAILED",p)
 		}
 	}
 }
