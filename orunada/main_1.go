@@ -128,6 +128,8 @@ func updateFS(acc chan preprocess.PacketAcc, sorter []string, subspace_keys [][]
 					g.Assign(x_old)
 					g.Assign(x_update)
 					g.Assign(x_new)
+					fmt.Println(x_update)
+					fmt.Println(x_new)
 					os.Exit(2)
 				}
 				base_matrix = base_matrix[1:]
@@ -138,6 +140,8 @@ func updateFS(acc chan preprocess.PacketAcc, sorter []string, subspace_keys [][]
 }
 
 func main(){
+	go BootServer()
+
 	sorter:= getSorter()
 	grids := map[[2]string]grid.Grid{}
 	subspace_keys := utils.GetKeyComb(sorter, 2)
