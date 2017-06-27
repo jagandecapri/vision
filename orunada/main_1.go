@@ -14,7 +14,6 @@ import (
 	"sort"
 	//"os"
 	"time"
-	"os"
 )
 
 func getSorter() []string{
@@ -103,7 +102,7 @@ func getSubspace(subspace_keys [][]string, mat []grid.Point) map[[2]string][]gri
 	return subspaces
 }
 
-func updateFS(acc chan preprocess.PacketAcc, sorter []string, subspace_keys [][]string, grids map[[2]string]grid.Grid){
+func updateFS(acc chan preprocess.PacketAcc, data chan grid.HttpData, sorter []string, subspace_keys [][]string, grids map[[2]string]grid.Grid){
 	base_matrix := []grid.Point{}
 	point_ctr := 0
 	for{
@@ -119,8 +118,9 @@ func updateFS(acc chan preprocess.PacketAcc, sorter []string, subspace_keys [][]
 				base_matrix = append(base_matrix, p)
 				//TODO: normalization need to be done here, x_old and x_new will be what here?
 			} else {
+				fmt.Println("flow processing")
 				base_matrix = append(base_matrix, p)
-				norm_mat, _ := normalize(base_matrix, sorter)
+				norm_mat, _  := normalize(base_matrix, sorter)
 				subspaces := getSubspace(subspace_keys, norm_mat)
 				for key, subspace := range subspaces{
 					g := grids[key]
@@ -128,11 +128,10 @@ func updateFS(acc chan preprocess.PacketAcc, sorter []string, subspace_keys [][]
 					g.Assign(x_old)
 					g.Assign(x_update)
 					g.Assign(x_new)
-					fmt.Println(x_update)
-					fmt.Println(x_new)
-					os.Exit(2)
+					data <- grid.HttpData{Data: subspace}
+					//os.Exit(2)
 				}
-				base_matrix = base_matrix[1:]
+				//base_matrix = base_matrix[1:]
 			}
 
 		}
@@ -140,7 +139,8 @@ func updateFS(acc chan preprocess.PacketAcc, sorter []string, subspace_keys [][]
 }
 
 func main(){
-	go BootServer()
+	data := make(chan grid.HttpData)
+	go BootServer(data)
 
 	sorter:= getSorter()
 	grids := map[[2]string]grid.Grid{}
@@ -159,7 +159,7 @@ func main(){
 	acc := make(chan preprocess.PacketAcc)
 	quit := make(chan int)
 	go preprocess.WindowTimeSlide(ch, acc, quit)
-	go updateFS(acc, sorter, subspace_keys, grids)
+	go updateFS(acc, data, sorter, subspace_keys, grids)
 
 	if(err != nil){
 		log.Fatal(err)
