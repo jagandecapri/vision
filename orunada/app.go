@@ -9,7 +9,8 @@ import (
 	"github.com/gorilla/websocket"
 	"fmt"
 	"github.com/jagandecapri/vision/orunada/grid"
-	"github.com/jagandecapri/vision/orunada/utils"
+	"github.com/jagandecapri/vision/orunada/server"
+	"encoding/json"
 )
 
 var upgrader = websocket.Upgrader{} // use default options
@@ -23,43 +24,31 @@ type Data struct{
 }
 
 func BootServer(data chan grid.HttpData) {
-	bcast := &utils.ThreadSafeSlice{
-		Workers: []*utils.Worker{},
-	}
-
-	go utils.Broadcaster(bcast, data)
-	quit := make(chan bool)
-
 	fs := http.FileServer(http.Dir("static"))
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
 	http.HandleFunc("/", serveTemplate)
-	http.HandleFunc("/echo", func(w http.ResponseWriter, r *http.Request){
-		conn, err := upgrader.Upgrade(w, r, nil)
-		if err != nil {
-			log.Print("upgrade:", err)
-			return
-		}
-		defer conn.Close()
 
-		wk := &utils.Worker{
-			Source: make(chan grid.HttpData),
-		}
-		bcast.Push(wk)
-		q := false
-		for !q {
+	hub := server.NewHub()
+	go hub.Run()
+	go func(data chan grid.HttpData, hub *server.Hub){
+		for{
 			select {
-			case v := <-wk.Source:
-				err := conn.WriteJSON(v)
+			case tmp := <-data:
+				json, err := json.Marshal(tmp)
 				if err != nil{
-					log.Println(err)
+					log.Println("JSON encode err: ", err)
 				}
-			case q = <-quit:
-				break
+				hub.Broadcast <- json
+			default:
 			}
 		}
+	}(data, hub)
+
+	http.HandleFunc("/echo", func(w http.ResponseWriter, r *http.Request) {
+		server.ServeWs(hub, w, r)
 	})
 	log.Println("Listening...")
-	http.ListenAndServe(":3000", nil)
+	http.ListenAndServe(":3001", nil)
 }
 
 func serveTemplate(w http.ResponseWriter, r *http.Request) {
