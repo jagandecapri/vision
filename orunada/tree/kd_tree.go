@@ -14,10 +14,6 @@ type Node struct {
 func (kd *KDTree) newNode(p Point) *Node {
 	kd.len++
 	tmp := &Node{data:p}
-
-	/**for i := 0; i < k; i++ {
-		tmp.point = append(tmp.point, arr[i])
-	}**/
 	return tmp
 }
 
@@ -36,8 +32,10 @@ func (kd *KDTree) insertRec(root *Node, depth int, p Point) *Node {
 	return root
 }
 
-func (kd *KDTree) Insert(p Point){
-	kd.root = kd.insertRec(kd.root, 0, p)
+func (kd *KDTree) Insert(p ...Point){
+	for _, v := range p{
+		kd.root = kd.insertRec(kd.root, 0, v)
+	}
 }
 
 func (kd *KDTree) arePointsSame(p1 Point, p2 Point) bool {
