@@ -45,11 +45,9 @@ func TestBFSTreeTraversal(t *testing.T){
 		}
 		assert.Equal(t, kd.len, len(v.points))
 		res := kd.BFSTraverse()
-		fmt.Println(res)
-		//for i := 0; i < len(v.expected); i++{
-		//	for j := 0; j < len(v.expected[i]); j++{
-		//		assert.Equal(t, v.expected[i][j], res[i][j])
-		//	}
-		//}
+		for i := 0; i < len(v.expected); i++{
+			assert.Equal(t, v.expected[i], res[i])
+		}
 	}
+	fmt.Println()
 }
