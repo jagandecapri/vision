@@ -4,7 +4,6 @@ import (
 	"github.com/jagandecapri/vision/orunada/utils"
 	"github.com/jagandecapri/vision/orunada/grid"
 	"github.com/jagandecapri/vision/orunada/preprocess"
-	"github.com/cockroachdb/apd"
 	"fmt"
 	"github.com/google/gopacket/pcap"
 	"log"
@@ -14,6 +13,8 @@ import (
 	"sort"
 	//"os"
 	"time"
+	"github.com/golang-collections/go-datastructures/augmentedtree"
+	"github.com/jagandecapri/vision/orunada/tree"
 )
 
 func getSorter() []string{
@@ -25,12 +26,19 @@ func getSorter() []string{
 
 type DimMinMax struct{
 	Min, Max float64
-	Range float64
+ 	Range float64
+}
+
+func scale(elem float64, scale_factor float64) float64{
+	return elem * scale_factor
+}
+
+func norm_mat(elem float64, col_min float64, col_max float64) float64{
+	return (elem - col_min)/(col_max - col_min)
 }
 
 func normalize(mat []grid.Point, sorter []string) ([]grid.Point, map[string]DimMinMax){
 	rows := len(mat)
-	//cols := len(mat[0])
 
 	dim_min_max := map[string]DimMinMax{}
 	for _,c := range sorter {
@@ -48,15 +56,16 @@ func normalize(mat []grid.Point, sorter []string) ([]grid.Point, map[string]DimM
 		dim_min_max[c] = DimMinMax{min, max, range_}
 	}
 
+	scale_factor := 10000.0
 	for i := 0; i < rows; i++{
 		for _, c := range sorter{
 			col_min := dim_min_max[c].Min
 			col_max := dim_min_max[c].Max
 			elem := mat[i].Vec[c]
 			if col_min == 0 && col_max == 0{
-				mat[i].Norm_vec[c] = elem
+				mat[i].Norm_vec[c] = int64(scale(elem, scale_factor))
 			} else {
-				mat[i].Norm_vec[c] = (elem - col_min)/(col_max - col_min)
+				mat[i].Norm_vec[c] = int64(scale(norm_mat(elem, col_min, col_max), scale_factor)) //(elem - col_min)/(col_max - col_min)
 			}
 		}
 	}
@@ -88,12 +97,15 @@ func getSubspace(subspace_keys [][]string, mat []grid.Point) map[[2]string][]gri
 		subspace := []grid.Point{}
 		for _, p:= range mat{
 			sub_point := grid.Point{Id: p.Id}
-			tmp := make(map[string]float64)
+			tmp := []int64{}
+			tmp1 := make(map[string]int64)
 			for i := 0; i < len(subspace_k); i++{
 				key := subspace_k[i]
-				tmp[key] = p.Norm_vec[key]
+				tmp = append(tmp, p.Norm_vec[key])
+				tmp1[key] = p.Norm_vec[key]
 			}
-			sub_point.Norm_vec = tmp
+			sub_point.Norm_vec_int = tmp
+			sub_point.Norm_vec = tmp1
 			sub_point.Sorter = key
 			subspace = append(subspace, sub_point)
 		}
@@ -102,7 +114,7 @@ func getSubspace(subspace_keys [][]string, mat []grid.Point) map[[2]string][]gri
 	return subspaces
 }
 
-func updateFS(acc chan preprocess.PacketAcc, data chan grid.HttpData, sorter []string, subspace_keys [][]string, grids map[[2]string]grid.Grid){
+func updateFS(acc chan preprocess.PacketAcc, data chan grid.HttpData, sorter []string, subspace_keys [][]string, grids map[[2]string]augmentedtree.Tree){
 	base_matrix := []grid.Point{}
 	point_ctr := 0
 	for{
@@ -111,7 +123,7 @@ func updateFS(acc chan preprocess.PacketAcc, data chan grid.HttpData, sorter []s
 			fmt.Print(".")
 			x := packet_acc.ExtractDeltaPacketFeature()
 			point_ctr += 1
-			p := grid.Point{Id: point_ctr, Vec: x, Norm_vec: make(map[string]float64)}
+			p := grid.Point{Id: point_ctr, Vec: x, Norm_vec: make(map[string]int64)}
 			if len(base_matrix) < window_arr_len - 1{
 				base_matrix = append(base_matrix, p)
 			} else if len(base_matrix) == window_arr_len - 1{
@@ -121,16 +133,12 @@ func updateFS(acc chan preprocess.PacketAcc, data chan grid.HttpData, sorter []s
 				fmt.Println("flow processing")
 				base_matrix = append(base_matrix, p)
 				norm_mat, _  := normalize(base_matrix, sorter)
-				subspaces := getSubspace(subspace_keys, norm_mat)
-				for key, subspace := range subspaces{
-					g := grids[key]
-					x_old, x_update, x_new := []grid.Point{subspace[0]}, subspace[1:len(subspace)-2], []grid.Point{subspace[len(subspace)-1]}
-					g.Assign(x_old)
-					g.Assign(x_update)
-					g.Assign(x_new)
-					data <- grid.HttpData{Data: subspace}
-					//os.Exit(2)
-				}
+				getSubspace(subspace_keys, norm_mat)
+				//subspaces := getSubspace(subspace_keys, norm_mat)
+				//for key, subspace := range subspaces{
+
+				//	//os.Exit(2)
+				//}
 				//base_matrix = base_matrix[1:]
 			}
 
@@ -140,18 +148,19 @@ func updateFS(acc chan preprocess.PacketAcc, data chan grid.HttpData, sorter []s
 
 func main(){
 	data := make(chan grid.HttpData)
-	go BootServer(data)
+	//go BootServer(data)
 
 	sorter:= getSorter()
-	grids := map[[2]string]grid.Grid{}
 	subspace_keys := utils.GetKeyComb(sorter, 2)
-	ctx := apd.BaseContext.WithPrecision(6)
+	int_trees := map[[2]string]augmentedtree.Tree{}
+	intervals := tree.IntervalBuilder(0, 10, 1)
+
 	for _, subspace_key := range subspace_keys{
 		tmp := [2]string{}
 		copy(tmp[:], subspace_key)
-		grid := grid.Grid{}
-		grid.Build2DGrid(subspace_key, ctx)
-		grids[tmp] = grid
+		tree := tree.NewIntervalTree(2)
+		tree.Add(intervals...)
+		int_trees[tmp] = tree
 	}
 
 	handleRead, err := pcap.OpenOffline("C:\\Users\\Jack\\Downloads\\201705021400.pcap")
@@ -159,7 +168,7 @@ func main(){
 	acc := make(chan preprocess.PacketAcc)
 	quit := make(chan int)
 	go preprocess.WindowTimeSlide(ch, acc, quit)
-	go updateFS(acc, data, sorter, subspace_keys, grids)
+	go updateFS(acc, data, sorter, subspace_keys, int_trees)
 
 	if(err != nil){
 		log.Fatal(err)
