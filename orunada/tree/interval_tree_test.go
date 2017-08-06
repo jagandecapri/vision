@@ -28,3 +28,11 @@ func TestInterval_OverlapsAtDimension(t *testing.T) {
 func TestInterval_ImplementsInterface(t *testing.T) {
 	assert.Implements(t, (*augmentedtree.Interval)(nil), new(IntervalConc))
 }
+
+func TestCreateIntervalTree(t *testing.T){
+	assert.NotPanics(t, func(){
+		intervals := IntervalBuilder(0, 10, 1)
+		tree := NewIntervalTree(2)
+		tree.Add(intervals...)
+	})
+}

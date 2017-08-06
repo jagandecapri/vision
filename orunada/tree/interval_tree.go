@@ -36,9 +36,9 @@ func (itv IntervalConc) ID() uint64{
 	return uint64(itv.id)
 }
 
-func IntervalBuilder(min int, max int, interval_length int) []IntervalConc {
+func IntervalBuilder(min int, max int, interval_length int) []augmentedtree.Interval {
 	id := 0
-	intervals := []IntervalConc{}
+	intervals := []augmentedtree.Interval{}
 	for i := min; i < max; i += interval_length{
 		for j := min; j < max; j += interval_length{
 			intervals = append(intervals, IntervalConc{	id: id,
