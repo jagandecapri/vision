@@ -1,6 +1,8 @@
 package tree
 
-import "github.com/golang-collections/go-datastructures/augmentedtree"
+import (
+	"github.com/golang-collections/go-datastructures/augmentedtree"
+)
 
 type IntervalConc struct {
 	id int
@@ -36,9 +38,31 @@ func (itv IntervalConc) ID() uint64{
 	return uint64(itv.id)
 }
 
-func IntervalBuilder(min int, max int, interval_length int) []augmentedtree.Interval {
+// Return the total number of dimensions
+func (itv IntervalConc) Dim() int{
+	return len(itv.low)
+}
+
+// Return the value X_{dim}, dim is started from 0
+func (itv IntervalConc) GetValue(dim int) int{
+	dim++
+	res_int64 := itv.HighAtDimension(uint64(dim))
+	return int(res_int64)
+}
+
+// Return the distance between two points
+func (itv IntervalConc) Distance(point Point) float64{
+	return 0.0
+}
+
+// Return the distance between the point and the plane X_{dim}=val
+func (itv IntervalConc) PlaneDistance(val float64, dim int) float64{
+	return 0.0
+}
+
+func IntervalBuilder(min int, max int, interval_length int) []IntervalConc {
 	id := 0
-	intervals := []augmentedtree.Interval{}
+	intervals := []IntervalConc{}
 	for i := min; i < max; i += interval_length{
 		for j := min; j < max; j += interval_length{
 			intervals = append(intervals, IntervalConc{	id: id,

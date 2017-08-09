@@ -153,14 +153,24 @@ func main(){
 	sorter:= getSorter()
 	subspace_keys := utils.GetKeyComb(sorter, 2)
 	int_trees := map[[2]string]augmentedtree.Tree{}
+	kd_trees := map[[2]string]tree.KDTree{}
 	intervals := tree.IntervalBuilder(0, 10, 1)
 
 	for _, subspace_key := range subspace_keys{
 		tmp := [2]string{}
 		copy(tmp[:], subspace_key)
-		tree := tree.NewIntervalTree(2)
-		tree.Add(intervals...)
-		int_trees[tmp] = tree
+		int_tree := tree.NewIntervalTree(2)
+		kd_tree := tree.KDTree{}
+
+		for _, v := range intervals{
+			tmp2 := augmentedtree.Interval(v)
+			int_tree.Add(tmp2)
+			int_trees[tmp] = int_tree
+			tmp3 := tree.Point(v)
+			kd_tree.Insert(tmp3)
+			kd_trees[tmp] = kd_tree
+		}
+
 	}
 
 	handleRead, err := pcap.OpenOffline("C:\\Users\\Jack\\Downloads\\201705021400.pcap")
