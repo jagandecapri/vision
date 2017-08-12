@@ -5,19 +5,19 @@ import (
 )
 
 type IntervalConc struct {
-	id int
-	low []int64
-	high []int64
+	Id   int
+	Low  []int64
+	High []int64
 }
 
 func (itv IntervalConc) LowAtDimension(dim uint64) int64{
-	return itv.low[dim - 1]
+	return itv.Low[dim - 1]
 }
 
 // HighAtDimension returns an integer representing the higher bound
 // at the requested dimension.
 func (itv IntervalConc) HighAtDimension(dim uint64) int64{
-	return itv.high[dim - 1]
+	return itv.High[dim - 1]
 }
 
 // OverlapsAtDimension should return a bool indicating if the provided
@@ -35,12 +35,12 @@ func (itv IntervalConc) OverlapsAtDimension(interval augmentedtree.Interval, dim
 // is used to identify which interval to delete from the tree if
 // there are duplicates.
 func (itv IntervalConc) ID() uint64{
-	return uint64(itv.id)
+	return uint64(itv.Id)
 }
 
 // Return the total number of dimensions
 func (itv IntervalConc) Dim() int{
-	return len(itv.low)
+	return len(itv.Low)
 }
 
 // Return the value X_{dim}, dim is started from 0
@@ -65,9 +65,9 @@ func IntervalBuilder(min int, max int, interval_length int) []IntervalConc {
 	intervals := []IntervalConc{}
 	for i := min; i < max; i += interval_length{
 		for j := min; j < max; j += interval_length{
-			intervals = append(intervals, IntervalConc{	id: id,
-				low: []int64{int64(i), int64(i + interval_length)},
-				high: []int64{int64(j), int64(j + interval_length)}})
+			intervals = append(intervals, IntervalConc{	Id: id,
+				Low: []int64{int64(i), int64(i + interval_length)},
+				High: []int64{int64(j), int64(j + interval_length)}})
 			id += 1
 		}
 	}

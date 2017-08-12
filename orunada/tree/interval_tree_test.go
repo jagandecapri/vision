@@ -11,12 +11,12 @@ func TestInterval_OverlapsAtDimension(t *testing.T) {
 		interval      IntervalConc
 		interval_test IntervalConc
 		expected      bool
-	}{{interval: IntervalConc{low: []int64{0,0}, high: []int64{999,999}},
-		interval_test: IntervalConc{low: []int64{0,2}, high: []int64{998,997}},
+	}{{interval: IntervalConc{Low: []int64{0,0}, High: []int64{999,999}},
+		interval_test: IntervalConc{Low: []int64{0,2}, High: []int64{998,997}},
 		expected: true,
 	},
-	{interval: IntervalConc{low: []int64{0,0}, high: []int64{999,999}},
-		interval_test: IntervalConc{low: []int64{0,2}, high: []int64{999,999}},
+	{interval: IntervalConc{Low: []int64{0,0}, High: []int64{999,999}},
+		interval_test: IntervalConc{Low: []int64{0,2}, High: []int64{999,999}},
 		expected: false,
 	}}
 
