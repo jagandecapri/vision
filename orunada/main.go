@@ -89,32 +89,44 @@ var window time.Duration = 15 * time.Second
 var window_arr_len = int(window.Seconds()/delta_t.Seconds())
 var time_counter time.Time
 
-func getSubspace(subspace_keys [][]string, mat []grid.Point) map[[2]string][]grid.Point{
-	subspaces := map[[2]string][]grid.Point{}
-	for _, subspace_k := range subspace_keys{
-		key := [2]string{}
-		copy(key[:], subspace_k)
-		subspace := []grid.Point{}
-		for _, p:= range mat{
-			sub_point := grid.Point{Id: p.Id}
-			tmp := []int64{}
-			tmp1 := make(map[string]int64)
-			for i := 0; i < len(subspace_k); i++{
-				key := subspace_k[i]
-				tmp = append(tmp, p.Norm_vec[key])
-				tmp1[key] = p.Norm_vec[key]
-			}
-			sub_point.Norm_vec_int = tmp
-			sub_point.Norm_vec = tmp1
-			sub_point.Sorter = key
-			subspace = append(subspace, sub_point)
+//func getSubspace(subspace_keys [][]string, mat []grid.Point) map[[2]string][]grid.Point{
+//	subspaces := map[[2]string][]grid.Point{}
+//	for _, subspace_k := range subspace_keys{
+//		key := [2]string{}
+//		copy(key[:], subspace_k)
+//		subspace := []grid.Point{}
+//		for _, p:= range mat{
+//			sub_point := grid.Point{Id: p.Id}
+//			tmp := []int64{}
+//			tmp1 := make(map[string]int64)
+//			for i := 0; i < len(subspace_k); i++{
+//				key := subspace_k[i]
+//				tmp = append(tmp, p.Norm_vec[key])
+//				tmp1[key] = p.Norm_vec[key]
+//			}
+//			sub_point.Norm_vec_int = tmp
+//			sub_point.Norm_vec = tmp1
+//			sub_point.Sorter = key
+//			subspace = append(subspace, sub_point)
+//		}
+//		subspaces[key] = subspace
+//	}
+//	return subspaces
+//}
+
+func getSubspace(subspace_key []string, mat []grid.Point) []tree.IntervalConc{
+	int_cons := []tree.IntervalConc{}
+	for _, p := range mat{
+		tmp := []int64{}
+		for i := 0; i <len(subspace_key); i++{
+			tmp = append(tmp, p.Norm_vec[subspace_key[i]])
 		}
-		subspaces[key] = subspace
+		int_cons = append(int_cons, tree.IntervalConc{Id: 1, Low: tmp, High: tmp})
 	}
-	return subspaces
+	return int_cons
 }
 
-func updateFS(acc chan preprocess.PacketAcc, data chan grid.HttpData, sorter []string, subspace_keys [][]string, grids map[[2]string]augmentedtree.Tree){
+func updateFS(acc chan preprocess.PacketAcc, data chan grid.HttpData, sorter []string, subspace_keys [][]string, interval_trees map[[2]string]augmentedtree.Tree, kd_tree map[[2]string]tree.KDTree){
 	base_matrix := []grid.Point{}
 	point_ctr := 0
 	for{
@@ -133,13 +145,18 @@ func updateFS(acc chan preprocess.PacketAcc, data chan grid.HttpData, sorter []s
 				fmt.Println("flow processing")
 				base_matrix = append(base_matrix, p)
 				norm_mat, _  := normalize(base_matrix, sorter)
-				getSubspace(subspace_keys, norm_mat)
-				//subspaces := getSubspace(subspace_keys, norm_mat)
-				//for key, subspace := range subspaces{
-
-				//	//os.Exit(2)
-				//}
-				//base_matrix = base_matrix[1:]
+				for _, subspace_key := range subspace_keys{
+					subspace := getSubspace(subspace_key, norm_mat)
+					for _, point := range subspace{
+						keys := [2]string{}
+						copy(keys[:], subspace_key)
+						intervals := interval_trees[keys].Query(point)
+						fmt.Println(point)
+						fmt.Println(intervals)
+					}
+					os.Exit(2)
+				}
+				base_matrix = base_matrix[1:]
 			}
 
 		}
