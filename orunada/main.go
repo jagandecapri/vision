@@ -195,7 +195,7 @@ func main(){
 	acc := make(chan preprocess.PacketAcc)
 	quit := make(chan int)
 	go preprocess.WindowTimeSlide(ch, acc, quit)
-	go updateFS(acc, data, sorter, subspace_keys, int_trees)
+	go updateFS(acc, data, sorter, subspace_keys, int_trees, kd_trees)
 
 	if(err != nil){
 		log.Fatal(err)
