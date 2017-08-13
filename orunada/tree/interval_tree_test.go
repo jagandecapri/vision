@@ -16,7 +16,7 @@ func TestInterval_OverlapsAtDimension(t *testing.T) {
 		expected: true,
 	},
 	{interval: IntervalConc{Low: []int64{0,0}, High: []int64{999,999}},
-		interval_test: IntervalConc{Low: []int64{0,2}, High: []int64{999,999}},
+		interval_test: IntervalConc{Low: []int64{1000,5000}, High: []int64{1200,5500}},
 		expected: false,
 	}}
 
@@ -33,6 +33,9 @@ func TestCreateIntervalTree(t *testing.T){
 	assert.NotPanics(t, func(){
 		intervals := IntervalBuilder(0, 10, 1)
 		tree := NewIntervalTree(2)
-		tree.Add(intervals...)
+		for _, interval := range intervals{
+			interval := augmentedtree.Interval(interval)
+			tree.Add(interval)
+		}
 	})
 }

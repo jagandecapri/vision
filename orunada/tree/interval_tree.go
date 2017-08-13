@@ -23,14 +23,18 @@ func (itv IntervalConc) HighAtDimension(dim uint64) int64{
 // OverlapsAtDimension should return a bool indicating if the provided
 // interval overlaps this interval at the dimension requested.
 func (itv IntervalConc) OverlapsAtDimension(interval augmentedtree.Interval, dim uint64) bool{
-	interval = interval.(IntervalConc)
-	if itv.LowAtDimension(dim) <= interval.LowAtDimension(dim) &&
-		itv.HighAtDimension(dim) > interval.HighAtDimension(dim){
-		return true
-	} else {
-		return false
+	check := false
+	for i := uint64(1); i <= uint64(len(itv.Low)); i++{
+		if interval.LowAtDimension(i) <= itv.HighAtDimension(i) &&
+			interval.HighAtDimension(i) >= itv.LowAtDimension(i){
+			check = true
+		} else {
+			check = false
+		}
 	}
+	return check
 }
+
 // ID should be a unique ID representing this interval.  This
 // is used to identify which interval to delete from the tree if
 // there are duplicates.
@@ -61,13 +65,13 @@ func (itv IntervalConc) PlaneDistance(val float64, dim int) float64{
 }
 
 func IntervalBuilder(min int, max int, interval_length int) []IntervalConc {
-	id := 0
+	id := 1
 	intervals := []IntervalConc{}
 	for i := min; i < max; i += interval_length{
 		for j := min; j < max; j += interval_length{
 			intervals = append(intervals, IntervalConc{	Id: id,
-				Low: []int64{int64(i), int64(i + interval_length)},
-				High: []int64{int64(j), int64(j + interval_length)}})
+				Low: []int64{int64(i), int64(j)},
+				High: []int64{int64(i + interval_length), int64(j + interval_length)}})
 			id += 1
 		}
 	}

@@ -11,7 +11,7 @@ import (
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"sort"
-	//"os"
+	"os"
 	"time"
 	"github.com/golang-collections/go-datastructures/augmentedtree"
 	"github.com/jagandecapri/vision/orunada/tree"
@@ -56,16 +56,15 @@ func normalize(mat []grid.Point, sorter []string) ([]grid.Point, map[string]DimM
 		dim_min_max[c] = DimMinMax{min, max, range_}
 	}
 
-	scale_factor := 10000.0
 	for i := 0; i < rows; i++{
 		for _, c := range sorter{
 			col_min := dim_min_max[c].Min
 			col_max := dim_min_max[c].Max
 			elem := mat[i].Vec[c]
 			if col_min == 0 && col_max == 0{
-				mat[i].Norm_vec[c] = int64(scale(elem, scale_factor))
+				mat[i].Norm_vec[c] = int64(scale(elem, float64(scale_factor)))
 			} else {
-				mat[i].Norm_vec[c] = int64(scale(norm_mat(elem, col_min, col_max), scale_factor)) //(elem - col_min)/(col_max - col_min)
+				mat[i].Norm_vec[c] = int64(scale(norm_mat(elem, col_min, col_max), float64(scale_factor))) //(elem - col_min)/(col_max - col_min)
 			}
 		}
 	}
@@ -88,6 +87,7 @@ var delta_t time.Duration = 300 * time.Millisecond
 var window time.Duration = 15 * time.Second
 var window_arr_len = int(window.Seconds()/delta_t.Seconds())
 var time_counter time.Time
+var scale_factor = 10000
 
 //func getSubspace(subspace_keys [][]string, mat []grid.Point) map[[2]string][]grid.Point{
 //	subspaces := map[[2]string][]grid.Point{}
@@ -117,11 +117,14 @@ var time_counter time.Time
 func getSubspace(subspace_key []string, mat []grid.Point) []tree.IntervalConc{
 	int_cons := []tree.IntervalConc{}
 	for _, p := range mat{
-		tmp := []int64{}
-		for i := 0; i <len(subspace_key); i++{
-			tmp = append(tmp, p.Norm_vec[subspace_key[i]])
-		}
-		int_cons = append(int_cons, tree.IntervalConc{Id: 1, Low: tmp, High: tmp})
+		tmp := []int64{p.Norm_vec[subspace_key[0]], p.Norm_vec[subspace_key[0]]}
+		tmp1 := []int64{p.Norm_vec[subspace_key[1]], p.Norm_vec[subspace_key[1]]}
+
+		//for i := 0; i <len(subspace_key); i++{
+		//	tmp = append(tmp, p.Norm_vec[subspace_key[i]])
+		//}
+
+		int_cons = append(int_cons, tree.IntervalConc{Id: 1, Low: tmp, High: tmp1})
 	}
 	return int_cons
 }
@@ -147,12 +150,12 @@ func updateFS(acc chan preprocess.PacketAcc, data chan grid.HttpData, sorter []s
 				norm_mat, _  := normalize(base_matrix, sorter)
 				for _, subspace_key := range subspace_keys{
 					subspace := getSubspace(subspace_key, norm_mat)
+					keys := [2]string{}
+					copy(keys[:], subspace_key)
 					for _, point := range subspace{
-						keys := [2]string{}
-						copy(keys[:], subspace_key)
+						fmt.Println(keys)
 						intervals := interval_trees[keys].Query(point)
-						fmt.Println(point)
-						fmt.Println(intervals)
+						fmt.Println(point, intervals)
 					}
 					os.Exit(2)
 				}
@@ -171,21 +174,21 @@ func main(){
 	subspace_keys := utils.GetKeyComb(sorter, 2)
 	int_trees := map[[2]string]augmentedtree.Tree{}
 	kd_trees := map[[2]string]tree.KDTree{}
-	intervals := tree.IntervalBuilder(0, 10, 1)
+	intervals := tree.IntervalBuilder(0, 10*scale_factor, scale_factor)
 
 	for _, subspace_key := range subspace_keys{
 		tmp := [2]string{}
 		copy(tmp[:], subspace_key)
 		int_tree := tree.NewIntervalTree(2)
 		kd_tree := tree.KDTree{}
+		int_trees[tmp] = int_tree
+		kd_trees[tmp] = kd_tree
 
 		for _, v := range intervals{
 			tmp2 := augmentedtree.Interval(v)
 			int_tree.Add(tmp2)
-			int_trees[tmp] = int_tree
 			tmp3 := tree.Point(v)
 			kd_tree.Insert(tmp3)
-			kd_trees[tmp] = kd_tree
 		}
 
 	}
