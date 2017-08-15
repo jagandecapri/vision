@@ -42,6 +42,11 @@ func (itv IntervalConc) ID() uint64{
 	return uint64(itv.Id)
 }
 
+func (itv IntervalConc) GetID() int{
+	return itv.Id
+}
+
+
 // Return the total number of dimensions
 func (itv IntervalConc) Dim() int{
 	return len(itv.Low)
