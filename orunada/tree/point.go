@@ -9,4 +9,6 @@ type Point interface {
 	Distance(point Point) float64
 	// Return the distance between the point and the plane X_{dim}=val
 	PlaneDistance(val float64, dim int) float64
+	// ID
+	GetID() int
 }
