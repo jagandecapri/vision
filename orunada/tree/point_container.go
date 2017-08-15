@@ -3,19 +3,24 @@ package tree
 import "math"
 
 type PointContainer struct{
+	id int
 	dim int
 	point []int
 }
 
-func (p PointContainer) Dim() int{
+func (p *PointContainer) GetID() int{
+	return p.id
+}
+
+func (p *PointContainer) Dim() int{
 	return p.dim
 }
 
-func (p PointContainer) GetValue(dim int) int{
+func (p *PointContainer) GetValue(dim int) int{
 	return p.point[dim]
 }
 
-func (p PointContainer) Distance(p1 Point) float64{
+func (p *PointContainer) Distance(p1 Point) float64{
 	sum := 0.0
 	t := p1.(*PointContainer)
 	for i:=0; i<len(p.point); i++{
@@ -26,6 +31,6 @@ func (p PointContainer) Distance(p1 Point) float64{
 	return 0.0
 }
 
-func (p PointContainer) PlaneDistance(val float64, dim int) float64{
+func (p *PointContainer) PlaneDistance(val float64, dim int) float64{
 	return 0.0
 }
