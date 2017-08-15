@@ -21,7 +21,7 @@ func TestKDTree_InsertTest(t *testing.T){
 	}
 
 	for _, v := range tests{
-		kd := new(KDTree)
+		kd := NewKDTree()
 		kd.Insert(v.points...)
 		assert.Equal(t, kd.len, len(v.points))
 	}
@@ -44,7 +44,7 @@ func TestKDTree_Insert(t *testing.T) {
 	}
 
 	for _, v := range tests{
-		kd := new(KDTree)
+		kd := NewKDTree()
 		kd.Insert(v.points...)
 		assert.Equal(t, v.expected, kd.Search(v.point_cont))
 	}
@@ -63,7 +63,7 @@ func TestKDTree_BFSTraverseTest(t *testing.T){
 	}
 
 	for _, v := range tests{
-		kd := new(KDTree)
+		kd := NewKDTree()
 		kd.Insert(v.points...)
 		assert.Equal(t, kd.len, len(v.points))
 		res := kd.BFSTraverse()
@@ -86,8 +86,7 @@ func TestKDTree_BFSTraverseChan(t *testing.T) {
 	}
 
 	for _,v := range tests{
-		kd := new(KDTree)
-
+		kd := NewKDTree()
 		kd.Insert(v.points...)
 		assert.Equal(t, kd.len, len(v.points))
 		out := make(chan Point)
