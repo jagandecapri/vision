@@ -12,8 +12,16 @@ func TestPointContainer_Distance(t *testing.T) {
 		point2 *PointContainer
 		expected float64
 	}{
-		{point1: &PointContainer{1, Point{1, map[string]float64{"a": 1.0, "b": 2.0}, []float64{1.0,2.0}}},
-			point2: &PointContainer{2, Point{2, map[string]float64{"a": 3.0, "b": 4.0}, []float64{3.0,4.0} }},
+		{point1: &PointContainer{1,
+			[]float64{1.0,2.0},
+			Point{1,
+				map[string]float64{"a": 1.0, "b": 2.0},
+			}},
+		point2: &PointContainer{2,
+			[]float64{3.0,4.0},
+			Point{2,
+				map[string]float64{"a": 3.0, "b": 4.0},
+		}},
 			expected: math.Sqrt(8),
 		},
 	}

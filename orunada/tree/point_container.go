@@ -4,6 +4,7 @@ import "math"
 
 type PointContainer struct{
 	Unit_id int
+	Vec []float64
 	Point
 }
 
@@ -12,18 +13,18 @@ func (p *PointContainer) GetID() int{
 }
 
 func (p *PointContainer) Dim() int{
-	return len(p.Norm_vec)
+	return len(p.Vec)
 }
 
 func (p *PointContainer) GetValue(dim int) float64{
-	return p.Norm_vec[dim]
+	return p.Vec[dim]
 }
 
 func (p *PointContainer) Distance(p1 PointInterface) float64{
 	sum := 0.0
 	t := p1.(*PointContainer)
-	for i:=0; i<len(p.Norm_vec); i++{
-		sum += math.Pow(p.Norm_vec[i]-t.Norm_vec[i], 2)
+	for i:=0; i<len(p.Vec); i++{
+		sum += math.Pow(p.Vec[i]-t.Vec[i], 2)
 	}
 	euclidean_dist := math.Sqrt(sum)
 	return euclidean_dist
