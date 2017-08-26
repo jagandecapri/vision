@@ -45,33 +45,6 @@ func (itv IntervalConc) ID() uint64{
 	return uint64(itv.Id)
 }
 
-func (itv IntervalConc) GetID() int{
-	return itv.Id
-}
-
-
-// Return the total number of dimensions
-func (itv IntervalConc) Dim() int{
-	return len(itv.Low)
-}
-
-// Return the value X_{dim}, dim is started from 0
-func (itv IntervalConc) GetValue(dim int) int{
-	dim++
-	res_int64 := itv.HighAtDimension(uint64(dim))
-	return int(res_int64)
-}
-
-// Return the distance between two points
-func (itv IntervalConc) Distance(point PointInterface) float64{
-	return 0.0
-}
-
-// Return the distance between the point and the plane X_{dim}=val
-func (itv IntervalConc) PlaneDistance(val float64, dim int) float64{
-	return 0.0
-}
-
 func IntervalBuilder(min int, max int, interval_length int) []IntervalConc {
 	id := 1
 	intervals := []IntervalConc{}
