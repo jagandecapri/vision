@@ -2,22 +2,25 @@ package tree
 
 import (
 	"github.com/golang-collections/go-datastructures/augmentedtree"
+	"math"
 )
 
 type IntervalConc struct {
 	Id   int
-	Low  []int64
-	High []int64
+	Interval_conc_store []IntervalConc
+	Low  []float64
+	High []float64
+	Decimal_places int
 }
 
 func (itv IntervalConc) LowAtDimension(dim uint64) int64{
-	return itv.Low[dim - 1]
+	return int64(itv.Low[dim - 1] * math.Pow(10, float64(itv.Decimal_places)))
 }
 
 // HighAtDimension returns an integer representing the higher bound
 // at the requested dimension.
 func (itv IntervalConc) HighAtDimension(dim uint64) int64{
-	return itv.High[dim - 1]
+	return int64(itv.High[dim - 1] * math.Pow(10, float64(itv.Decimal_places)))
 }
 
 // OverlapsAtDimension should return a bool indicating if the provided
@@ -60,7 +63,7 @@ func (itv IntervalConc) GetValue(dim int) int{
 }
 
 // Return the distance between two points
-func (itv IntervalConc) Distance(point Point) float64{
+func (itv IntervalConc) Distance(point PointInterface) float64{
 	return 0.0
 }
 
@@ -75,8 +78,8 @@ func IntervalBuilder(min int, max int, interval_length int) []IntervalConc {
 	for i := min; i < max; i += interval_length{
 		for j := min; j < max; j += interval_length{
 			intervals = append(intervals, IntervalConc{	Id: id,
-				Low: []int64{int64(i), int64(j)},
-				High: []int64{int64(i + interval_length), int64(j + interval_length)}})
+				Low: []float64{float64(i), float64(j)},
+				High: []float64{float64(i + interval_length), float64(j + interval_length)}})
 			id += 1
 		}
 	}
