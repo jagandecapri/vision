@@ -3,21 +3,21 @@ package tree
 import (
 	"testing"
 	"github.com/stretchr/testify/assert"
-	"fmt"
 	"os"
+	"fmt"
 )
 
 func TestKDTree_InsertTest(t *testing.T){
 	tests := []struct {
-		points []Point
-		expected bool
+		points []PointInterface
 	}{
-		{points: []Point{&PointContainer{dim:2, point: []int{3, 6}}, &PointContainer{dim:2, point: []int{17, 15}}, &PointContainer{dim:2, point: []int{13, 15}},
-			&PointContainer{dim:2, point: []int{6, 12}}, &PointContainer{dim:2, point: []int{9, 1}}, &PointContainer{dim:2, point: []int{2, 7}}, &PointContainer{dim:2, point: []int{10, 19}}},
+		{points: []PointInterface{&PointContainer{1,
+			Point{1,
+				map[string]float64{"a": 1.0, "b": 2.0},
+				[]float64{1.0, 2.0},
+			},
 		},
-		{points: []Point{&PointContainer{dim:2, point: []int{3, 6}}, &PointContainer{dim:2, point: []int{17, 15}}, &PointContainer{dim:2, point: []int{13, 15}},
-			&PointContainer{dim:2, point: []int{6, 12}}, &PointContainer{dim:2, point: []int{9, 1}}, &PointContainer{dim:2, point: []int{2, 7}}, &PointContainer{dim:2, point: []int{10, 19}}},
-		},
+		}},
 	}
 
 	for _, v := range tests{
@@ -25,22 +25,40 @@ func TestKDTree_InsertTest(t *testing.T){
 		kd.Insert(v.points...)
 		assert.Equal(t, kd.len, len(v.points))
 	}
-
-	fmt.Println()
 }
 
 func TestKDTree_Insert(t *testing.T) {
 	tests := []struct {
-		points []Point
+		points []PointInterface
 		point_cont *PointContainer
 		expected bool
 	}{
-		{points: []Point{&PointContainer{dim:2, point: []int{3, 6}}, &PointContainer{dim:2, point: []int{17, 15}}, &PointContainer{dim:2, point: []int{13, 15}},
-			&PointContainer{dim:2, point: []int{6, 12}}, &PointContainer{dim:2, point: []int{9, 1}}, &PointContainer{dim:2, point: []int{2, 7}}, &PointContainer{dim:2, point: []int{10, 19}}},
-			point_cont:  &PointContainer{dim:2, point: []int{3, 6}}, expected: true},
-		{points: []Point{&PointContainer{dim:2, point: []int{3, 6}}, &PointContainer{dim:2, point: []int{17, 15}}, &PointContainer{dim:2, point: []int{13, 15}},
-			&PointContainer{dim:2, point: []int{6, 12}}, &PointContainer{dim:2, point: []int{9, 1}}, &PointContainer{dim:2, point: []int{2, 7}}, &PointContainer{dim:2, point: []int{10, 19}}},
-			point_cont:  &PointContainer{dim:2, point: []int{12, 19}}, expected: false},
+		{points: []PointInterface{&PointContainer{1,
+			Point{1,
+				map[string]float64{"a": 1.0, "b": 2.0},
+				[]float64{1.0, 2.0},
+			},
+		}},
+			point_cont:  &PointContainer{1,
+				Point{1,
+					map[string]float64{"a": 1.0, "b": 2.0},
+					[]float64{1.0, 2.0},
+				},
+			},
+			expected: true},
+		{points: []PointInterface{&PointContainer{1,
+			Point{1,
+				map[string]float64{"a": 1.0, "b": 2.0},
+				[]float64{1.0, 2.0},
+			},
+		}},
+			point_cont:  &PointContainer{1,
+				Point{1,
+					map[string]float64{"a": 3.0, "b": 2.0},
+					[]float64{3.0, 2.0},
+				},
+			},
+			expected: false},
 	}
 
 	for _, v := range tests{
@@ -54,12 +72,53 @@ func TestKDTree_Insert(t *testing.T) {
 
 func TestKDTree_BFSTraverseTest(t *testing.T){
 	tests := []struct {
-		points []Point
-		expected [][]int
+		points []PointInterface
+		expected [][]float64
 	}{
-		{points: []Point{&PointContainer{dim:2, point: []int{3, 6}}, &PointContainer{dim:2, point: []int{17, 15}}, &PointContainer{dim:2, point: []int{13, 15}},
-			&PointContainer{dim:2, point: []int{6, 12}}, &PointContainer{dim:2, point: []int{9, 1}}, &PointContainer{dim:2, point: []int{2, 7}}, &PointContainer{dim:2, point: []int{10, 19}}},
-			expected: [][]int{{3,6},{2,7},{17,15},{6,12},{13,15},{9,1},{10,19}}},
+		{points: []PointInterface{&PointContainer{1,
+			Point{1,
+				map[string]float64{"a": 3.0, "b": 6.0},
+				[]float64{3.0, 6.0},
+			},
+		},
+		&PointContainer{1,
+			Point{1,
+				map[string]float64{"a": 6.0, "b": 12.0},
+				[]float64{6.0, 12.0},
+			},
+		},
+		&PointContainer{1,
+			Point{1,
+				map[string]float64{"a": 2.0, "b": 7.0},
+				[]float64{2.0, 7.0},
+			},
+		},
+		&PointContainer{1,
+			Point{1,
+				map[string]float64{"a": 13.0, "b": 15.0},
+				[]float64{13.0, 15.0},
+			},
+		},
+		&PointContainer{1,
+			Point{1,
+				map[string]float64{"a": 17.0, "b": 15.0},
+				[]float64{17.0, 15.0},
+			},
+		},
+		&PointContainer{1,
+			Point{1,
+				map[string]float64{"a": 9.0, "b": 1.0},
+				[]float64{9.0, 1.0},
+			},
+		},
+		&PointContainer{1,
+			Point{1,
+				map[string]float64{"a": 10.0, "b": 19.0},
+				[]float64{10.0, 19.0},
+			},
+		},
+		},
+			expected: [][]float64{{3.0,6.0},{2.0,7.0},{6.0,12.0},{9.0,1.0},{13.0,15.0},{10.0,19.0},{17.0,15.0}}},
 	}
 
 	for _, v := range tests{
@@ -69,7 +128,7 @@ func TestKDTree_BFSTraverseTest(t *testing.T){
 		res := kd.BFSTraverse()
 		for i := 0; i < len(v.expected); i++{
 			tmp := res[i].(*PointContainer)
-			assert.Equal(t, v.expected[i], tmp.point)
+			assert.Equal(t, v.expected[i], tmp.Norm_vec)
 		}
 	}
 	fmt.Println()
@@ -77,24 +136,65 @@ func TestKDTree_BFSTraverseTest(t *testing.T){
 
 func TestKDTree_BFSTraverseChan(t *testing.T) {
 	tests := []struct {
-		points []Point
-		expected [][]int
+		points []PointInterface
+		expected [][]float64
 	}{
-		{points: []Point{&PointContainer{dim:2, point: []int{3, 6}}, &PointContainer{dim:2, point: []int{17, 15}}, &PointContainer{dim:2, point: []int{13, 15}},
-			&PointContainer{dim:2, point: []int{6, 12}}, &PointContainer{dim:2, point: []int{9, 1}}, &PointContainer{dim:2, point: []int{2, 7}}, &PointContainer{dim:2, point: []int{10, 19}}},
-			expected: [][]int{{3,6},{2,7},{17,15},{6,12},{13,15},{9,1},{10,19}}},
+		{points: []PointInterface{&PointContainer{1,
+			Point{1,
+				map[string]float64{"a": 3.0, "b": 6.0},
+				[]float64{3.0, 6.0},
+			},
+		},
+			&PointContainer{1,
+				Point{1,
+					map[string]float64{"a": 6.0, "b": 12.0},
+					[]float64{6.0, 12.0},
+				},
+			},
+			&PointContainer{1,
+				Point{1,
+					map[string]float64{"a": 2.0, "b": 7.0},
+					[]float64{2.0, 7.0},
+				},
+			},
+			&PointContainer{1,
+				Point{1,
+					map[string]float64{"a": 13.0, "b": 15.0},
+					[]float64{13.0, 15.0},
+				},
+			},
+			&PointContainer{1,
+				Point{1,
+					map[string]float64{"a": 17.0, "b": 15.0},
+					[]float64{17.0, 15.0},
+				},
+			},
+			&PointContainer{1,
+				Point{1,
+					map[string]float64{"a": 9.0, "b": 1.0},
+					[]float64{9.0, 1.0},
+				},
+			},
+			&PointContainer{1,
+				Point{1,
+					map[string]float64{"a": 10.0, "b": 19.0},
+					[]float64{10.0, 19.0},
+				},
+			},
+		},
+			expected: [][]float64{{3.0,6.0},{2.0,7.0},{6.0,12.0},{9.0,1.0},{13.0,15.0},{10.0,19.0},{17.0,15.0}}},
 	}
 
 	for _,v := range tests{
 		kd := NewKDTree()
 		kd.Insert(v.points...)
 		assert.Equal(t, kd.len, len(v.points))
-		out := make(chan Point)
+		out := make(chan PointInterface)
 		kd.BFSTraverseChan(out)
 		i := 0
 		for point := range out{
 			tmp := point.(*PointContainer)
-			assert.Equal(t, v.expected[i], tmp.point)
+			assert.Equal(t, v.expected[i], tmp.Norm_vec)
 			i++
 		}
 	}
