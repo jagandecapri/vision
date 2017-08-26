@@ -2,7 +2,7 @@ package tree
 
 import "github.com/golang-collections/go-datastructures/augmentedtree"
 
-func IntervalBuilder(min int, max int, interval_length int) []IntervalContainer {
+func IntervalBuilder(min float64, max float64, interval_length float64) []IntervalContainer {
 	id := 1
 	intervals := []IntervalContainer{}
 	for i := min; i < max; i += interval_length{

@@ -35,7 +35,7 @@ func TestInterval_ImplementsInterface(t *testing.T) {
 
 func TestCreateIntervalTree(t *testing.T){
 	assert.NotPanics(t, func(){
-		intervals := IntervalBuilder(0, 10, 1)
+		intervals := IntervalBuilder(0.0, 10.0, 1.0)
 		tree := NewIntervalTree(2)
 		for _, interval := range intervals{
 			interval := augmentedtree.Interval(interval)
