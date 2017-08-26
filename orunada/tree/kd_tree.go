@@ -103,7 +103,3 @@ func (kd *KDTree) BFSTraverseChan(out chan<- PointInterface){
 		close(out)
 	}(out)
 }
-
-func NewKDTree(p ...PointInterface) *KDTree{
-	return &KDTree{}
-}
