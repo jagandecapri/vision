@@ -3,28 +3,27 @@ package tree
 import "math"
 
 type PointContainer struct{
-	id int
-	dim int
-	point []int
+	Unit_id int
+	Point
 }
 
 func (p *PointContainer) GetID() int{
-	return p.id
+	return p.Id
 }
 
 func (p *PointContainer) Dim() int{
-	return p.dim
+	return len(p.Norm_vec)
 }
 
-func (p *PointContainer) GetValue(dim int) int{
-	return p.point[dim]
+func (p *PointContainer) GetValue(dim int) float64{
+	return p.Norm_vec[dim]
 }
 
-func (p *PointContainer) Distance(p1 Point) float64{
+func (p *PointContainer) Distance(p1 PointInterface) float64{
 	sum := 0.0
 	t := p1.(*PointContainer)
-	for i:=0; i<len(p.point); i++{
-		sum += math.Pow(float64(p.point[i]-t.point[i]), 2)
+	for i:=0; i<len(p.Norm_vec); i++{
+		sum += math.Pow(p.Norm_vec[i]-t.Norm_vec[i], 2)
 	}
 	euclidean_dist := math.Sqrt(sum)
 	return euclidean_dist
