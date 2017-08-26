@@ -7,17 +7,17 @@ type KDTree struct{
 
 type Node struct {
 	left  *Node
-	data Point
+	data  PointInterface
 	right *Node
 }
 
-func (kd *KDTree) newNode(p Point) *Node {
+func (kd *KDTree) newNode(p PointInterface) *Node {
 	kd.len++
 	tmp := &Node{data:p}
 	return tmp
 }
 
-func (kd *KDTree) insertRec(root *Node, depth int, p Point) *Node {
+func (kd *KDTree) insertRec(root *Node, depth int, p PointInterface) *Node {
 	if root == nil {
 		return kd.newNode(p)
 	}
@@ -32,13 +32,13 @@ func (kd *KDTree) insertRec(root *Node, depth int, p Point) *Node {
 	return root
 }
 
-func (kd *KDTree) Insert(p ...Point){
+func (kd *KDTree) Insert(p ...PointInterface){
 	for _, v := range p{
 		kd.root = kd.insertRec(kd.root, 0, v)
 	}
 }
 
-func (kd *KDTree) arePointsSame(p1 Point, p2 Point) bool {
+func (kd *KDTree) arePointsSame(p1 PointInterface, p2 PointInterface) bool {
 	k := p1.Dim()
 	for i := 0; i < k; i++ {
 		if p1.GetValue(i) != p2.GetValue(i) {
@@ -48,7 +48,7 @@ func (kd *KDTree) arePointsSame(p1 Point, p2 Point) bool {
 	return true
 }
 
-func (kd *KDTree) searchRec(root *Node, depth int, p Point) bool {
+func (kd *KDTree) searchRec(root *Node, depth int, p PointInterface) bool {
 	if root == nil {
 		return false
 	}
@@ -65,13 +65,13 @@ func (kd *KDTree) searchRec(root *Node, depth int, p Point) bool {
 	return kd.searchRec(root.right, depth+1, p)
 }
 
-func (kd *KDTree) Search(p Point) bool {
+func (kd *KDTree) Search(p PointInterface) bool {
 	return kd.searchRec(kd.root, 0, p)
 }
 
-func (kd *KDTree) BFSTraverse() []Point{
+func (kd *KDTree) BFSTraverse() []PointInterface {
 	queue := Queue{}
-	val := []Point{}
+	val := []PointInterface{}
 	tmp_node := kd.root
 	for tmp_node != nil{
 		val = append(val, tmp_node.data)
@@ -86,8 +86,8 @@ func (kd *KDTree) BFSTraverse() []Point{
 	return val
 }
 
-func (kd *KDTree) BFSTraverseChan(out chan<- Point){
-	go func(out chan<- Point){
+func (kd *KDTree) BFSTraverseChan(out chan<- PointInterface){
+	go func(out chan<- PointInterface){
 		queue := Queue{}
 		tmp_node := kd.root
 		for tmp_node != nil{
@@ -104,6 +104,6 @@ func (kd *KDTree) BFSTraverseChan(out chan<- Point){
 	}(out)
 }
 
-func NewKDTree() *KDTree{
+func NewKDTree(p ...PointInterface) *KDTree{
 	return &KDTree{}
 }
