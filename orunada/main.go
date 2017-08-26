@@ -62,9 +62,9 @@ func normalize(mat []tree.Point, sorter []string) ([]tree.Point, map[string]DimM
 			col_max := dim_min_max[c].Max
 			elem := mat[i].Vec[c]
 			if col_min == 0 && col_max == 0{
-				mat[i].Norm_vec[c] = int64(scale(elem, float64(scale_factor)))
+				mat[i].Norm_vec[c] = scale(elem, float64(scale_factor))
 			} else {
-				mat[i].Norm_vec[c] = int64(scale(norm_mat(elem, col_min, col_max), float64(scale_factor))) //(elem - col_min)/(col_max - col_min)
+				mat[i].Norm_vec[c] = scale(norm_mat(elem, col_min, col_max), float64(scale_factor)) //(elem - col_min)/(col_max - col_min)
 			}
 		}
 	}
@@ -92,8 +92,8 @@ var scale_factor = 10000
 func getSubspace(subspace_key []string, mat []tree.Point) []tree.IntervalConc{
 	int_cons := []tree.IntervalConc{}
 	for _, p := range mat{
-		tmp := []int64{p.Norm_vec[subspace_key[0]], p.Norm_vec[subspace_key[0]]}
-		tmp1 := []int64{p.Norm_vec[subspace_key[1]], p.Norm_vec[subspace_key[1]]}
+		tmp := []float64{p.Norm_vec[subspace_key[0]], p.Norm_vec[subspace_key[0]]}
+		tmp1 := []float64{p.Norm_vec[subspace_key[1]], p.Norm_vec[subspace_key[1]]}
 		int_cons = append(int_cons, tree.IntervalConc{Id: 1, Low: tmp, High: tmp1})
 	}
 	return int_cons
@@ -117,7 +117,7 @@ interval_trees map[[2]string]augmentedtree.Tree, kd_tree map[[2]string]tree.KDTr
 			fmt.Print(".")
 			x := packet_acc.ExtractDeltaPacketFeature()
 			point_ctr += 1
-			p := tree.Point{Id: point_ctr, Vec: x, Norm_vec: make(map[string]int64)}
+			p := tree.Point{Id: point_ctr, Vec: x, Norm_vec: make(map[string]float64)}
 			if len(base_matrix) < window_arr_len - 1{
 				base_matrix = append(base_matrix, p)
 			} else if len(base_matrix) == window_arr_len - 1{
