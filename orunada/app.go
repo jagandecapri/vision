@@ -8,9 +8,9 @@ import (
 	"path/filepath"
 	"github.com/gorilla/websocket"
 	"fmt"
-	"github.com/jagandecapri/vision/orunada/grid"
 	"github.com/jagandecapri/vision/orunada/server"
 	"encoding/json"
+	"github.com/jagandecapri/vision/orunada/tree"
 )
 
 var upgrader = websocket.Upgrader{} // use default options
@@ -20,17 +20,17 @@ type Socket struct{
 }
 
 type Data struct{
-	points []grid.Point
+	points []tree.Point
 }
 
-func BootServer(data chan grid.HttpData) {
+func BootServer(data chan server.HttpData) {
 	fs := http.FileServer(http.Dir("static"))
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
 	http.HandleFunc("/", serveTemplate)
 
 	hub := server.NewHub()
 	go hub.Run()
-	go func(data chan grid.HttpData, hub *server.Hub){
+	go func(data chan server.HttpData, hub *server.Hub){
 		for{
 			select {
 			case tmp := <-data:

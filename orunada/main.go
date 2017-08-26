@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/jagandecapri/vision/orunada/utils"
-	"github.com/jagandecapri/vision/orunada/grid"
 	"github.com/jagandecapri/vision/orunada/preprocess"
 	"fmt"
 	"github.com/google/gopacket/pcap"
@@ -14,6 +13,8 @@ import (
 	"time"
 	"github.com/golang-collections/go-datastructures/augmentedtree"
 	"github.com/jagandecapri/vision/orunada/tree"
+	"os"
+	"github.com/jagandecapri/vision/orunada/server"
 )
 
 func getSorter() []string{
@@ -36,7 +37,7 @@ func norm_mat(elem float64, col_min float64, col_max float64) float64{
 	return (elem - col_min)/(col_max - col_min)
 }
 
-func normalize(mat []grid.Point, sorter []string) ([]grid.Point, map[string]DimMinMax){
+func normalize(mat []tree.Point, sorter []string) ([]tree.Point, map[string]DimMinMax){
 	rows := len(mat)
 
 	dim_min_max := map[string]DimMinMax{}
@@ -88,7 +89,7 @@ var window_arr_len = int(window.Seconds()/delta_t.Seconds())
 var time_counter time.Time
 var scale_factor = 10000
 
-func getSubspace(subspace_key []string, mat []grid.Point) []tree.IntervalConc{
+func getSubspace(subspace_key []string, mat []tree.Point) []tree.IntervalConc{
 	int_cons := []tree.IntervalConc{}
 	for _, p := range mat{
 		tmp := []int64{p.Norm_vec[subspace_key[0]], p.Norm_vec[subspace_key[0]]}
@@ -98,8 +99,17 @@ func getSubspace(subspace_key []string, mat []grid.Point) []tree.IntervalConc{
 	return int_cons
 }
 
-func updateFS(acc chan preprocess.PacketAcc, data chan grid.HttpData, sorter []string, subspace_keys [][]string, interval_trees map[[2]string]augmentedtree.Tree, kd_tree map[[2]string]tree.KDTree_Extend){
-	base_matrix := []grid.Point{}
+func Clustering(kd_ext tree.KDTree_Extend, density int, distance int){
+	out := make(chan tree.PointInterface)
+	kd_ext.KDTree.BFSTraverseChan(out)
+	for p := range out{
+		fmt.Println(p)
+	}
+}
+
+func updateFS(acc chan preprocess.PacketAcc, data chan server.HttpData, sorter []string, subspace_keys [][]string,
+interval_trees map[[2]string]augmentedtree.Tree, kd_tree map[[2]string]tree.KDTree_Extend){
+	base_matrix := []tree.Point{}
 	point_ctr := 0
 	for{
 		select{
@@ -107,7 +117,7 @@ func updateFS(acc chan preprocess.PacketAcc, data chan grid.HttpData, sorter []s
 			fmt.Print(".")
 			x := packet_acc.ExtractDeltaPacketFeature()
 			point_ctr += 1
-			p := grid.Point{Id: point_ctr, Vec: x, Norm_vec: make(map[string]int64)}
+			p := tree.Point{Id: point_ctr, Vec: x, Norm_vec: make(map[string]int64)}
 			if len(base_matrix) < window_arr_len - 1{
 				base_matrix = append(base_matrix, p)
 			} else if len(base_matrix) == window_arr_len - 1{
@@ -140,13 +150,12 @@ func updateFS(acc chan preprocess.PacketAcc, data chan grid.HttpData, sorter []s
 }
 
 func main(){
-	data := make(chan grid.HttpData)
+	data := make(chan server.HttpData)
 	//go BootServer(data)
 
 	sorter:= getSorter()
 	subspace_keys := utils.GetKeyComb(sorter, 2)
 	int_trees := map[[2]string]augmentedtree.Tree{}
-	//kd_trees := map[[2]string]tree.KDTree{}
 	kd_trees_ext := map[[2]string]tree.KDTree_Extend{}
 	intervals := tree.IntervalBuilder(0, 10*scale_factor, scale_factor)
 
