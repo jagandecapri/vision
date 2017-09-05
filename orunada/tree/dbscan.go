@@ -56,10 +56,7 @@ func get_epsilon_neighbours(index int, points []point, num_points int, epsilon f
 		} else if dist(&points[index], &points[i]) > epsilon{
 			continue
 		} else {
-			res := append_at_end(i, &en)
-			if res == FAILURE{
-				break
-			}
+			append_at_end(i, &en)
 		}
 	}
 	return en
@@ -95,9 +92,6 @@ func expand(index int, cluster_id int, points []point, num_points int, epsilon f
 	return_value := NOT_CORE_POINT
 	seeds := get_epsilon_neighbours(index, points, num_points, epsilon, dist)
 
-	if (epsilon_neighbours{}) == seeds{
-		return FAILURE
-	}
 	if (seeds.num_members < minpts){
 		points[index].cluster_id = NOISE
 	} else {
@@ -120,19 +114,14 @@ func expand(index int, cluster_id int, points []point, num_points int, epsilon f
 
 func spread(index int, seeds *epsilon_neighbours, cluster_id int, points []point, num_points int, epsilon float64, minpts int, dist func (a *point, b *point) float64) int{
 	spread := get_epsilon_neighbours(index, points, num_points, epsilon, dist)
-	if (epsilon_neighbours{}) == spread{
-		return FAILURE
-	}
+
 	if spread.num_members >= minpts {
 		n := spread.head
 		for n != nil{
 			d := &points[n.index];
 			if d.cluster_id == NOISE || d.cluster_id == UNCLASSIFIED {
 				if (d.cluster_id == UNCLASSIFIED) {
-					if append_at_end(n.index, seeds)== FAILURE {
-						destroy_epsilon_neighbours(&spread);
-						return FAILURE;
-					}
+					append_at_end(n.index, seeds)
 				}
 				d.cluster_id = cluster_id;
 			}
