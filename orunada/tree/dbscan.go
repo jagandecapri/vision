@@ -154,14 +154,15 @@ func print_points (points []point, num_points int){
 	fmt.Printf("Number of points: %v\nx\ty\tz\tcluster_id\n----------------------------------------\n", num_points)
 	for i := 0; i < num_points; i++{
 		tmp := points[i]
-		fmt.Printf("%v\t%v\t%v\t%v\n", tmp.x, tmp.y, tmp.z, tmp.cluster_id)
+		fmt.Printf("%f\t%f\t%f\t%d\n", tmp.x, tmp.y, tmp.z, tmp.cluster_id)
 	}
 }
 
-func Main_mock(points []point, epsilon float64, minpts int){
+func Main_mock(points []point, epsilon float64, minpts int) []point{
 	num_points := len(points)
 	dbscan(points, num_points, epsilon, minpts, euclidean_dist)
 	fmt.Printf("Epsilon: %v\n", epsilon)
 	fmt.Printf("Minimum points: %v\n", minpts)
 	print_points(points, num_points)
+	return points
 }
