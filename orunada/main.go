@@ -42,10 +42,10 @@ func normalize(mat []tree.Point, sorter []string) ([]tree.Point, map[string]DimM
 
 	dim_min_max := map[string]DimMinMax{}
 	for _,c := range sorter {
-		min := mat[0].Vec[c]
-		max := mat[0].Vec[c]
+		min := mat[0].Vec_map[c]
+		max := mat[0].Vec_map[c]
 		for j := 0; j < rows; j++{
-			val := mat[j].Vec[c]
+			val := mat[j].Vec_map[c]
 			if val < min{
 				min = val
 			} else if  val > max{
@@ -60,11 +60,13 @@ func normalize(mat []tree.Point, sorter []string) ([]tree.Point, map[string]DimM
 		for _, c := range sorter{
 			col_min := dim_min_max[c].Min
 			col_max := dim_min_max[c].Max
-			elem := mat[i].Vec[c]
+			elem := mat[i].Vec_map[c]
 			if col_min == 0 && col_max == 0{
-				mat[i].Norm_vec[c] = scale(elem, float64(scale_factor))
+				//mat[i].Vec_map[c] = scale(elem, float64(scale_factor))
+				mat[i].Vec_map[c] = elem
 			} else {
-				mat[i].Norm_vec[c] = scale(norm_mat(elem, col_min, col_max), float64(scale_factor)) //(elem - col_min)/(col_max - col_min)
+				//mat[i].Vec_map[c] = scale(norm_mat(elem, col_min, col_max), float64(scale_factor)) //(elem - col_min)/(col_max - col_min)
+				mat[i].Vec_map[c] = norm_mat(elem, col_min, col_max) //(elem - col_min)/(col_max - col_min)
 			}
 		}
 	}
@@ -87,16 +89,28 @@ var delta_t time.Duration = 300 * time.Millisecond
 var window time.Duration = 15 * time.Second
 var window_arr_len = int(window.Seconds()/delta_t.Seconds())
 var time_counter time.Time
-var scale_factor = 10000
+var scale_factor = 5
 
-func getSubspace(subspace_key []string, mat []tree.Point) []tree.IntervalConc{
-	int_cons := []tree.IntervalConc{}
+func getSubspace(subspace_key []string, mat []tree.Point, interval_tree augmentedtree.Tree) []tree.PointContainer {
+	pnt_containers := []tree.PointContainer{}
 	for _, p := range mat{
-		tmp := []float64{p.Norm_vec[subspace_key[0]], p.Norm_vec[subspace_key[0]]}
-		tmp1 := []float64{p.Norm_vec[subspace_key[1]], p.Norm_vec[subspace_key[1]]}
-		int_cons = append(int_cons, tree.IntervalConc{Id: 1, Low: tmp, High: tmp1})
+		tmp := []float64{p.Vec_map[subspace_key[0]], p.Vec_map[subspace_key[0]]}
+		tmp1 := []float64{p.Vec_map[subspace_key[1]], p.Vec_map[subspace_key[1]]}
+		int_container := tree.IntervalContainer{Id: 1, Low: tmp, High: tmp1, Scale_factor: scale_factor}
+		interval := interval_tree.Query(int_container)
+		if len(interval) > 0{
+			Vec := []float64{p.Vec_map[subspace_key[0]], p.Vec_map[subspace_key[1]]}
+			pnt_container := tree.PointContainer{
+				Unit_id: int(interval[0].ID()),
+				Vec: Vec,
+				Point: p,
+			}
+			pnt_containers = append(pnt_containers, pnt_container)
+		} else {
+			fmt.Println("Empty interval:", int_container, interval)
+		}
 	}
-	return int_cons
+	return pnt_containers
 }
 
 func Clustering(kd_ext tree.KDTree_Extend, density int, distance int){
@@ -117,7 +131,7 @@ interval_trees map[[2]string]augmentedtree.Tree, kd_tree map[[2]string]tree.KDTr
 			fmt.Print(".")
 			x := packet_acc.ExtractDeltaPacketFeature()
 			point_ctr += 1
-			p := tree.Point{Id: point_ctr, Vec: x, Norm_vec: make(map[string]float64)}
+			p := tree.Point{Id: point_ctr, Vec_map: x}
 			if len(base_matrix) < window_arr_len - 1{
 				base_matrix = append(base_matrix, p)
 			} else if len(base_matrix) == window_arr_len - 1{
@@ -128,19 +142,16 @@ interval_trees map[[2]string]augmentedtree.Tree, kd_tree map[[2]string]tree.KDTr
 				base_matrix = append(base_matrix, p)
 				norm_mat, _  := normalize(base_matrix, sorter)
 				for _, subspace_key := range subspace_keys{
-					subspace := getSubspace(subspace_key, norm_mat)
 					keys := [2]string{}
 					copy(keys[:], subspace_key)
-					for _, point := range subspace{
-						intervals := interval_trees[keys].Query(point)
-						fmt.Println(point, intervals)
-						tmp := kd_tree[keys]
-						if (len(intervals) > 0){ //ignoring point having (0,0) (0,0) as coordinates
-							itv := intervals[0].(tree.IntervalConc)
-							tmp.Add(int(intervals[0].ID()), itv)
-						}
-					}
-					//os.Exit(2)
+					getSubspace(subspace_key, norm_mat, interval_trees[keys])
+					//subspace := getSubspace(subspace_key, norm_mat, interval_trees[keys])
+					//tmp := kd_tree[keys]
+					//for _, point := range subspace{
+					//	tmp.AddToStore(point.Unit_id, point)
+					//}
+					//Clustering(tmp, 50, 1000)
+					os.Exit(2)
 				}
 				base_matrix = base_matrix[1:]
 			}
@@ -157,24 +168,27 @@ func main(){
 	subspace_keys := utils.GetKeyComb(sorter, 2)
 	int_trees := map[[2]string]augmentedtree.Tree{}
 	kd_trees_ext := map[[2]string]tree.KDTree_Extend{}
-	intervals := tree.IntervalBuilder(0, 10*scale_factor, scale_factor)
+	intervals := tree.IntervalBuilder(0.0, 1.0, 0.1, scale_factor)
+	fmt.Println(intervals)
 
 	for _, subspace_key := range subspace_keys{
 		tmp := [2]string{}
 		copy(tmp[:], subspace_key)
 		int_tree := tree.NewIntervalTree(2)
-		kd_tree_ext := tree.KDTree_Extend{&tree.KDTree{}, make(map[int][]tree.IntervalConc)}
+		kd_tree_ext := tree.KDTree_Extend{&tree.KDTree{}, make(map[int]*tree.Unit)}
 		int_trees[tmp] = int_tree
 		kd_trees_ext[tmp] = kd_tree_ext
 
 		for _, v := range intervals{
-			tmp2 := augmentedtree.Interval(v)
-			int_tree.Add(tmp2)
-			kd_tree_ext.Insert(v)
+			unit_center := tree.PointContainer{Unit_id: v.Id, Vec: v.GetCenter()}
+			unit := tree.Unit{Id: v.Id, IntervalContainer: &v, Dimension: 2, Center: unit_center}
+			int_tree.Add(unit)
+			kd_tree_ext.AddUnit(&unit)
 		}
-
+		break
 	}
 
+	//os.Exit(2)
 	handleRead, err := pcap.OpenOffline("C:\\Users\\Jack\\Downloads\\201705021400.pcap")
 	ch := make(chan preprocess.PacketData)
 	acc := make(chan preprocess.PacketAcc)
