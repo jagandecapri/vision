@@ -2,14 +2,16 @@ package tree
 
 type KDTree_Extend struct{
 	*KDTree
-	Store map[int][]IntervalConc
+	Store map[int]*Unit
 }
 
-func (kd_ext *KDTree_Extend) Add(key int, itv IntervalConc){
-	kd_ext.Store[key] = append( kd_ext.Store[key], itv)
+func (kd_ext *KDTree_Extend) AddUnit(unit *Unit){
+	key := unit.GetID()
+	kd_ext.Store[key] = unit
+	kd_ext.Insert(unit)
 }
 
-func (kd_ext *KDTree_Extend) Insert(interval IntervalConc){
-	tmp := Point(interval)
-	kd_ext.KDTree.Insert(tmp)
+func (kd_ext *KDTree_Extend) AddToStore(key int, p PointContainer){
+	tmp := kd_ext.Store[key]
+	tmp.AddPoint(p)
 }
