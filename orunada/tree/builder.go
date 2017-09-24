@@ -14,9 +14,9 @@ func IntervalBuilder(min float64, max float64, interval_length float64, scale_fa
 		j := min
 		for j < max{
 			intervals = append(intervals, IntervalContainer{	Id: id,
-				Low: []float64{i, j},
-				High: []float64{i + interval_length,
-					j + interval_length},
+				Range: &Range{Low: [2]float64{i, j},
+				High: [2]float64{i + interval_length,
+					j + interval_length}},
 				Scale_factor: scale_factor})
 			id += 1
 			j += interval_length
