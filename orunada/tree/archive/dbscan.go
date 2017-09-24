@@ -66,8 +66,8 @@ func print_epsilon_neightbours(points []point, en *epsilon_neighbours){
 	if en != nil{
 		h := (*en).head
 		for h != nil {
-			tmp := points[h.index]
-			fmt.Printf("%f, %f, %f\n", tmp.x, tmp.y, tmp.z)
+			//tmp := points[h.index]
+			//fmt.Printf("%f, %f, %f\n", tmp.x, tmp.y, tmp.z)
 			h = h.next
 		}
 	}
@@ -140,11 +140,11 @@ func parse_input(){
 }
 
 func print_points (points []point, num_points int){
-	fmt.Printf("Number of points: %v\nx\ty\tz\tcluster_id\n----------------------------------------\n", num_points)
-	for i := 0; i < num_points; i++{
-		tmp := points[i]
-		fmt.Printf("%f\t%f\t%f\t%d\n", tmp.x, tmp.y, tmp.z, tmp.cluster_id)
-	}
+	//fmt.Printf("Number of points: %v\nx\ty\tz\tcluster_id\n----------------------------------------\n", num_points)
+	//for i := 0; i < num_points; i++{
+	//	tmp := points[i]
+	//	fmt.Printf("%f\t%f\t%f\t%d\n", tmp.x, tmp.y, tmp.z, tmp.cluster_id)
+	//}
 }
 
 func Main_mock(points []point, epsilon float64, minpts int) []point{
