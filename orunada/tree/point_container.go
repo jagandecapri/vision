@@ -28,7 +28,6 @@ func (p *PointContainer) Distance(p1 PointInterface) float64{
 	}
 	euclidean_dist := math.Sqrt(sum)
 	return euclidean_dist
-	return 0.0
 }
 
 func (p *PointContainer) PlaneDistance(val float64, dim int) float64{
