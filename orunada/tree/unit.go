@@ -4,9 +4,6 @@ import (
 	"math"
 )
 
-const UNCLUSTERED = 0
-const NOISE = -1
-
 type Unit struct {
 	Id                 int
 	Cluster_id         int
