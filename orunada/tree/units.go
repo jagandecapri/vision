@@ -1,11 +1,13 @@
 package tree
 
 
-type Units map[Range]*Unit
+type Units struct{
+	Store map[Range]*Unit
+}
 
 
 func (us Units) AddUnit(rg Range, unit *Unit){
-	us[rg] = unit
+	us.Store[rg] = unit
 }
 
 func (us Units) GetNeighbouringUnits(rg Range, interval_l float64) []*Unit {
@@ -35,14 +37,14 @@ func (us Units) GetNeighbouringUnits(rg Range, interval_l float64) []*Unit {
 		High: [2]float64{rg.High[0] + interval_l, rg.High[1] + interval_l}}
 
 	neighbour_units := []*Unit{
-		us[n1],
-		us[n2],
-		us[n3],
-		us[n4],
-		us[n5],
-		us[n6],
-		us[n7],
-		us[n8],
+		us.Store[n1],
+		us.Store[n2],
+		us.Store[n3],
+		us.Store[n4],
+		us.Store[n5],
+		us.Store[n6],
+		us.Store[n7],
+		us.Store[n8],
 	}
 
 	return neighbour_units
