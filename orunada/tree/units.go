@@ -6,9 +6,15 @@ type Units struct{
 }
 
 
-func (us Units) AddUnit(unit *Unit, rg Range, interval_l float64){
+func (us Units) AddUnit(unit *Unit, rg Range){
 	us.Store[rg] = unit
-	unit.Neighbour_units = us.GetNeighbouringUnits(rg, interval_l)
+}
+
+func (us Units) SetupGrid(interval_l float64){
+	for rg, unit := range us.Store{
+		unit.Neighbour_units = us.GetNeighbouringUnits(rg, interval_l)
+		us.Store[rg] = unit
+	}
 }
 
 func (us Units) GetNeighbouringUnits(rg Range, interval_l float64) []*Unit {
@@ -37,15 +43,14 @@ func (us Units) GetNeighbouringUnits(rg Range, interval_l float64) []*Unit {
 	n8 := Range{Low:[2]float64{rg.High[0], rg.High[1]},
 		High: [2]float64{rg.High[0] + interval_l, rg.High[1] + interval_l}}
 
-	neighbour_units := []*Unit{
-		us.Store[n1],
-		us.Store[n2],
-		us.Store[n3],
-		us.Store[n4],
-		us.Store[n5],
-		us.Store[n6],
-		us.Store[n7],
-		us.Store[n8],
+	tmp := [8]Range{n1,n2,n3,n4,n5,n6,n7,n8}
+
+	neighbour_units := []*Unit{}
+
+	for _, rg := range tmp{
+		if unit, ok := us.Store[rg]; ok{
+			neighbour_units = append(neighbour_units, unit)
+		}
 	}
 
 	return neighbour_units
