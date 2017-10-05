@@ -28,6 +28,9 @@ func (u *Unit) RecalculateCenter() {
 }
 
 func (u *Unit) GetCenter() PointContainer {
+	if len(u.Center.Vec) > 0{
+		return u.Center
+	}
 	Center_vec := make([]float64, u.Dimension)
 	for _, p := range u.points {
 		for i := 0; i < p.Dim(); i++ {
