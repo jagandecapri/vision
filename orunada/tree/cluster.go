@@ -8,10 +8,10 @@ const NOT_CORE_UNIT = 2
 
 var cluster_map map[int]Unit
 
-func Cluster(units Units, min_dense_points int, min_cluster_points int) {
+func Cluster(units Units, min_dense_points int, min_cluster_points int) Units{
 	cluster_id := 1
 	for rg, unit := range units.Store {
-		seeds := Queue{}
+		seeds := QueueUnit{}
 		if isDenseUnit(unit, min_dense_points) == true {
 			unit.Cluster_id = cluster_id
 			for _, neighbour_unit := range unit.Neighbour_units {
@@ -33,9 +33,10 @@ func Cluster(units Units, min_dense_points int, min_cluster_points int) {
 		cluster_id++
                 units.Store[rg] = unit
 	}
+    return units
 }
 
-func expandCluster(unit *Unit, cluster_id int, min_dense_points int, seeds Queue) {
+func expandCluster(unit *Unit, cluster_id int, min_dense_points int, seeds QueueUnit) {
 	for _, neighbour_unit := range unit.Neighbour_units {
 		if neighbour_unit.Cluster_id == UNCLASSIFIED || neighbour_unit.Cluster_id == NOISE {
 			unit.Cluster_id = cluster_id
