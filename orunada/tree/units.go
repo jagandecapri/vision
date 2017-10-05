@@ -6,8 +6,9 @@ type Units struct{
 }
 
 
-func (us Units) AddUnit(rg Range, unit *Unit){
+func (us Units) AddUnit(unit *Unit, rg Range, interval_l float64){
 	us.Store[rg] = unit
+	unit.Neighbour_units = us.GetNeighbouringUnits(rg, interval_l)
 }
 
 func (us Units) GetNeighbouringUnits(rg Range, interval_l float64) []*Unit {

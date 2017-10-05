@@ -9,7 +9,7 @@ func TestUnits_AddUnit(t *testing.T) {
 	tmp := Range{Low: [2]float64{0.0, 0.0}, High: [2]float64{1.0, 1.0}}
 	unit := &Unit{}
 	units := Units{Store: make(map[Range]*Unit)}
-	units.AddUnit(tmp, unit)
+	units.AddUnit(unit, tmp, 1.0)
 }
 
 func TestUnits_GetNeighbouringUnits(t *testing.T) {
