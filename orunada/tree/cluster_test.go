@@ -5,7 +5,41 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCluster(t *testing.T) {
+func TestCluster2by2Grid(t *testing.T) {
+	units := Units{Store: make(map[Range]*Unit)}
+	interval_l := 1.0
+
+	u1 := Unit{Id: 1, Center: PointContainer{Vec: []float64{0.5,0.5}},
+		points: map[int]PointContainer{1: {},2: {},3: {},4: {},5: {}}}
+	r1 := Range{Low: [2]float64{0, 0}, High: [2]float64{1, 1}}
+	units.AddUnit(&u1, r1)
+
+	u2 := Unit{Id: 2, Center: PointContainer{Vec: []float64{0.5,1.5}},
+		points: map[int]PointContainer{1: {},2: {}}}
+	r2 := Range{Low: [2]float64{0, 1}, High: [2]float64{1, 2}}
+	units.AddUnit(&u2, r2)
+
+	u3 := Unit{Id: 3, Center: PointContainer{Vec: []float64{1.5,0.5}},
+		points: map[int]PointContainer{1: {},2: {}}}
+	r3 := Range{Low: [2]float64{1, 0}, High: [2]float64{2, 1}}
+	units.AddUnit(&u3, r3)
+
+	u4 := Unit{Id: 4, Center: PointContainer{Vec: []float64{1.5,1.5}}}
+	r4 := Range{Low: [2]float64{1, 1}, High: [2]float64{2, 2}}
+	units.AddUnit(&u4, r4)
+
+	units.SetupGrid(interval_l)
+
+	min_dense_points := 2
+	min_cluster_points := 5
+
+	res, non_outlier_clusters := GDA(units, min_dense_points, min_cluster_points)
+	assert.True(t, res.Store[r1].Cluster_id == res.Store[r2].Cluster_id,
+		"%v %v %v", res.Store[r1].Cluster_id, res.Store[r2].Cluster_id)
+	assert.Equal(t, 1, len(non_outlier_clusters))
+}
+
+func TestCluster3by3Grid(t *testing.T) {
 	units := Units{Store: make(map[Range]*Unit)}
 	interval_l := 1.0
 
@@ -56,20 +90,19 @@ func TestCluster(t *testing.T) {
 	min_dense_points := 2
 	min_cluster_points := 5
 
-	res := Cluster(units, min_dense_points, min_cluster_points)
+	res, non_outlier_clusters := GDA(units, min_dense_points, min_cluster_points)
+	assert.True(t, res.Store[r1].Cluster_id == res.Store[r2].Cluster_id && res.Store[r2].Cluster_id == res.Store[r3].Cluster_id,
+	"%v %v %v", res.Store[r1].Cluster_id, res.Store[r2].Cluster_id, res.Store[r3].Cluster_id)
+	assert.True(t, res.Store[r8].Cluster_id == NOISE, "%v", res.Store[r8].Cluster_id)
 	for _, unit := range res.Store{
 		switch unit.Id{
 		case 1:
-			assert.Equal(t, 1, unit.Cluster_id)
 		case 2:
-			assert.Equal(t, 1, unit.Cluster_id)
 		case 3:
-			assert.Equal(t, 1, unit.Cluster_id)
 		case 8:
-			assert.Equal(t, NOISE, unit.Cluster_id)
-		case 9:
-			assert.Equal(t, 0, unit.Cluster_id)
+		default:
+			assert.Equal(t, 0, unit.Cluster_id, "%v", unit.Id)
 		}
 	}
-
+	assert.Equal(t, 1, len(non_outlier_clusters))
 }
