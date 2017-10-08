@@ -33,10 +33,11 @@ func TestCluster2by2Grid(t *testing.T) {
 	min_dense_points := 2
 	min_cluster_points := 5
 
-	res, non_outlier_clusters := GDA(units, min_dense_points, min_cluster_points)
-	assert.True(t, res.Store[r1].Cluster_id == res.Store[r2].Cluster_id,
-		"%v %v %v", res.Store[r1].Cluster_id, res.Store[r2].Cluster_id)
-	assert.Equal(t, 1, len(non_outlier_clusters))
+	res, cluster_map := GDA(units.Store, min_dense_points, min_cluster_points)
+	assert.True(t, res[r1].Cluster_id == res[r2].Cluster_id,
+		"%v %v %v", res[r1].Cluster_id, res[r2].Cluster_id)
+	assert.Equal(t, 1, len(cluster_map["non_outlier_clusters"]), "%v", cluster_map["non_outlier_clusters"])
+	assert.Equal(t, 0, len(cluster_map["outlier_clusters"]), "%v", cluster_map["outlier_clusters"])
 }
 
 func TestCluster3by3Grid(t *testing.T) {
@@ -90,11 +91,10 @@ func TestCluster3by3Grid(t *testing.T) {
 	min_dense_points := 2
 	min_cluster_points := 5
 
-	res, non_outlier_clusters := GDA(units, min_dense_points, min_cluster_points)
-	assert.True(t, res.Store[r1].Cluster_id == res.Store[r2].Cluster_id && res.Store[r2].Cluster_id == res.Store[r3].Cluster_id,
-	"%v %v %v", res.Store[r1].Cluster_id, res.Store[r2].Cluster_id, res.Store[r3].Cluster_id)
-	assert.True(t, res.Store[r8].Cluster_id == NOISE, "%v", res.Store[r8].Cluster_id)
-	for _, unit := range res.Store{
+	res, cluster_map := GDA(units.Store, min_dense_points, min_cluster_points)
+	assert.True(t, res[r1].Cluster_id == res[r2].Cluster_id && res[r2].Cluster_id == res[r3].Cluster_id,
+	"%v %v %v", res[r1].Cluster_id, res[r2].Cluster_id, res[r3].Cluster_id)
+	for _, unit := range res{
 		switch unit.Id{
 		case 1:
 		case 2:
@@ -104,5 +104,6 @@ func TestCluster3by3Grid(t *testing.T) {
 			assert.Equal(t, 0, unit.Cluster_id, "%v", unit.Id)
 		}
 	}
-	assert.Equal(t, 1, len(non_outlier_clusters))
+	assert.Equal(t, 1, len(cluster_map["non_outlier_clusters"]), "%v", cluster_map["non_outlier_clusters"])
+	assert.Equal(t, 1, len(cluster_map["outlier_clusters"]), "%v", cluster_map["outlier_clusters"])
 }
