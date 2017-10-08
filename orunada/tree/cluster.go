@@ -3,6 +3,15 @@ package tree
 const UNCLASSIFIED = 0
 const NOISE = -1
 
+const OUTLIER_CLUSTER = -3
+const NON_OUTLER_CLUSTER = -4
+
+type Cluster_Map struct{
+	Cluster_id int
+	Cluster_type int
+	ListOfUnits []*Unit
+}
+
 func GDA(units map[Range]*Unit, min_dense_points int, min_cluster_points int) (map[Range]*Unit, map[string][]int){
 	cluster_id := 1
 	cluster_map := map[string][]int{

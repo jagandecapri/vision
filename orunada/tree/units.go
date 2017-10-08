@@ -3,6 +3,10 @@ package tree
 
 type Units struct{
 	Store map[Range]*Unit
+	listDenseUnits map[Range]*Unit
+	listOldDenseUnits map[Range]*Unit
+	listNewDenseUnits map[Range]*Unit
+	listUnitToRep map[Range]*Unit
 }
 
 
@@ -15,6 +19,49 @@ func (us Units) SetupGrid(interval_l float64){
 		unit.Neighbour_units = us.GetNeighbouringUnits(rg, interval_l)
 		us.Store[rg] = unit
 	}
+}
+
+func (us Units) RecomputeDenseUnits(min_dense_points int){
+	for rg, unit := range us.Store{
+		if isDenseUnit(unit, min_dense_points){
+			_, ok := us.listDenseUnits[rg]
+			if !ok{
+				us.listDenseUnits[rg] = unit
+				us.listNewDenseUnits[rg] = unit
+			}
+		} else {
+			_, ok := us.listDenseUnits[rg]
+			if ok{
+				delete(us.listDenseUnits, rg)
+				us.listOldDenseUnits[rg] = unit
+			}
+		}
+	}
+	us.ProcessOldDenseUnits()
+}
+
+func (us Units) ProcessOldDenseUnits(){
+	for _, unit := range us.listOldDenseUnits{
+		cluster_id := unit.Cluster_id
+		unit.Cluster_id = UNCLASSIFIED
+		count_neighbour_same_cluster := 0
+
+		for _, neighbour_unit := range unit.Neighbour_units{
+			if neighbour_unit.Cluster_id == cluster_id{
+				count_neighbour_same_cluster
+			}
+			if count_neighbour_same_cluster > 2{
+				break
+			}
+		}
+		if count_neighbour_same_cluster > 2 {
+			//TODO: Write for-loop to unclusterise all units having the cluster id and add to listOrRep
+		}
+	}
+}
+
+func (us Units) isDenseUnit(unit *Unit, min_dense_points int) bool{
+	return unit.GetNumberOfPoints() >= min_dense_points
 }
 
 func (us Units) GetNeighbouringUnits(rg Range, interval_l float64) []*Unit {
