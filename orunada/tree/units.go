@@ -48,7 +48,7 @@ func (us Units) ProcessOldDenseUnits(){
 
 		for _, neighbour_unit := range unit.Neighbour_units{
 			if neighbour_unit.Cluster_id == cluster_id{
-				count_neighbour_same_cluster
+				count_neighbour_same_cluster++
 			}
 			if count_neighbour_same_cluster > 2{
 				break
