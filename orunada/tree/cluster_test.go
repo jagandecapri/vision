@@ -3,6 +3,7 @@ package tree
 import (
 	"testing"
 	"github.com/stretchr/testify/assert"
+	"fmt"
 )
 
 func TestCluster2by2Grid(t *testing.T) {
@@ -106,4 +107,26 @@ func TestCluster3by3Grid(t *testing.T) {
 	}
 	assert.Equal(t, 1, len(cluster_map["non_outlier_clusters"]), "%v", cluster_map["non_outlier_clusters"])
 	assert.Equal(t, 1, len(cluster_map["outlier_clusters"]), "%v", cluster_map["outlier_clusters"])
+}
+
+func BenchmarkGDA(t *testing.B) {
+	units := Units{Store: make(map[Range]*Unit)}
+	interval_l := 1.0
+
+	for i:= 0; i < 100; i++{
+		i_float := float64(i)
+		u := Unit{Id: 1, Center: PointContainer{Vec: []float64{(( i_float + (i_float + 1.0))/2.0),0.5}},
+			points: map[int]PointContainer{1: {},2: {},3: {},4: {},5: {}}}
+		r := Range{Low: [2]float64{i_float, 0}, High: [2]float64{i_float + 1.0, 1.0}}
+		units.AddUnit(&u, r)
+	}
+	units.SetupGrid(interval_l)
+	min_dense_points := 2
+	min_cluster_points := 5
+
+	for i:=0; i < t.N; i++{
+		_, cluster_map := GDA(units.Store, min_dense_points, min_cluster_points)
+		assert.Equal(t, 1, len(cluster_map["non_outlier_clusters"]), "%v", cluster_map["non_outlier_clusters"])
+		assert.Equal(t, 0, len(cluster_map["outlier_clusters"]), "%v", cluster_map["outlier_clusters"])
+	}
 }
