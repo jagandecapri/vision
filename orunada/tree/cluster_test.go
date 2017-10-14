@@ -5,6 +5,20 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func CountClusterTypes(cluster_list map[int]Cluster) (int, int){
+	outlier_cluster_count := 0
+	non_outlier_cluster_count := 0
+	for _, cluster := range cluster_list{
+		if cluster.Cluster_type == OUTLIER_CLUSTER{
+			outlier_cluster_count++
+		} else if cluster.Cluster_type == NON_OUTLIER_CLUSTER{
+			non_outlier_cluster_count++
+		}
+	}
+
+	return outlier_cluster_count, non_outlier_cluster_count
+}
+
 func TestCluster2by2Grid(t *testing.T) {
 	units := Units{Store: make(map[Range]*Unit)}
 	interval_l := 1.0
@@ -36,8 +50,9 @@ func TestCluster2by2Grid(t *testing.T) {
 	res, cluster_map := GDA(units.Store, min_dense_points, min_cluster_points)
 	assert.True(t, res[r1].Cluster_id == res[r2].Cluster_id,
 		"%v %v %v", res[r1].Cluster_id, res[r2].Cluster_id)
-	assert.Equal(t, 1, len(cluster_map["non_outlier_clusters"]), "%v", cluster_map["non_outlier_clusters"])
-	assert.Equal(t, 0, len(cluster_map["outlier_clusters"]), "%v", cluster_map["outlier_clusters"])
+	outlier_cluster_count, non_outlier_cluster_count := CountClusterTypes(cluster_map)
+	assert.Equal(t, 0, outlier_cluster_count)
+	assert.Equal(t, 1, non_outlier_cluster_count)
 }
 
 func TestCluster3by3Grid(t *testing.T) {
@@ -104,8 +119,9 @@ func TestCluster3by3Grid(t *testing.T) {
 			assert.Equal(t, 0, unit.Cluster_id, "%v", unit.Id)
 		}
 	}
-	assert.Equal(t, 1, len(cluster_map["non_outlier_clusters"]), "%v", cluster_map["non_outlier_clusters"])
-	assert.Equal(t, 1, len(cluster_map["outlier_clusters"]), "%v", cluster_map["outlier_clusters"])
+	outlier_cluster_count, non_outlier_cluster_count := CountClusterTypes(cluster_map)
+	assert.Equal(t, 1, outlier_cluster_count)
+	assert.Equal(t, 1, non_outlier_cluster_count)
 }
 
 func TestGDA(t *testing.T){
@@ -124,8 +140,9 @@ func TestGDA(t *testing.T){
 	min_cluster_points := 5
 
 	_, cluster_map := GDA(units.Store, min_dense_points, min_cluster_points)
-	assert.Equal(t, 1, len(cluster_map["non_outlier_clusters"]), "%v", cluster_map["non_outlier_clusters"])
-	assert.Equal(t, 0, len(cluster_map["outlier_clusters"]), "%v", cluster_map["outlier_clusters"])
+	outlier_cluster_count, non_outlier_cluster_count := CountClusterTypes(cluster_map)
+	assert.Equal(t, 0, outlier_cluster_count)
+	assert.Equal(t, 1, non_outlier_cluster_count)
 }
 
 func BenchmarkGDA(t *testing.B) {
@@ -144,7 +161,8 @@ func BenchmarkGDA(t *testing.B) {
 		min_dense_points := 2
 		min_cluster_points := 5
 		_, cluster_map := GDA(units.Store, min_dense_points, min_cluster_points)
-		assert.Equal(t, 1, len(cluster_map["non_outlier_clusters"]), "%v", cluster_map["non_outlier_clusters"])
-		assert.Equal(t, 0, len(cluster_map["outlier_clusters"]), "%v", cluster_map["outlier_clusters"])
+		outlier_cluster_count, non_outlier_cluster_count := CountClusterTypes(cluster_map)
+		assert.Equal(t, 0, outlier_cluster_count)
+		assert.Equal(t, 1, non_outlier_cluster_count)
 	}
 }
