@@ -40,43 +40,39 @@ func expand(unit *Unit, cluster_id int, min_dense_points int) (int){
 	seeds := []*Unit{}
 	for _, neighbour_unit := range unit.Neighbour_units{
 		if isDenseUnit(neighbour_unit, min_dense_points){
-			seeds = append(seeds, neighbour_unit)
+			if neighbour_unit.Cluster_id == UNCLASSIFIED {
+				seeds = append(seeds, neighbour_unit)
+			}
 		}
 	}
 
 	unit.Cluster_id = cluster_id
 	point_count_acc += unit.GetNumberOfPoints()
-	for _, neighbour_unit := range seeds{
-		neighbour_unit.Cluster_id = cluster_id
-		point_count_acc += unit.GetNumberOfPoints()
-	}
-	for _, neighbour_unit := range seeds{
-		point_count_acc += spread(neighbour_unit, seeds, cluster_id, min_dense_points)
-	}
-
+	point_count_acc = spread(point_count_acc, seeds, cluster_id, min_dense_points)
 	return point_count_acc
 }
 
-func spread(unit *Unit, seeds []*Unit, cluster_id int, min_dense_points int) int{
-	spread := []*Unit{}
-	point_count_acc := 0
-	for _, neighbour_unit := range unit.Neighbour_units{
-		if isDenseUnit(neighbour_unit, min_dense_points){
-			spread = append(spread, neighbour_unit)
-		}
+func spread(point_count_acc int, seeds []*Unit, cluster_id int, min_dense_points int) int{
+	if len(seeds) == 0{
+		return point_count_acc
 	}
-	if len(spread) > 0{
-		for _, neighbour_unit := range spread{
-			if neighbour_unit.Cluster_id == UNCLASSIFIED || neighbour_unit.Cluster_id == NOISE{
-				if neighbour_unit.Cluster_id == UNCLASSIFIED{
+	var unit *Unit
+	unit, seeds = seeds[0], seeds[1:]
+
+	if unit.Cluster_id == UNCLASSIFIED || unit.Cluster_id == NOISE{
+		unit.Cluster_id = cluster_id
+		point_count_acc += unit.GetNumberOfPoints()
+
+		for _, neighbour_unit := range unit.Neighbour_units{
+			if isDenseUnit(neighbour_unit, min_dense_points){
+				if neighbour_unit.Cluster_id == UNCLASSIFIED {
 					seeds = append(seeds, neighbour_unit)
 				}
-				neighbour_unit.Cluster_id = cluster_id
-				point_count_acc += unit.GetNumberOfPoints()
 			}
 		}
 	}
-	return point_count_acc
+
+	return spread(point_count_acc, seeds, cluster_id, min_dense_points)
 }
 
 func isDenseUnit(unit *Unit, min_dense_points int) bool{
