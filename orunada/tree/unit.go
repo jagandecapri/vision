@@ -11,19 +11,20 @@ type Unit struct {
 	Center             PointContainer
 	Neighbour_units    []*Unit
 	points             map[int]PointContainer
-	recalculate_center bool
+	Center_calculated bool
 }
 
 func (u *Unit) AddPoint(p PointContainer) {
-	u.recalculate_center = true
+	u.Center_calculated = false
 	u.points[p.GetID()] = p
 }
 
-func (u *Unit) RemovePoint() {
-
+func (u *Unit) RemovePoint(p PointContainer) {
+	u.Center_calculated = false
+	delete(u.points, p.GetID())
 }
 
-func (u *Unit) RecalculateCenter() {
+func (u *Unit) CalculateCenter() {
 	u.GetCenter()
 }
 
@@ -62,8 +63,8 @@ func (u *Unit) GetValue(dim int) float64 {
 }
 
 func (u *Unit) Distance(p1 PointInterface) float64 {
-	if u.recalculate_center {
-		u.RecalculateCenter()
+	if u.Center_calculated {
+		u.CalculateCenter()
 	}
 	sum := 0.0
 	t := p1.(*PointContainer)

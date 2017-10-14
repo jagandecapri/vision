@@ -3,12 +3,35 @@ package tree
 
 type Units struct{
 	Store map[Range]*Unit
+	Point_unit_map map[int]Range
+	Cluster_map map[int]Cluster
 	listDenseUnits map[Range]*Unit
 	listOldDenseUnits map[Range]*Unit
 	listNewDenseUnits map[Range]*Unit
 	listUnitToRep map[Range]*Unit
 }
 
+
+func (us Units) RemovePoint(point PointContainer, rg Range){
+	unit := us.Store[rg]
+	unit.RemovePoint(point)
+	delete(us.Point_unit_map, point.GetID())
+}
+
+func (us Units) AddPoint(point PointContainer, rg Range){
+	unit := us.Store[rg]
+	unit.AddPoint(point)
+	us.Point_unit_map[point.GetID()] = rg
+}
+
+func (us Units) UpdatePoint(point PointContainer, new_range Range){
+	point_id := point.GetID()
+	cur_range := us.Point_unit_map[point_id]
+	if cur_range != new_range{
+		us.AddPoint(point, new_range)
+		us.RemovePoint(point, cur_range)
+	}
+}
 
 func (us Units) AddUnit(unit *Unit, rg Range){
 	us.Store[rg] = unit
@@ -40,6 +63,12 @@ func (us Units) RecomputeDenseUnits(min_dense_points int){
 	us.ProcessOldDenseUnits()
 }
 
+func (us Units) RemoveCluster(cluster_id int) []*Unit{
+	list_of_units := us.Cluster_map[cluster_id].ListOfUnits
+	delete(us.Cluster_map, cluster_id)
+	return list_of_units
+}
+
 func (us Units) ProcessOldDenseUnits(){
 	for _, unit := range us.listOldDenseUnits{
 		cluster_id := unit.Cluster_id
@@ -54,8 +83,10 @@ func (us Units) ProcessOldDenseUnits(){
 				break
 			}
 		}
+
 		if count_neighbour_same_cluster > 2 {
-			//TODO: Write for-loop to unclusterise all units having the cluster id and add to listOrRep
+			listUnitToRep := us.RemoveCluster(cluster_id)
+			//MERGE CLUSTER
 		}
 	}
 }
