@@ -85,7 +85,7 @@ func (us Units) ProcessOldDenseUnits(){
 		}
 
 		if count_neighbour_same_cluster > 2 {
-			listUnitToRep := us.RemoveCluster(cluster_id)
+			//listUnitToRep := us.RemoveCluster(cluster_id)
 			//MERGE CLUSTER
 		}
 	}
