@@ -47,8 +47,7 @@ func TestCluster2by2Grid(t *testing.T) {
 	min_dense_points := 2
 	min_cluster_points := 5
 
-	gda := GDA{}
-	res, cluster_map := gda.Run(units.Store, min_dense_points, min_cluster_points)
+	res, cluster_map := GDA(units.Store, min_dense_points, min_cluster_points)
 	assert.True(t, res[r1].Cluster_id == res[r2].Cluster_id,
 		"%v %v %v", res[r1].Cluster_id, res[r2].Cluster_id)
 	outlier_cluster_count, non_outlier_cluster_count := CountClusterTypes(cluster_map)
@@ -107,8 +106,7 @@ func TestCluster3by3Grid(t *testing.T) {
 	min_dense_points := 2
 	min_cluster_points := 5
 
-	gda := GDA{}
-	res, cluster_map := gda.Run(units.Store, min_dense_points, min_cluster_points)
+	res, cluster_map := GDA(units.Store, min_dense_points, min_cluster_points)
 	assert.True(t, res[r1].Cluster_id == res[r2].Cluster_id && res[r2].Cluster_id == res[r3].Cluster_id,
 	"%v %v %v", res[r1].Cluster_id, res[r2].Cluster_id, res[r3].Cluster_id)
 	for _, unit := range res{
@@ -141,8 +139,7 @@ func TestGDA(t *testing.T){
 	min_dense_points := 2
 	min_cluster_points := 5
 
-	gda := GDA{}
-	_, cluster_map := gda.Run(units.Store, min_dense_points, min_cluster_points)
+	_, cluster_map := GDA(units.Store, min_dense_points, min_cluster_points)
 	outlier_cluster_count, non_outlier_cluster_count := CountClusterTypes(cluster_map)
 	assert.Equal(t, 0, outlier_cluster_count)
 	assert.Equal(t, 1, non_outlier_cluster_count)
@@ -163,8 +160,7 @@ func BenchmarkGDA(t *testing.B) {
 		units.SetupGrid(interval_l)
 		min_dense_points := 2
 		min_cluster_points := 5
-		gda := GDA{}
-		_, cluster_map := gda.Run(units.Store, min_dense_points, min_cluster_points)
+		_, cluster_map := GDA(units.Store, min_dense_points, min_cluster_points)
 		outlier_cluster_count, non_outlier_cluster_count := CountClusterTypes(cluster_map)
 		assert.Equal(t, 0, outlier_cluster_count)
 		assert.Equal(t, 1, non_outlier_cluster_count)
