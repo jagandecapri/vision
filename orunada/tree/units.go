@@ -85,7 +85,7 @@ func (us Units) ProcessOldDenseUnits(){
 		}
 
 		if count_neighbour_same_cluster > 2 {
-			listUnitToRep := us.RemoveCluster(cluster_id)
+			//listUnitToRep := us.RemoveCluster(cluster_id)
 			//MERGE CLUSTER
 		}
 	}
@@ -132,4 +132,8 @@ func (us Units) GetNeighbouringUnits(rg Range, interval_l float64) []*Unit {
 	}
 
 	return neighbour_units
+}
+
+func isDenseUnit(unit *Unit, min_dense_points int) bool{
+	return unit.GetNumberOfPoints() >= min_dense_points
 }
