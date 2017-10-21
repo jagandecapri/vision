@@ -36,31 +36,32 @@ func (us *Units) GetUnits() map[Range]*Unit{
 	}
 }
 
-func (us Units) GetMinDensePoints() int{
+func (us *Units) GetMinDensePoints() int{
 	return us.MinDensePoints
 }
 
-func (us Units) GetMinClusterPoints() int{
+func (us *Units) GetMinClusterPoints() int{
 	return us.MinClusterPoints
 }
 
-func (us Units) GetNextClusterID() int{
-	return us.cluster_id_counter + 1
+func (us *Units) GetNextClusterID() int{
+	us.cluster_id_counter += 1
+	return us.cluster_id_counter
 }
 
-func (us Units) RemovePoint(point PointContainer, rg Range){
+func (us *Units) RemovePoint(point PointContainer, rg Range){
 	unit := us.Store[rg]
 	unit.RemovePoint(point)
 	delete(us.Point_unit_map, point.GetID())
 }
 
-func (us Units) AddPoint(point PointContainer, rg Range){
+func (us *Units) AddPoint(point PointContainer, rg Range){
 	unit := us.Store[rg]
 	unit.AddPoint(point)
 	us.Point_unit_map[point.GetID()] = rg
 }
 
-func (us Units) UpdatePoint(point PointContainer, new_range Range){
+func (us *Units) UpdatePoint(point PointContainer, new_range Range){
 	point_id := point.GetID()
 	cur_range := us.Point_unit_map[point_id]
 	if cur_range != new_range{
@@ -69,18 +70,18 @@ func (us Units) UpdatePoint(point PointContainer, new_range Range){
 	}
 }
 
-func (us Units) AddUnit(unit *Unit, rg Range){
+func (us *Units) AddUnit(unit *Unit, rg Range){
 	us.Store[rg] = unit
 }
 
-func (us Units) SetupGrid(interval_l float64){
+func (us *Units) SetupGrid(interval_l float64){
 	for rg, unit := range us.Store{
 		unit.Neighbour_units = us.GetNeighbouringUnits(rg, interval_l)
 		us.Store[rg] = unit
 	}
 }
 
-func (us Units) RecomputeDenseUnits(min_dense_points int){
+func (us *Units) RecomputeDenseUnits(min_dense_points int){
 	for rg, unit := range us.Store{
 		if isDenseUnit(unit, min_dense_points){
 			_, ok := us.listDenseUnits[rg]
@@ -99,13 +100,13 @@ func (us Units) RecomputeDenseUnits(min_dense_points int){
 	us.ProcessOldDenseUnits()
 }
 
-func (us Units) RemoveCluster(cluster_id int) []*Unit{
+func (us *Units) RemoveCluster(cluster_id int) []*Unit{
 	list_of_units := us.Cluster_map[cluster_id].ListOfUnits
 	delete(us.Cluster_map, cluster_id)
 	return list_of_units
 }
 
-func (us Units) ProcessOldDenseUnits(){
+func (us *Units) ProcessOldDenseUnits(){
 	for _, unit := range us.listOldDenseUnits{
 		cluster_id := unit.Cluster_id
 		unit.Cluster_id = UNCLASSIFIED
@@ -127,11 +128,11 @@ func (us Units) ProcessOldDenseUnits(){
 	}
 }
 
-func (us Units) isDenseUnit(unit *Unit, min_dense_points int) bool{
+func (us *Units) isDenseUnit(unit *Unit, min_dense_points int) bool{
 	return unit.GetNumberOfPoints() >= min_dense_points
 }
 
-func (us Units) GetNeighbouringUnits(rg Range, interval_l float64) []*Unit {
+func (us *Units) GetNeighbouringUnits(rg Range, interval_l float64) []*Unit {
 	/**
 	U = unit; n{x} => neighbouring units
 	|n3|n5|n8|
