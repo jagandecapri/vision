@@ -35,3 +35,7 @@ func TestUnits_GetNeighbouringUnits(t *testing.T) {
 	}
 
 }
+
+func TestUnits_ImplementsClusterInterface(t *testing.T){
+	assert.Implements(t, (*ClusterInterface)(nil), new(Units))
+}

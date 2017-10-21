@@ -1,16 +1,38 @@
 package tree
 
-
 type Units struct{
 	Store map[Range]*Unit
 	Point_unit_map map[int]Range
 	Cluster_map map[int]Cluster
+	MinDensePoints int
+	MinClusterPoints int
+	cluster_id_counter int
 	listDenseUnits map[Range]*Unit
 	listOldDenseUnits map[Range]*Unit
 	listNewDenseUnits map[Range]*Unit
 	listUnitToRep map[Range]*Unit
+	tmpUnitToCluster map[Range]*Unit
 }
 
+func (us Units) GetUnits() map[Range]*Unit{
+	if len(us.tmpUnitToCluster) == 0{
+		return us.Store
+	} else {
+		return us.tmpUnitToCluster
+	}
+}
+
+func (us Units) GetMinDensePoints() int{
+	return us.MinDensePoints
+}
+
+func (us Units) GetMinClusterPoints() int{
+	return us.MinClusterPoints
+}
+
+func (us Units) GetNextClusterID() int{
+	return us.cluster_id_counter + 1
+}
 
 func (us Units) RemovePoint(point PointContainer, rg Range){
 	unit := us.Store[rg]

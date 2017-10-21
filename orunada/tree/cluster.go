@@ -6,6 +6,13 @@ const NOISE = -1
 const OUTLIER_CLUSTER = -3
 const NON_OUTLIER_CLUSTER = -4
 
+type ClusterInterface interface{
+	GetUnits() map[Range]*Unit
+	GetMinDensePoints() int
+	GetMinClusterPoints() int
+	GetNextClusterID() int
+}
+
 type Cluster struct{
 	Cluster_id int
 	Cluster_type int
