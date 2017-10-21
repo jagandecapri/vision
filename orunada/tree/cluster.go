@@ -19,8 +19,9 @@ type Cluster struct{
 	ListOfUnits []*Unit
 }
 
-func GDA(units map[Range]*Unit, min_dense_points int, min_cluster_points int) (map[Range]*Unit, map[int]Cluster){
-	cluster_id := 1
+func GDA(Units Units, min_dense_points int, min_cluster_points int) (map[Range]*Unit, map[int]Cluster){
+	units := Units.GetUnits()
+	cluster_id := Units.GetNextClusterID()
 	cluster_map := make(map[int]Cluster)
 
 	for _, unit := range units{
@@ -34,7 +35,7 @@ func GDA(units map[Range]*Unit, min_dense_points int, min_cluster_points int) (m
 					cluster.Cluster_type = OUTLIER_CLUSTER
 				}
 				cluster_map[cluster_id] = cluster
-				cluster_id++
+				cluster_id = Units.GetNextClusterID()
 			}
 		}
 	}
