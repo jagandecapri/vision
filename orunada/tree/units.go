@@ -14,7 +14,21 @@ type Units struct{
 	tmpUnitToCluster map[Range]*Unit
 }
 
-func (us Units) GetUnits() map[Range]*Unit{
+func NewUnits() Units{
+	units := Units{
+		Store: make(map[Range]*Unit),
+		Point_unit_map: make(map[int]Range),
+		Cluster_map: make(map[int]Cluster),
+		listDenseUnits: make(map[Range]*Unit),
+		listOldDenseUnits: make(map[Range]*Unit),
+		listNewDenseUnits: make(map[Range]*Unit),
+		listUnitToRep: make(map[Range]*Unit),
+		tmpUnitToCluster: make(map[Range]*Unit),
+	}
+	return units
+}
+
+func (us *Units) GetUnits() map[Range]*Unit{
 	if len(us.tmpUnitToCluster) == 0{
 		return us.Store
 	} else {
