@@ -16,7 +16,7 @@ type ClusterInterface interface{
 type Cluster struct{
 	Cluster_id int
 	Cluster_type int
-	ListOfUnits []*Unit
+	ListOfUnits map[Range]*Unit
 }
 
 func GDA(Units Units, min_dense_points int, min_cluster_points int) (map[Range]*Unit, map[int]Cluster){
@@ -24,11 +24,11 @@ func GDA(Units Units, min_dense_points int, min_cluster_points int) (map[Range]*
 	cluster_id := Units.GetNextClusterID()
 	cluster_map := make(map[int]Cluster)
 
-	for _, unit := range units{
+	for rg, unit := range units{
 		if unit.Cluster_id == UNCLASSIFIED{
 			if isDenseUnit(unit, min_dense_points){ //TODO: Could be redundant is only dense units are sent
-				cluster := Cluster{Cluster_id: cluster_id}
-				num_points_cluster := expand(unit, cluster_id, min_dense_points, cluster)
+				cluster := Cluster{Cluster_id: cluster_id, ListOfUnits: make(map[Range]*Unit)}
+				num_points_cluster := expand(unit, rg, cluster_id, min_dense_points, cluster)
 				if num_points_cluster >= min_cluster_points{
 					cluster.Cluster_type = NON_OUTLIER_CLUSTER
 				} else {
@@ -42,41 +42,50 @@ func GDA(Units Units, min_dense_points int, min_cluster_points int) (map[Range]*
 	return units, cluster_map
 }
 
-func expand(unit *Unit, cluster_id int, min_dense_points int, cluster Cluster) (int){
+type Seed struct{
+	unit *Unit
+	rg Range
+}
+
+func expand(unit *Unit, rg Range, cluster_id int, min_dense_points int, cluster Cluster) (int){
 	point_count_acc := 0
 
-	seeds := []*Unit{}
-	for _, neighbour_unit := range unit.Neighbour_units{
+	seeds := []Seed{}
+	for rg, neighbour_unit := range unit.Neighbour_units{
 		if isDenseUnit(neighbour_unit, min_dense_points){
 			if neighbour_unit.Cluster_id == UNCLASSIFIED {
-				seeds = append(seeds, neighbour_unit)
+				seed := Seed{unit: neighbour_unit, rg: rg}
+				seeds = append(seeds, seed)
 			}
 		}
 	}
 
 	unit.Cluster_id = cluster_id
 	point_count_acc += unit.GetNumberOfPoints()
-	cluster.ListOfUnits = append(cluster.ListOfUnits, unit)
+	cluster.ListOfUnits[rg] = unit
 	point_count_acc = spread(point_count_acc, seeds, cluster_id, min_dense_points, cluster)
 	return point_count_acc
 }
 
-func spread(point_count_acc int, seeds []*Unit, cluster_id int, min_dense_points int, cluster Cluster) int{
+func spread(point_count_acc int, seeds []Seed, cluster_id int, min_dense_points int, cluster Cluster) int{
 	if len(seeds) == 0{
 		return point_count_acc
 	}
+	var seed Seed
 	var unit *Unit
-	unit, seeds = seeds[0], seeds[1:]
+	seed, seeds = seeds[0], seeds[1:]
+	unit = seed.unit
 
 	if unit.Cluster_id == UNCLASSIFIED || unit.Cluster_id == NOISE{
 		unit.Cluster_id = cluster_id
 		point_count_acc += unit.GetNumberOfPoints()
-		cluster.ListOfUnits = append(cluster.ListOfUnits, unit)
+		cluster.ListOfUnits[seed.rg] = unit
 
-		for _, neighbour_unit := range unit.Neighbour_units{
+		for rg, neighbour_unit := range unit.Neighbour_units{
 			if isDenseUnit(neighbour_unit, min_dense_points){
 				if neighbour_unit.Cluster_id == UNCLASSIFIED {
-					seeds = append(seeds, neighbour_unit)
+					seed := Seed{unit: neighbour_unit, rg: rg}
+					seeds = append(seeds, seed)
 				}
 			}
 		}
