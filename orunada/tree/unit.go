@@ -9,7 +9,7 @@ type Unit struct {
 	Cluster_id         int
 	Dimension          int
 	Center             PointContainer
-	Neighbour_units    []*Unit
+	Neighbour_units    map[Range]*Unit
 	points             map[int]PointContainer
 	Center_calculated bool
 }
