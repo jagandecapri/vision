@@ -65,8 +65,8 @@ func (us *Units) UpdatePoint(point PointContainer, new_range Range){
 	point_id := point.GetID()
 	cur_range := us.Point_unit_map[point_id]
 	if cur_range != new_range{
-		us.AddPoint(point, new_range)
 		us.RemovePoint(point, cur_range)
+		us.AddPoint(point, new_range)
 	}
 }
 
@@ -97,16 +97,11 @@ func (us *Units) RecomputeDenseUnits(min_dense_points int){
 			}
 		}
 	}
-	us.ProcessOldDenseUnits()
-}
-
-func (us *Units) RemoveCluster(cluster_id int) []*Unit{
-	list_of_units := us.Cluster_map[cluster_id].ListOfUnits
-	delete(us.Cluster_map, cluster_id)
-	return list_of_units
+	//us.ProcessOldDenseUnits()
 }
 
 func (us *Units) ProcessOldDenseUnits(){
+	dst := make(map[Range]*Unit)
 	for _, unit := range us.listOldDenseUnits{
 		cluster_id := unit.Cluster_id
 		unit.Cluster_id = UNCLASSIFIED
@@ -122,17 +117,35 @@ func (us *Units) ProcessOldDenseUnits(){
 		}
 
 		if count_neighbour_same_cluster > 2 {
-			//listUnitToRep := us.RemoveCluster(cluster_id)
-			//MERGE CLUSTER
+			src := us.RemoveCluster(cluster_id)
+			for rg, unit := range src{
+				dst[rg] = unit
+			}
 		}
 	}
+	us.tmpUnitToCluster = dst
+}
+
+func (us *Units) RemoveCluster(cluster_id int) map[Range]*Unit{
+	tmp := make(map[Range]*Unit)
+	for rg, unit := range us.Cluster_map[cluster_id].ListOfUnits{
+		tmp[rg] = unit
+	}
+	delete(us.Cluster_map, cluster_id)
+	return tmp
+}
+
+func (us *Units) Cluster(min_dense_points int, min_cluster_points int){
+	us.RecomputeDenseUnits(min_dense_points)
+	us.ProcessOldDenseUnits()
+	GDA(*us, min_dense_points, min_cluster_points)
 }
 
 func (us *Units) isDenseUnit(unit *Unit, min_dense_points int) bool{
 	return unit.GetNumberOfPoints() >= min_dense_points
 }
 
-func (us *Units) GetNeighbouringUnits(rg Range, interval_l float64) []*Unit {
+func (us *Units) GetNeighbouringUnits(rg Range, interval_l float64) map[Range]*Unit {
 	/**
 	U = unit; n{x} => neighbouring units
 	|n3|n5|n8|
@@ -160,11 +173,12 @@ func (us *Units) GetNeighbouringUnits(rg Range, interval_l float64) []*Unit {
 
 	tmp := [8]Range{n1,n2,n3,n4,n5,n6,n7,n8}
 
-	neighbour_units := []*Unit{}
+	neighbour_units := make(map[Range]*Unit)
 
 	for _, rg := range tmp{
 		if unit, ok := us.Store[rg]; ok{
-			neighbour_units = append(neighbour_units, unit)
+			//neighbour_units = append(neighbour_units, unit)
+			neighbour_units[rg] = unit
 		}
 	}
 

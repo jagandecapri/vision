@@ -39,3 +39,119 @@ func TestUnits_GetNeighbouringUnits(t *testing.T) {
 func TestUnits_ImplementsClusterInterface(t *testing.T){
 	assert.Implements(t, (*ClusterInterface)(nil), new(Units))
 }
+
+func TestUnits_AddPoint(t *testing.T) {
+	p := PointContainer{Point: Point{Id: 1}}
+	rg := Range{Low: [2]float64{0, 0}, High: [2]float64{0.5, 0.5}}
+	units := NewUnits()
+	unit := NewUnit(1, 2)
+	units.Store[rg] = &unit
+	units.AddPoint(p, rg)
+	assert.Equal(t, units.Point_unit_map[1], rg)
+	assert.Equal(t, units.Store[rg].points[1].Id, 1)
+	assert.False(t, units.Store[rg].Center_calculated)
+}
+
+func TestUnits_RemovePoint(t *testing.T) {
+	p := PointContainer{Point: Point{Id: 1}}
+	rg := Range{Low: [2]float64{0, 0}, High: [2]float64{0.5, 0.5}}
+	units := NewUnits()
+	unit := NewUnit(1, 2)
+	units.Store[rg] = &unit
+	units.AddPoint(p, rg)
+	units.RemovePoint(p, rg)
+	var ok bool
+	_, ok = units.Point_unit_map[1]
+	assert.False(t, ok)
+	_, ok = units.Store[rg].points[1]
+	assert.False(t, ok)
+	assert.False(t, units.Store[rg].Center_calculated)
+}
+
+func TestUnits_UpdatePoint(t *testing.T) {
+	p := PointContainer{Point: Point{Id: 1}}
+	cur_rg := Range{Low: [2]float64{0, 0}, High: [2]float64{0.5, 0.5}}
+	units := NewUnits()
+	unit := NewUnit(1, 2)
+	units.Store[cur_rg] = &unit
+	units.AddPoint(p, cur_rg)
+	new_rg := Range{Low: [2]float64{0.5, 0.5}, High: [2]float64{1.0, 1.0}}
+	unit1 := NewUnit(1, 2)
+	units.Store[new_rg] = &unit1
+	units.UpdatePoint(p, new_rg)
+	var ok bool
+	_, ok = units.Point_unit_map[1]
+	assert.True(t, ok)
+	_, ok = units.Store[cur_rg].points[1]
+	assert.False(t, ok)
+	_, ok = units.Store[new_rg].points[1]
+	assert.True(t, ok)
+}
+
+func TestUnits_RecomputeDenseUnits(t *testing.T) {
+	p := PointContainer{Point : Point{Id: 1}}
+
+	unit := NewUnit(1, 2)
+	unit.points[1] = p
+	rg := Range{Low: [2]float64{0, 0}, High: [2]float64{0.5, 0.5}}
+
+	unit1 := NewUnit(1, 2)
+	rg1 := Range{Low: [2]float64{0.5, 0.5}, High: [2]float64{1.0, 1.0}}
+
+	units := NewUnits()
+	units.Store[rg] = &unit
+	units.Store[rg1] = &unit1
+
+	var ok bool
+	/*
+	if isDenseUnit(unit, min_dense_points){
+		.....
+		if !ok{
+			us.listDenseUnits[rg] = unit
+			us.listNewDenseUnits[rg] = unit
+	}
+	 */
+	units.RecomputeDenseUnits(1)
+	_, ok =  units.listDenseUnits[rg]
+	assert.True(t, ok)
+	_, ok =  units.listNewDenseUnits[rg]
+	assert.True(t, ok)
+	_, ok = units.listDenseUnits[rg1]
+	assert.False(t, ok)
+
+	/*
+	if isDenseUnit(unit, min_dense_points){
+		_, ok := us.listDenseUnits[rg]
+		...
+	}
+	 */
+	units.RecomputeDenseUnits(1)
+	_, ok =  units.listDenseUnits[rg]
+	assert.True(t, ok)
+	_, ok =  units.listNewDenseUnits[rg]
+	assert.True(t, ok)
+
+	/*
+	 else {
+		...
+		if ok{
+			delete(us.listDenseUnits, rg)
+			us.listOldDenseUnits[rg] = unit
+		}
+	 */
+	unit.points = make(map[int]PointContainer)
+	units.RecomputeDenseUnits(1)
+	_, ok =  units.listDenseUnits[rg]
+	assert.False(t, ok)
+	_, ok =  units.listOldDenseUnits[rg]
+	assert.True(t, ok)
+
+	/*
+	else {
+		_, ok := us.listDenseUnits[rg]
+
+	 */
+	units.RecomputeDenseUnits(1)
+	_, ok = units.listOldDenseUnits[rg1]
+	assert.False(t, ok)
+}
