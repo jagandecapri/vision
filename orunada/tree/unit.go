@@ -78,3 +78,13 @@ func (u *Unit) Distance(p1 PointInterface) float64 {
 func (u *Unit) PlaneDistance(val float64, dim int) float64 {
 	return 0.0
 }
+
+func NewUnit(id int, dimension int) Unit{
+	unit := Unit{
+		Id: id,
+		Dimension: dimension,
+		Neighbour_units: make(map[Range]*Unit),
+		points: make(map[int]PointContainer),
+	}
+	return unit
+}
