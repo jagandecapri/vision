@@ -27,19 +27,23 @@ func GDA(Units Units, min_dense_points int, min_cluster_points int) (map[Range]*
 	for rg, unit := range units{
 		if unit.Cluster_id == UNCLASSIFIED{
 			if isDenseUnit(unit, min_dense_points){ //TODO: Could be redundant is only dense units are sent
-				cluster := Cluster{Cluster_id: cluster_id, ListOfUnits: make(map[Range]*Unit)}
-				num_points_cluster := expand(unit, rg, cluster_id, min_dense_points, cluster)
-				if num_points_cluster >= min_cluster_points{
-					cluster.Cluster_type = NON_OUTLIER_CLUSTER
-				} else {
-					cluster.Cluster_type = OUTLIER_CLUSTER
-				}
-				cluster_map[cluster_id] = cluster
+				NewCluster(unit, rg, cluster_id, min_dense_points, min_cluster_points, cluster_map)
 				cluster_id = Units.GetNextClusterID()
 			}
 		}
 	}
 	return units, cluster_map
+}
+
+func NewCluster(unit *Unit, rg Range, cluster_id int, min_dense_points int, min_cluster_points int, cluster_map map[int]Cluster){
+	cluster := Cluster{Cluster_id: cluster_id, ListOfUnits: make(map[Range]*Unit)}
+	num_points_cluster := expand(unit, rg, cluster_id, min_dense_points, cluster)
+	if num_points_cluster >= min_cluster_points{
+	cluster.Cluster_type = NON_OUTLIER_CLUSTER
+	} else {
+	cluster.Cluster_type = OUTLIER_CLUSTER
+	}
+	cluster_map[cluster_id] = cluster
 }
 
 type Seed struct{
