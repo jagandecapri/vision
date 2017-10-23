@@ -111,12 +111,12 @@ func (us *Units) ProcessOldDenseUnits(){
 			if neighbour_unit.Cluster_id == cluster_id{
 				count_neighbour_same_cluster++
 			}
-			if count_neighbour_same_cluster > 2{
+			if count_neighbour_same_cluster >= 2{
 				break
 			}
 		}
 
-		if count_neighbour_same_cluster > 2 {
+		if count_neighbour_same_cluster >= 2 {
 			src := us.RemoveCluster(cluster_id)
 			for rg, unit := range src{
 				dst[rg] = unit
