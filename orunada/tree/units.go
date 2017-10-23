@@ -8,9 +8,6 @@ type Units struct{
 	MinClusterPoints int
 	cluster_id_counter int
 	listDenseUnits map[Range]*Unit
-	listOldDenseUnits map[Range]*Unit
-	listNewDenseUnits map[Range]*Unit
-	listUnitToRep map[Range]*Unit
 	tmpUnitToCluster map[Range]*Unit
 }
 
@@ -20,9 +17,6 @@ func NewUnits() Units{
 		Point_unit_map: make(map[int]Range),
 		Cluster_map: make(map[int]Cluster),
 		listDenseUnits: make(map[Range]*Unit),
-		listOldDenseUnits: make(map[Range]*Unit),
-		listNewDenseUnits: make(map[Range]*Unit),
-		listUnitToRep: make(map[Range]*Unit),
 		tmpUnitToCluster: make(map[Range]*Unit),
 	}
 	return units
@@ -81,28 +75,31 @@ func (us *Units) SetupGrid(interval_l float64){
 	}
 }
 
-func (us *Units) RecomputeDenseUnits(min_dense_points int){
+func (us *Units) RecomputeDenseUnits(min_dense_points int) (map[Range]*Unit, map[Range]*Unit){
+	listNewDenseUnits := make(map[Range]*Unit)
+	listOldDenseUnits := make(map[Range]*Unit)
+
 	for rg, unit := range us.Store{
 		if isDenseUnit(unit, min_dense_points){
 			_, ok := us.listDenseUnits[rg]
 			if !ok{
 				us.listDenseUnits[rg] = unit
-				us.listNewDenseUnits[rg] = unit
+				listNewDenseUnits[rg] = unit
 			}
 		} else {
 			_, ok := us.listDenseUnits[rg]
 			if ok{
 				delete(us.listDenseUnits, rg)
-				us.listOldDenseUnits[rg] = unit
+				listOldDenseUnits[rg] = unit
 			}
 		}
 	}
-	//us.ProcessOldDenseUnits()
+	return listNewDenseUnits, listOldDenseUnits
 }
 
-func (us *Units) ProcessOldDenseUnits(){
+func (us *Units) ProcessOldDenseUnits(listOldDenseUnits map[Range]*Unit) map[Range]*Unit {
 	dst := make(map[Range]*Unit)
-	for _, unit := range us.listOldDenseUnits{
+	for _, unit := range listOldDenseUnits{
 		cluster_id := unit.Cluster_id
 		unit.Cluster_id = UNCLASSIFIED
 		count_neighbour_same_cluster := 0
@@ -123,7 +120,7 @@ func (us *Units) ProcessOldDenseUnits(){
 			}
 		}
 	}
-	us.tmpUnitToCluster = dst
+	return dst
 }
 
 func (us *Units) RemoveCluster(cluster_id int) map[Range]*Unit{
@@ -136,9 +133,9 @@ func (us *Units) RemoveCluster(cluster_id int) map[Range]*Unit{
 }
 
 func (us *Units) Cluster(min_dense_points int, min_cluster_points int){
-	us.RecomputeDenseUnits(min_dense_points)
-	us.ProcessOldDenseUnits()
-	GDA(*us, min_dense_points, min_cluster_points)
+	//us.RecomputeDenseUnits(min_dense_points)
+	//us.ProcessOldDenseUnits()
+	//GDA(*us, min_dense_points, min_cluster_points)
 }
 
 func (us *Units) isDenseUnit(unit *Unit, min_dense_points int) bool{

@@ -103,6 +103,7 @@ func TestUnits_RecomputeDenseUnits(t *testing.T) {
 	units.Store[rg1] = &unit1
 
 	var ok bool
+	var listNewDenseUnits, listOldDenseUnits map[Range]*Unit
 	/*
 	if isDenseUnit(unit, min_dense_points){
 		.....
@@ -111,10 +112,10 @@ func TestUnits_RecomputeDenseUnits(t *testing.T) {
 			us.listNewDenseUnits[rg] = unit
 	}
 	 */
-	units.RecomputeDenseUnits(1)
+	listNewDenseUnits, _ = units.RecomputeDenseUnits(1)
 	_, ok =  units.listDenseUnits[rg]
 	assert.True(t, ok)
-	_, ok =  units.listNewDenseUnits[rg]
+	_, ok = listNewDenseUnits[rg]
 	assert.True(t, ok)
 	_, ok = units.listDenseUnits[rg1]
 	assert.False(t, ok)
@@ -125,10 +126,8 @@ func TestUnits_RecomputeDenseUnits(t *testing.T) {
 		...
 	}
 	 */
-	units.RecomputeDenseUnits(1)
+	listNewDenseUnits, _ = units.RecomputeDenseUnits(1)
 	_, ok =  units.listDenseUnits[rg]
-	assert.True(t, ok)
-	_, ok =  units.listNewDenseUnits[rg]
 	assert.True(t, ok)
 
 	/*
@@ -140,10 +139,10 @@ func TestUnits_RecomputeDenseUnits(t *testing.T) {
 		}
 	 */
 	unit.points = make(map[int]PointContainer)
-	units.RecomputeDenseUnits(1)
+	_, listOldDenseUnits = units.RecomputeDenseUnits(1)
 	_, ok =  units.listDenseUnits[rg]
 	assert.False(t, ok)
-	_, ok =  units.listOldDenseUnits[rg]
+	_, ok = listOldDenseUnits[rg]
 	assert.True(t, ok)
 
 	/*
@@ -151,8 +150,8 @@ func TestUnits_RecomputeDenseUnits(t *testing.T) {
 		_, ok := us.listDenseUnits[rg]
 
 	 */
-	units.RecomputeDenseUnits(1)
-	_, ok = units.listOldDenseUnits[rg1]
+	_, listOldDenseUnits =units.RecomputeDenseUnits(1)
+	_, ok = listOldDenseUnits[rg1]
 	assert.False(t, ok)
 }
 
@@ -174,12 +173,12 @@ func TestUnits_ProcessOldDenseUnits(t *testing.T) {
 		Range{Low: [2]float64{0, 1}, High: [2]float64{1, 2}}: {Id: 2, Cluster_id: 1},
 	}
 	units.Cluster_map = map[int]Cluster{1: {ListOfUnits: list_of_units}}
-	units.listOldDenseUnits = map[Range]*Unit{{Low: [2]float64{1, 1}, High: [2]float64{2, 2}}: &unit}
+	listOldDenseUnits := map[Range]*Unit{{Low: [2]float64{1, 1}, High: [2]float64{2, 2}}: &unit}
 
-	units.ProcessOldDenseUnits()
+	listUnitToRep := units.ProcessOldDenseUnits(listOldDenseUnits)
 
 	unit_ids := []int{}
-	for _, nu := range units.tmpUnitToCluster{
+	for _, nu := range listUnitToRep{
 		unit_ids = append(unit_ids, nu.Id)
 	}
 
