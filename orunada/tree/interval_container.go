@@ -1,7 +1,7 @@
 package tree
 
 import (
-	"github.com/golang-collections/go-datastructures/augmentedtree"
+	"github.com/Workiva/go-datastructures/augmentedtree"
 	"math"
 )
 
@@ -31,24 +31,12 @@ func (itv IntervalContainer) HighAtDimension(dim uint64) int64{
 // OverlapsAtDimension should return a bool indicating if the provided
 // interval overlaps this interval at the dimension requested.
 func (itv IntervalContainer) OverlapsAtDimension(interval augmentedtree.Interval, dim uint64) bool{
-	check := false
-	//for i := uint64(1); i <= uint64(len(itv.Low)); i++{
-	//	if interval.LowAtDimension(i) <= itv.HighAtDimension(i) &&
-	//		interval.HighAtDimension(i) >= itv.LowAtDimension(i){
-	//		check = true
-	//	} else {
-	//		check = false
-	//	}
-	//}
-	//for i := uint64(1); i <= uint64(len(itv.Low)); i++{
-		if interval.LowAtDimension(dim) <= itv.HighAtDimension(dim) &&
-			interval.HighAtDimension(dim) >= itv.LowAtDimension(dim){
-			check = true
-		} else {
-			check = false
-		}
-	//}
-	return check
+	if interval.LowAtDimension(dim) < itv.HighAtDimension(dim) &&
+		interval.HighAtDimension(dim) >= itv.LowAtDimension(dim) {
+		return true
+	}
+
+	return false
 }
 
 // ID should be a unique ID representing this interval.  This
