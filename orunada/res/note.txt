@@ -1,0 +1,5 @@
+Wireshark command to split big PCAP file to smaller file
+
+cd C:\Program Files\Wireshark>
+
+editcap.exe -r C:\Users\Jack\Downloads\201705021400.pcap C:\Users\Jack\Downloads\pcap_split\201705021400_split.pcap 1-10000
