@@ -31,6 +31,19 @@ func UniqFloat64(input []float64) []float64 {
 	return u
 }
 
+func UniqInt(input []int) []int {
+	u := make([]int, 0, len(input))
+	m := make(map[int]struct{})
+
+	for _, val := range input {
+		if _, ok := m[val]; !ok {
+			m[val] = struct{}{}
+			u = append(u, val)
+		}
+	}
+	return u
+}
+
 func UniqString(input []string) []string {
 	u := make([]string, 0, len(input))
 	m := make(map[string]struct{})
@@ -55,3 +68,12 @@ func GetKeyComb(sorter []string, feature_cnt int) [][]string {
 	})
 	return all
 }
+
+//Taken from https://stackoverflow.com/questions/39544571/golang-round-to-nearest-0-05
+func Round(x float64, unit float64) float64 {
+	if x > 0 {
+		return float64(int64(x/unit+0.5)) * unit
+	}
+	return float64(int64(x/unit-0.5)) * unit
+}
+
