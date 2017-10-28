@@ -43,6 +43,10 @@ func (us *Units) GetNextClusterID() int{
 	return us.cluster_id_counter
 }
 
+func (us *Units) GetClusterMap() map[int]Cluster{
+	return us.Cluster_map
+}
+
 func (us *Units) RemovePoint(point PointContainer, rg Range){
 	unit := us.Store[rg]
 	unit.RemovePoint(point)
