@@ -26,7 +26,7 @@ type Cluster struct{
 	ListOfUnits map[Range]*Unit
 }
 
-func GDA(Units Units, min_dense_points int, min_cluster_points int) (map[Range]*Unit, map[int]Cluster){
+func IGDCA(Units Units, min_dense_points int, min_cluster_points int) (map[Range]*Unit, map[int]Cluster){
 	units := Units.GetUnits()
 	cluster_id := Units.GetNextClusterID()
 	cluster_map := Units.GetClusterMap()
