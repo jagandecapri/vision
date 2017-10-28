@@ -1,6 +1,8 @@
 package tree
 
-import "github.com/jagandecapri/vision/orunada/utils"
+import (
+	"github.com/jagandecapri/vision/orunada/utils"
+)
 
 const UNCLASSIFIED = 0
 const NOISE = -1
@@ -32,14 +34,14 @@ func GDA(Units Units, min_dense_points int, min_cluster_points int) (map[Range]*
 	for rg, unit := range units{
 		if unit.Cluster_id == UNCLASSIFIED{
 			if isDenseUnit(unit, min_dense_points){ //TODO: Could be redundant is only dense units are sent
-				var ret bool
+				var ret int
 				var neighbour_cluster_ids []int
-				ret, neighbour_cluster_ids = AbsorbIntoCluster(unit, Units, min_dense_points)
+				ret, neighbour_cluster_ids = AbsorbIntoCluster(unit, min_dense_points)
 				if ret == SUCCESS{
 					if len(neighbour_cluster_ids) > 1{
-						MergeClusters(units, neighbour_cluster_ids)
+						MergeClusters(cluster_map, neighbour_cluster_ids)
 					}
-				} else if ret == FAILURE{
+				}else if ret == FAILURE{
 					NewCluster(unit, rg, cluster_id, min_dense_points, min_cluster_points, cluster_map)
 					cluster_id = Units.GetNextClusterID()
 				}
@@ -60,11 +62,11 @@ func NewCluster(unit *Unit, rg Range, cluster_id int, min_dense_points int, min_
 	cluster_map[cluster_id] = cluster
 }
 
-func AbsorbIntoCluster(unit *Unit, units Units, min_dense_points int) (int, neighbour_cluster_ids []int){
+func AbsorbIntoCluster(unit *Unit, min_dense_points int) (int, []int){
 	ret_value := FAILURE
 	cluster_ids := []int{}
 	for _, neighbour_unit := range unit.Neighbour_units{
-		if isDenseUnit(neighbour_unit, min_dense_points) && neighbour_unit.Cluster_id != UNCLASSIFIED ||
+		if isDenseUnit(neighbour_unit, min_dense_points) && neighbour_unit.Cluster_id != UNCLASSIFIED &&
 			neighbour_unit.Cluster_id != NOISE{
 			unit.Cluster_id = neighbour_unit.Cluster_id
 			cluster_ids = append(cluster_ids, unit.Cluster_id)
@@ -80,9 +82,8 @@ func AbsorbIntoCluster(unit *Unit, units Units, min_dense_points int) (int, neig
 	return ret_value, cluster_ids
 }
 
-func MergeClusters(units Units, cluster_ids []int) int{
+func MergeClusters(cluster_map map[int]Cluster, cluster_ids []int) int{
 	ret_value := FAILURE
-	cluster_map := units.GetClusterMap()
 	cluster_id_to_merge := cluster_ids[0]
 	for _, cluster_id := range cluster_ids{
 		cluster, ok := cluster_map[cluster_id]
