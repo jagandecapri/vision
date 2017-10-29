@@ -12,6 +12,7 @@ type Unit struct {
 	Neighbour_units    map[Range]*Unit
 	points             map[int]PointContainer
 	Center_calculated bool
+	Range
 }
 
 func (u *Unit) AddPoint(p PointContainer) {
@@ -79,12 +80,13 @@ func (u *Unit) PlaneDistance(val float64, dim int) float64 {
 	return 0.0
 }
 
-func NewUnit(id int, dimension int) Unit{
+func NewUnit(id int, dimension int, rg Range) Unit{
 	unit := Unit{
 		Id: id,
 		Dimension: dimension,
 		Neighbour_units: make(map[Range]*Unit),
 		points: make(map[int]PointContainer),
+		Range: rg,
 	}
 	return unit
 }

@@ -44,7 +44,7 @@ func TestUnits_AddPoint(t *testing.T) {
 	p := PointContainer{Point: Point{Id: 1}}
 	rg := Range{Low: [2]float64{0, 0}, High: [2]float64{0.5, 0.5}}
 	units := NewUnits()
-	unit := NewUnit(1, 2)
+	unit := NewUnit(1, 2, rg)
 	units.Store[rg] = &unit
 	units.AddPoint(p, rg)
 	assert.Equal(t, units.Point_unit_map[1], rg)
@@ -56,7 +56,7 @@ func TestUnits_RemovePoint(t *testing.T) {
 	p := PointContainer{Point: Point{Id: 1}}
 	rg := Range{Low: [2]float64{0, 0}, High: [2]float64{0.5, 0.5}}
 	units := NewUnits()
-	unit := NewUnit(1, 2)
+	unit := NewUnit(1, 2, rg)
 	units.Store[rg] = &unit
 	units.AddPoint(p, rg)
 	units.RemovePoint(p, rg)
@@ -72,11 +72,11 @@ func TestUnits_UpdatePoint(t *testing.T) {
 	p := PointContainer{Point: Point{Id: 1}}
 	cur_rg := Range{Low: [2]float64{0, 0}, High: [2]float64{0.5, 0.5}}
 	units := NewUnits()
-	unit := NewUnit(1, 2)
+	unit := NewUnit(1, 2, cur_rg)
 	units.Store[cur_rg] = &unit
 	units.AddPoint(p, cur_rg)
 	new_rg := Range{Low: [2]float64{0.5, 0.5}, High: [2]float64{1.0, 1.0}}
-	unit1 := NewUnit(1, 2)
+	unit1 := NewUnit(1, 2, new_rg)
 	units.Store[new_rg] = &unit1
 	units.UpdatePoint(p, new_rg)
 	var ok bool
@@ -91,12 +91,12 @@ func TestUnits_UpdatePoint(t *testing.T) {
 func TestUnits_RecomputeDenseUnits(t *testing.T) {
 	p := PointContainer{Point : Point{Id: 1}}
 
-	unit := NewUnit(1, 2)
-	unit.points[1] = p
 	rg := Range{Low: [2]float64{0, 0}, High: [2]float64{0.5, 0.5}}
+	unit := NewUnit(1,2,rg)
+	unit.points[1] = p
 
-	unit1 := NewUnit(1, 2)
 	rg1 := Range{Low: [2]float64{0.5, 0.5}, High: [2]float64{1.0, 1.0}}
+	unit1 := NewUnit(1,2,rg1)
 
 	units := NewUnits()
 	units.Store[rg] = &unit
@@ -156,7 +156,8 @@ func TestUnits_RecomputeDenseUnits(t *testing.T) {
 }
 
 func TestUnits_ProcessOldDenseUnits(t *testing.T) {
-	unit := NewUnit(1, 2)
+	rg := Range{Low: [2]float64{1, 1}, High: [2]float64{2, 2}}
+	unit := NewUnit(1,2,rg)
 	unit.Id = 9
 	unit.Cluster_id = 1
 	unit.Neighbour_units = map[Range]*Unit{{Low: [2]float64{0, 0}, High: [2]float64{1, 1}}: {Id: 1, Cluster_id: 1},
