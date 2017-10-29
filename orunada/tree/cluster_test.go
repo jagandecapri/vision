@@ -82,18 +82,30 @@ func TestCluster2by2GridAbsorbCluster(t *testing.T) {
 
 	min_dense_points := 2
 
-	res, cluster_ids := AbsorbIntoCluster(&u1, min_dense_points)
+	units.Cluster_map = map[int]Cluster{
+		1: {
+			Cluster_id: 1,
+			ListOfUnits: map[Range]*Unit{
+				r2: &u2,
+				r3: &u3,
+			},
+		},
+	}
+
+	res, cluster_ids, cluster_map := AbsorbIntoCluster(&u1, r1, units.Cluster_map, min_dense_points)
 	assert.Equal(t, res, SUCCESS)
 	assert.Equal(t, 1, len(cluster_ids), "%v", cluster_ids)
 	assert.Contains(t, cluster_ids, 1)
 	assert.Equal(t, 1, u1.Cluster_id)
+	_, ok := cluster_map[1].ListOfUnits[r1]
+	assert.True(t, ok)
 }
 
-func TestCluster2by2GridMergeClusters(t *testing.T) {
+func TestCluster2by2GridMergeClusters1(t *testing.T) {
 	units := NewUnits()
 	interval_l := 1.0
 
-	u1 := Unit{Id: 1, Center: PointContainer{Vec: []float64{0.5,0.5}},
+	u1 := Unit{Id: 1, Cluster_id: 1, Center: PointContainer{Vec: []float64{0.5,0.5}},
 		points: map[int]PointContainer{1: {},2: {},3: {},4: {},5: {}}}
 	r1 := Range{Low: [2]float64{0, 0}, High: [2]float64{1, 1}}
 	units.AddUnit(&u1, r1)
@@ -132,21 +144,79 @@ func TestCluster2by2GridMergeClusters(t *testing.T) {
 
 	var cluster_ids []int
 	var res int
+	var merged_cluster_id []int
+	var cluster_map map[int]Cluster
+	var ok bool
+
 	cluster_ids = []int{1,2}
-	res = MergeClusters(units.Cluster_map,cluster_ids)
+	res, merged_cluster_id,cluster_map = MergeClusters(units.Cluster_map,cluster_ids)
 	assert.Equal(t, res, SUCCESS)
 	assert.Equal(t, 1, u1.Cluster_id)
 	assert.Equal(t, 1, u2.Cluster_id)
 	assert.Equal(t, 1, u3.Cluster_id)
 	assert.Equal(t, UNCLASSIFIED, u4.Cluster_id)
+	assert.Contains(t, merged_cluster_id, 1)
+	_, ok = cluster_map[2]
+	assert.False(t, ok)
+}
+
+func TestCluster2by2GridMergeClusters2(t *testing.T) {
+	units := NewUnits()
+	interval_l := 1.0
+
+	u1 := Unit{Id: 1, Cluster_id: 1, Center: PointContainer{Vec: []float64{0.5,0.5}},
+		points: map[int]PointContainer{1: {},2: {},3: {},4: {},5: {}}}
+	r1 := Range{Low: [2]float64{0, 0}, High: [2]float64{1, 1}}
+	units.AddUnit(&u1, r1)
+
+	u2 := Unit{Id: 2, Cluster_id: 1, Center: PointContainer{Vec: []float64{0.5,1.5}},
+		points: map[int]PointContainer{1: {},2: {}}}
+	r2 := Range{Low: [2]float64{0, 1}, High: [2]float64{1, 2}}
+	units.AddUnit(&u2, r2)
+
+	u3 := Unit{Id: 3, Cluster_id: 2, Center: PointContainer{Vec: []float64{1.5,0.5}},
+		points: map[int]PointContainer{1: {},2: {}}}
+	r3 := Range{Low: [2]float64{1, 0}, High: [2]float64{2, 1}}
+	units.AddUnit(&u3, r3)
+
+	u4 := Unit{Id: 4, Center: PointContainer{Vec: []float64{1.5,1.5}}}
+	r4 := Range{Low: [2]float64{1, 1}, High: [2]float64{2, 2}}
+	units.AddUnit(&u4, r4)
+
+	units.SetupGrid(interval_l)
+
+	units.Cluster_map = map[int]Cluster{
+		1: {
+			Cluster_id: 1,
+			ListOfUnits: map[Range]*Unit{
+				r1: &u1,
+				r2: &u2,
+			},
+		},
+		2: {
+			Cluster_id: 2,
+			ListOfUnits: map[Range]*Unit{
+				r3: &u3,
+			},
+		},
+	}
+
+	var cluster_ids []int
+	var res int
+	var merged_cluster_id []int
+	var cluster_map map[int]Cluster
+	var ok bool
 
 	cluster_ids = []int{2,1}
-	res = MergeClusters(units.Cluster_map,cluster_ids)
+	res, merged_cluster_id,cluster_map = MergeClusters(units.Cluster_map,cluster_ids)
 	assert.Equal(t, res, SUCCESS)
 	assert.Equal(t, 2, u1.Cluster_id)
 	assert.Equal(t, 2, u2.Cluster_id)
-	assert.Equal(t, 2, u3.Cluster_id)
+	assert.Equal(t, 2, u3.Cluster_id, "%v", u3.Cluster_id)
 	assert.Equal(t, UNCLASSIFIED, u4.Cluster_id)
+	assert.Contains(t, merged_cluster_id, 2)
+	_, ok = cluster_map[1]
+	assert.False(t, ok)
 }
 
 func TestCluster3by3Grid(t *testing.T) {

@@ -36,13 +36,18 @@ func IGDCA(Units Units, min_dense_points int, min_cluster_points int) (map[Range
 			if isDenseUnit(unit, min_dense_points){ //TODO: Could be redundant is only dense units are sent
 				var ret int
 				var neighbour_cluster_ids []int
-				ret, neighbour_cluster_ids = AbsorbIntoCluster(unit, min_dense_points)
+				ret, neighbour_cluster_ids, cluster_map = AbsorbIntoCluster(unit, rg, cluster_map, min_dense_points)
 				if ret == SUCCESS{
 					if len(neighbour_cluster_ids) > 1{
-						MergeClusters(cluster_map, neighbour_cluster_ids)
+						_, neighbour_cluster_ids, cluster_map = MergeClusters(cluster_map, neighbour_cluster_ids)
+					}
+					num_points_cluster := 0
+					for _, cluster_id := range neighbour_cluster_ids{
+						num_points_cluster = ComputeNumberOfPointsInCluster(cluster_map[cluster_id])
+						cluster_map[cluster_id] = ComputeClusterType(min_cluster_points, num_points_cluster, cluster_map[cluster_id])
 					}
 				}else if ret == FAILURE{
-					NewCluster(unit, rg, cluster_id, min_dense_points, min_cluster_points, cluster_map)
+					cluster_map = NewCluster(unit, rg, cluster_id, min_dense_points, min_cluster_points, cluster_map)
 					cluster_id = Units.GetNextClusterID()
 				}
 			}
@@ -51,18 +56,31 @@ func IGDCA(Units Units, min_dense_points int, min_cluster_points int) (map[Range
 	return units, cluster_map
 }
 
-func NewCluster(unit *Unit, rg Range, cluster_id int, min_dense_points int, min_cluster_points int, cluster_map map[int]Cluster){
-	cluster := Cluster{Cluster_id: cluster_id, ListOfUnits: make(map[Range]*Unit)}
-	num_points_cluster := expand(unit, rg, cluster_id, min_dense_points, cluster)
-	if num_points_cluster >= min_cluster_points{
-	cluster.Cluster_type = NON_OUTLIER_CLUSTER
-	} else {
-	cluster.Cluster_type = OUTLIER_CLUSTER
+func ComputeNumberOfPointsInCluster(cluster Cluster) int{
+	num_points_cluster := 0
+	for _, unit := range cluster.ListOfUnits{
+		num_points_cluster += unit.GetNumberOfPoints()
 	}
-	cluster_map[cluster_id] = cluster
+	return num_points_cluster
+}
+func ComputeClusterType(min_cluster_points int, num_points_cluster int, cluster Cluster) Cluster{
+	if num_points_cluster >= min_cluster_points{
+		cluster.Cluster_type = NON_OUTLIER_CLUSTER
+	} else {
+		cluster.Cluster_type = OUTLIER_CLUSTER
+	}
+	return cluster
 }
 
-func AbsorbIntoCluster(unit *Unit, min_dense_points int) (int, []int){
+func NewCluster(unit *Unit, rg Range, cluster_id int, min_dense_points int, min_cluster_points int, cluster_map map[int]Cluster) map[int]Cluster{
+	cluster := Cluster{Cluster_id: cluster_id, ListOfUnits: make(map[Range]*Unit)}
+	num_points_cluster := expand(unit, rg, cluster_id, min_dense_points, cluster)
+	cluster = ComputeClusterType(min_cluster_points, num_points_cluster, cluster)
+	cluster_map[cluster_id] = cluster
+	return cluster_map
+}
+
+func AbsorbIntoCluster(unit *Unit, rg Range, cluster_map map[int]Cluster, min_dense_points int) (int, []int, map[int]Cluster){
 	ret_value := FAILURE
 	cluster_ids := []int{}
 	for _, neighbour_unit := range unit.Neighbour_units{
@@ -76,25 +94,27 @@ func AbsorbIntoCluster(unit *Unit, min_dense_points int) (int, []int){
 	if len(cluster_ids) > 0{
 		tmp := cluster_ids[0]
 		unit.Cluster_id = tmp
+		cluster_map[tmp].ListOfUnits[rg] = unit
 		ret_value = SUCCESS
 	}
-
-	return ret_value, cluster_ids
+	return ret_value, cluster_ids, cluster_map
 }
 
-func MergeClusters(cluster_map map[int]Cluster, cluster_ids []int) int{
+func MergeClusters(cluster_map map[int]Cluster, cluster_ids []int) (int, []int, map[int]Cluster){
 	ret_value := FAILURE
-	cluster_id_to_merge := cluster_ids[0]
-	for _, cluster_id := range cluster_ids{
+	cluster_id_merged, cluster_id_to_be_merged := cluster_ids[0], cluster_ids[1:]
+	tmp := []int{cluster_id_merged}
+	for _, cluster_id := range cluster_id_to_be_merged{
 		cluster, ok := cluster_map[cluster_id]
 		if ok{
 			for _, unit := range cluster.ListOfUnits{
-				unit.Cluster_id = cluster_id_to_merge
+				unit.Cluster_id = cluster_id_merged
 			}
 			ret_value = SUCCESS
+			delete(cluster_map, cluster_id)
 		}
 	}
-	return ret_value
+	return ret_value, tmp, cluster_map
 }
 
 type Seed struct{
