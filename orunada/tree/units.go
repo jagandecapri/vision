@@ -102,7 +102,7 @@ func (us *Units) RecomputeDenseUnits(min_dense_points int) (map[Range]*Unit, map
 }
 
 func (us *Units) ProcessOldDenseUnits(listOldDenseUnits map[Range]*Unit) map[Range]*Unit {
-	dst := make(map[Range]*Unit)
+	listUnitToRep := make(map[Range]*Unit)
 	for _, unit := range listOldDenseUnits{
 		cluster_id := unit.Cluster_id
 		unit.Cluster_id = UNCLASSIFIED
@@ -120,11 +120,11 @@ func (us *Units) ProcessOldDenseUnits(listOldDenseUnits map[Range]*Unit) map[Ran
 		if count_neighbour_same_cluster >= 2 {
 			src := us.RemoveCluster(cluster_id)
 			for rg, unit := range src{
-				dst[rg] = unit
+				listUnitToRep[rg] = unit
 			}
 		}
 	}
-	return dst
+	return listUnitToRep
 }
 
 func (us *Units) RemoveCluster(cluster_id int) map[Range]*Unit{
