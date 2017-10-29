@@ -13,7 +13,7 @@ type Range struct{
 type IntervalContainer struct {
 	Id           int
 	Scale_factor int
-	*Range
+	Range
 }
 
 func (itv IntervalContainer) LowAtDimension(dim uint64) int64{

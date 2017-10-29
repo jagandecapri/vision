@@ -6,19 +6,16 @@ import (
 	"math/big"
 )
 
-func IntervalBuilder(min float64, max float64, interval_length float64, scale_factor int) []IntervalContainer {
-	id := 1
-	intervals := []IntervalContainer{}
+func RangeBuilder(min float64, max float64, interval_length float64) []Range{
+	ranges := []Range{}
 	i := min
 	for i < max{
 		j := min
 		for j < max{
-			intervals = append(intervals, IntervalContainer{	Id: id,
-				Range: &Range{Low: [2]float64{i, j},
+			tmp := Range{Low: [2]float64{i, j},
 				High: [2]float64{i + interval_length,
-					j + interval_length}},
-				Scale_factor: scale_factor})
-			id += 1
+					j + interval_length}}
+			ranges = append(ranges, tmp)
 			j += interval_length
 			j, _ = strconv.ParseFloat(new(big.Float).SetFloat64(j).Text('f', 1), 64)
 			if j >= max{
@@ -31,7 +28,25 @@ func IntervalBuilder(min float64, max float64, interval_length float64, scale_fa
 			break
 		}
 	}
+	return ranges
+}
+
+func IntervalBuilder(ranges []Range,  scale_factor int) []IntervalContainer {
+	intervals := []IntervalContainer{}
+	for idx, rg := range ranges{
+		intervals = append(intervals, IntervalContainer{Id: idx,
+			Range: rg,
+			Scale_factor: scale_factor})
+	}
 	return intervals
+}
+
+func UnitsBuilder(ranges []Range, dim int) []Unit{
+	units := []Unit{}
+	for idx, _ := range ranges{
+		units = append(units, NewUnit(idx, dim))
+	}
+	return units
 }
 
 func NewIntervalTree(dim uint64) augmentedtree.Tree{
