@@ -137,9 +137,13 @@ func (us *Units) RemoveCluster(cluster_id int) map[Range]*Unit{
 }
 
 func (us *Units) Cluster(min_dense_points int, min_cluster_points int){
-	//us.RecomputeDenseUnits(min_dense_points)
-	//us.ProcessOldDenseUnits()
-	//GDA(*us, min_dense_points, min_cluster_points)
+	listNewDenseUnits, listOldDenseUnits := us.RecomputeDenseUnits(min_dense_points)
+	us.tmpUnitToCluster = listNewDenseUnits
+	_, us.Cluster_map = IGDCA(*us, min_dense_points, min_cluster_points)
+
+	listUnitToRep := us.ProcessOldDenseUnits(listOldDenseUnits)
+	us.tmpUnitToCluster = listUnitToRep
+	_, us.Cluster_map = IGDCA(*us, min_dense_points, min_cluster_points)
 }
 
 func (us *Units) isDenseUnit(unit *Unit, min_dense_points int) bool{
