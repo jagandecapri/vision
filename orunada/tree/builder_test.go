@@ -38,3 +38,17 @@ func TestIntervalBuilder(t *testing.T) {
 	assert.Contains(t, intervals, i3)
 	assert.Contains(t, intervals, i4)
 }
+
+func TestUnitsBuilder(t *testing.T) {
+	r1 := Range{Low: [2]float64{0, 0}, High: [2]float64{0.1, 0.1}}
+	r2 := Range{Low: [2]float64{0, 0.1}, High: [2]float64{0.1, 0.2}}
+	r3 := Range{Low: [2]float64{0.1, 0}, High: [2]float64{0.2, 0.1}}
+	r4 := Range{Low: [2]float64{0.1, 0.1}, High: [2]float64{0.2, 0.2}}
+	ranges := []Range{r1,r2,r3,r4}
+	dim := 2
+
+	units := UnitsBuilder(ranges, dim)
+	for _, unit := range units{
+		assert.Contains(t, ranges, unit.Range)
+	}
+}

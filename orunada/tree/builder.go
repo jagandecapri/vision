@@ -43,8 +43,8 @@ func IntervalBuilder(ranges []Range,  scale_factor int) []IntervalContainer {
 
 func UnitsBuilder(ranges []Range, dim int) []Unit{
 	units := []Unit{}
-	for idx, _ := range ranges{
-		units = append(units, NewUnit(idx, dim))
+	for idx, rg := range ranges{
+		units = append(units, NewUnit(idx, dim, rg))
 	}
 	return units
 }
