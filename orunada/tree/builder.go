@@ -1,7 +1,7 @@
 package tree
 
 import (
-	"github.com/golang-collections/go-datastructures/augmentedtree"
+	"github.com/Workiva/go-datastructures/augmentedtree"
 	"strconv"
 	"math/big"
 )
