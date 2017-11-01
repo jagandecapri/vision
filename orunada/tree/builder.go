@@ -31,20 +31,20 @@ func RangeBuilder(min float64, max float64, interval_length float64) []Range{
 	return ranges
 }
 
-func IntervalBuilder(ranges []Range,  scale_factor int) []IntervalContainer {
-	intervals := []IntervalContainer{}
+func IntervalBuilder(ranges []Range,  scale_factor int) map[Range]IntervalContainer {
+	intervals := make(map[Range]IntervalContainer)
 	for idx, rg := range ranges{
-		intervals = append(intervals, IntervalContainer{Id: idx,
+		intervals[rg] = IntervalContainer{Id: idx,
 			Range: rg,
-			Scale_factor: scale_factor})
+			Scale_factor: scale_factor}
 	}
 	return intervals
 }
 
-func UnitsBuilder(ranges []Range, dim int) []Unit{
-	units := []Unit{}
+func UnitsBuilder(ranges []Range, dim int) map[Range]Unit{
+	units := make(map[Range]Unit)
 	for idx, rg := range ranges{
-		units = append(units, NewUnit(idx, dim, rg))
+		units[rg] = NewUnit(idx, dim, rg)
 	}
 	return units
 }

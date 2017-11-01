@@ -32,11 +32,12 @@ func TestIntervalBuilder(t *testing.T) {
 	i2 := IntervalContainer{Id:1, Range: r2, Scale_factor: scale_factor}
 	i3 := IntervalContainer{Id:2, Range: r3, Scale_factor: scale_factor}
 	i4 := IntervalContainer{Id:3, Range: r4, Scale_factor: scale_factor}
+	expected_intervals := []IntervalContainer{i1,i2,i3,i4}
 	intervals := IntervalBuilder(ranges, scale_factor)
-	assert.Contains(t, intervals, i1)
-	assert.Contains(t, intervals, i2)
-	assert.Contains(t, intervals, i3)
-	assert.Contains(t, intervals, i4)
+
+	for _, interval := range intervals{
+		assert.Contains(t, expected_intervals, interval)
+	}
 }
 
 func TestUnitsBuilder(t *testing.T) {
