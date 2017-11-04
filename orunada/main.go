@@ -11,10 +11,9 @@ import (
 	"github.com/google/gopacket/layers"
 	"sort"
 	"time"
-	"github.com/Workiva/go-datastructures/augmentedtree"
 	"github.com/jagandecapri/vision/orunada/tree"
-	//"os"
 	"github.com/jagandecapri/vision/orunada/server"
+	//"os"
 )
 
 func getSorter() []string{
@@ -91,32 +90,12 @@ var window_arr_len = int(window.Seconds()/delta_t.Seconds())
 var time_counter time.Time
 var scale_factor = 5
 
-func getSubspace(subspace_key []string, mat []tree.Point, interval_tree augmentedtree.Tree) []tree.PointContainer {
-	pnt_containers := []tree.PointContainer{}
-	for _, p := range mat{
-		tmp := [2]float64{p.Vec_map[subspace_key[0]], p.Vec_map[subspace_key[1]]}
-		tmp1 := [2]float64{p.Vec_map[subspace_key[0]], p.Vec_map[subspace_key[1]]}
-		int_container := tree.IntervalContainer{Id: 1, Range: tree.Range{Low: tmp, High: tmp1}, Scale_factor: scale_factor}
-		interval := interval_tree.Query(int_container)
-		if len(interval) > 0{
-			Vec := []float64{p.Vec_map[subspace_key[0]], p.Vec_map[subspace_key[1]]}
-			pnt_container := tree.PointContainer{
-				Unit_id: int(interval[0].ID()),
-				Vec: Vec,
-				Point: p,
-			}
-			pnt_containers = append(pnt_containers, pnt_container)
-			fmt.Println("Interval found", int_container, interval)
-			//os.Exit(2)
-		} else {
-			fmt.Println("Empty interval:", int_container, interval)
-		}
-	}
-	return pnt_containers
+type Config struct{
+	min_dense_points int
+	min_cluster_points int
 }
 
-func updateFS(acc chan preprocess.PacketAcc, data chan server.HttpData, sorter []string, subspace_keys [][]string,
-interval_trees map[[2]string]augmentedtree.Tree, units map[[2]string]tree.Units){
+func updateFS(acc chan preprocess.PacketAcc, data chan server.HttpData, sorter []string, subspaces map[[2]string]preprocess.Subspace, config Config){
 	base_matrix := []tree.Point{}
 	point_ctr := 0
 	for{
@@ -135,16 +114,9 @@ interval_trees map[[2]string]augmentedtree.Tree, units map[[2]string]tree.Units)
 				fmt.Println("flow processing")
 				base_matrix = append(base_matrix, p)
 				norm_mat, _  := normalize(base_matrix, sorter)
-				for _, subspace_key := range subspace_keys{
-					keys := [2]string{}
-					copy(keys[:], subspace_key)
-					getSubspace(subspace_key, norm_mat, interval_trees[keys])
-					//subspace := getSubspace(subspace_key, norm_mat, interval_trees[keys])
-					//tmp := kd_tree[keys]
-					//for _, point := range subspace{
-					//	tmp.AddToStore(point.Unit_id, point)
-					//}
-					//Clustering(tmp, 50, 1000)
+				for _, subspace := range subspaces{
+					subspace.ComputeSubspace(norm_mat)
+					subspace.Cluster(config.min_dense_points, config.min_cluster_points)
 					//os.Exit(2)
 				}
 				base_matrix = base_matrix[1:]
@@ -160,8 +132,6 @@ func main(){
 
 	sorter:= getSorter()
 	subspace_keys := utils.GetKeyComb(sorter, 2)
-	int_trees := make(map[[2]string]augmentedtree.Tree)
-	units_arr := make(map[[2]string]tree.Units)
 	min_interval := 0.0
 	max_interval := 1.0
 	interval_length := 0.1
@@ -169,21 +139,23 @@ func main(){
 	ranges := tree.RangeBuilder(min_interval, max_interval, interval_length)
 	intervals := tree.IntervalBuilder(ranges, scale_factor)
 	units := tree.UnitsBuilder(ranges, dim)
+	subspaces := make(map[[2]string]preprocess.Subspace)
 
 	for _, subspace_key := range subspace_keys{
 		tmp := [2]string{}
 		copy(tmp[:], subspace_key)
-		int_trees[tmp] = tree.NewIntervalTree(uint64(dim))
-		units_arr[tmp] = tree.NewUnits()
-
+		Int_tree := tree.NewIntervalTree(uint64(dim))
+		Units := tree.NewUnits()
+		subspace := preprocess.Subspace{Interval_tree: &Int_tree, Units: &Units}
 		for _, interval := range intervals{
-			int_trees[tmp].Add(interval)
+			Int_tree.Add(interval)
 		}
 
 		for rg, unit := range units{
-			units := units_arr[tmp]
-			units.AddUnit(&unit, rg)
+			Units.AddUnit(&unit, rg)
 		}
+		Units.SetupGrid(interval_length)
+		subspaces[tmp] = subspace
 	}
 
 	//os.Exit(2)
@@ -191,8 +163,10 @@ func main(){
 	ch := make(chan preprocess.PacketData)
 	acc := make(chan preprocess.PacketAcc)
 	quit := make(chan int)
+
+	config := Config{min_dense_points: 10, min_cluster_points: 15}
 	go preprocess.WindowTimeSlide(ch, acc, quit)
-	go updateFS(acc, data, sorter, subspace_keys, int_trees, units_arr)
+	go updateFS(acc, data, sorter, subspaces, config)
 
 	if(err != nil){
 		log.Fatal(err)
