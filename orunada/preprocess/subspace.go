@@ -34,7 +34,9 @@ func (s *Subspace) ComputeSubspace(mat []tree.Point) {
 			} else if cur_rg != (tree.Range{}) && cur_rg != new_rg{
 				s.Units.UpdatePoint(pnt_container, new_rg)
 			}
+			//fmt.Printf("Interval found %+v %+v \n", int_container, interval)
 		} else {
+			//fmt.Println("Empty interval:", int_container, interval)
 		}
 	}
 }
