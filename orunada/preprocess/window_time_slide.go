@@ -5,12 +5,13 @@ import (
 	"time"
 )
 
+
 var delta_t time.Duration = 300 * time.Millisecond
 var window time.Duration = 15 * time.Second
-var window_arr_len = int(window.Seconds()/delta_t.Seconds())
-var time_counter time.Time
+var WINDOW_ARR_LEN = int(window.Seconds()/delta_t.Seconds())
 
 func WindowTimeSlide(ch chan PacketData, acc chan PacketAcc, quit chan int){
+	time_counter := time.Time{}
 	tmp := []PacketFeature{}
 	initializePacketAcc := func(){
 		tmp = []PacketFeature{}
