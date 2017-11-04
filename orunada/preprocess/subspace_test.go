@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestSubspace_GetSubspace(t *testing.T) {
+func TestSubspace_ComputeSubspace(t *testing.T) {
 	subspace_key := [2]string{"first", "second"}
 	min_interval := 0.0
 	max_interval := 0.2
@@ -47,7 +47,7 @@ func TestSubspace_GetSubspace(t *testing.T) {
 	}}
 
 	points := []tree.Point{p1, p2}
-	subspace.GetSubspace(points)
+	subspace.ComputeSubspace(points)
 
 	assert.Equal(t, tree.Range{Low: [2]float64{0, 0}, High: [2]float64{0.1, 0.1}}, subspace.Units.Point_unit_map[1])
 	assert.Equal(t, tree.Range{Low: [2]float64{0.1, 0.1}, High: [2]float64{0.2, 0.2}}, subspace.Units.Point_unit_map[2])
@@ -65,7 +65,7 @@ func TestSubspace_GetSubspace(t *testing.T) {
 	}}
 
 	points = []tree.Point{p1, p2}
-	subspace.GetSubspace(points)
+	subspace.ComputeSubspace(points)
 
 	assert.Equal(t, tree.Range{Low: [2]float64{0.1, 0.1}, High: [2]float64{0.2, 0.2}}, subspace.Units.Point_unit_map[1])
 	assert.Equal(t, tree.Range{Low: [2]float64{0, 0}, High: [2]float64{0.1, 0.1}}, subspace.Units.Point_unit_map[2])

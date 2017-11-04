@@ -12,7 +12,7 @@ type Subspace struct{
 	Scale_factor int
 }
 
-func (s *Subspace) GetSubspace(mat []tree.Point) {
+func (s *Subspace) ComputeSubspace(mat []tree.Point) {
 	subspace_key := s.Subspace_key
 	for _, p := range mat{
 		tmp := [2]float64{p.Vec_map[subspace_key[0]], p.Vec_map[subspace_key[1]]}
