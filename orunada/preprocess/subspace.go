@@ -38,3 +38,7 @@ func (s *Subspace) ComputeSubspace(mat []tree.Point) {
 		}
 	}
 }
+
+func (s *Subspace) Cluster(min_dense_points int, min_cluster_points int){
+	s.Units.Cluster(min_dense_points, min_cluster_points)
+}
