@@ -47,7 +47,7 @@ func TestSubspace_ComputeSubspace(t *testing.T) {
 	}}
 
 	points := []tree.Point{p1, p2}
-	subspace.ComputeSubspace(points)
+	subspace.ComputeSubspace([]tree.Point{}, points)
 
 	assert.Equal(t, tree.Range{Low: [2]float64{0, 0}, High: [2]float64{0.1, 0.1}}, subspace.Units.Point_unit_map[1])
 	assert.Equal(t, tree.Range{Low: [2]float64{0.1, 0.1}, High: [2]float64{0.2, 0.2}}, subspace.Units.Point_unit_map[2])
@@ -65,8 +65,26 @@ func TestSubspace_ComputeSubspace(t *testing.T) {
 	}}
 
 	points = []tree.Point{p1, p2}
-	subspace.ComputeSubspace(points)
+	subspace.ComputeSubspace([]tree.Point{}, points)
 
 	assert.Equal(t, tree.Range{Low: [2]float64{0.1, 0.1}, High: [2]float64{0.2, 0.2}}, subspace.Units.Point_unit_map[1])
 	assert.Equal(t, tree.Range{Low: [2]float64{0, 0}, High: [2]float64{0.1, 0.1}}, subspace.Units.Point_unit_map[2])
+
+	//To test removing points
+	p1 = tree.Point{Id: 1, Vec_map: map[string]float64{
+		"first": 0.15,
+		"second": 0.15,
+		"three": 0.15,
+	}}
+	p2 = tree.Point{Id: 2, Vec_map: map[string]float64{
+		"first": 0.05,
+		"second": 0.05,
+		"three": 0.15,
+	}}
+
+	points = []tree.Point{p1, p2}
+	subspace.ComputeSubspace(points, []tree.Point{})
+
+	assert.Equal(t, tree.Range{}, subspace.Units.Point_unit_map[1])
+	assert.Equal(t, tree.Range{}, subspace.Units.Point_unit_map[2])
 }

@@ -12,9 +12,16 @@ type Subspace struct{
 	Scale_factor int
 }
 
-func (s *Subspace) ComputeSubspace(mat []tree.Point) {
+func (s *Subspace) ComputeSubspace(mat_old []tree.Point, mat_new_update []tree.Point) {
 	subspace_key := s.Subspace_key
-	for _, p := range mat{
+	for _, p := range mat_old{
+		rg := s.Units.GetPointRange(p.Id)
+		pnt_container_rem := tree.PointContainer{
+			Point: p,
+		}
+		s.Units.RemovePoint(pnt_container_rem, rg)
+	}
+	for _, p := range mat_new_update{
 		tmp := [2]float64{p.Vec_map[subspace_key[0]], p.Vec_map[subspace_key[1]]}
 		tmp1 := [2]float64{p.Vec_map[subspace_key[0]], p.Vec_map[subspace_key[1]]}
 		int_container := tree.IntervalContainer{Id: 1, Range: tree.Range{Low: tmp, High: tmp1}, Scale_factor: s.Scale_factor}
