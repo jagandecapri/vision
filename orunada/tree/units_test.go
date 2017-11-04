@@ -186,3 +186,12 @@ func TestUnits_ProcessOldDenseUnits(t *testing.T) {
 	assert.Contains(t, unit_ids, 1)
 	assert.Contains(t, unit_ids, 2)
 }
+
+func TestUnits_GetPointRange(t *testing.T) {
+	units := NewUnits()
+	rg := Range{Low: [2]float64{1, 1}, High: [2]float64{2, 2}}
+	units.Point_unit_map[1] = rg
+
+	assert.Equal(t, units.GetPointRange(1), rg)
+	assert.Equal(t, units.GetPointRange(2), Range{})
+}

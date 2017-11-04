@@ -68,6 +68,10 @@ func (us *Units) UpdatePoint(point PointContainer, new_range Range){
 	}
 }
 
+func (us *Units) GetPointRange(id int) Range{
+	return us.Point_unit_map[id]
+}
+
 func (us *Units) AddUnit(unit *Unit, rg Range){
 	us.Store[rg] = unit
 }
