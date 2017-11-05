@@ -14,7 +14,9 @@ type Subspace struct{
 
 func (s *Subspace) ComputeSubspace(mat_old []tree.Point, mat_new_update []tree.Point) {
 	subspace_key := s.Subspace_key
+
 	for _, p := range mat_old{
+		//fmt.Println("Remove point called")
 		rg := s.Units.GetPointRange(p.Id)
 		pnt_container_rem := tree.PointContainer{
 			Point: p,
@@ -37,8 +39,10 @@ func (s *Subspace) ComputeSubspace(mat_old []tree.Point, mat_new_update []tree.P
 			cur_rg := s.Units.GetPointRange(pnt_container.GetID())
 			new_rg := interval_ext.Range
 			if cur_rg == (tree.Range{}){
+				//fmt.Println("Add point called")
 				s.Units.AddPoint(pnt_container, new_rg)
 			} else if cur_rg != (tree.Range{}) && cur_rg != new_rg{
+				//fmt.Println("Update point called")
 				s.Units.UpdatePoint(pnt_container, new_rg)
 			}
 			//fmt.Printf("Interval found %+v %+v \n", int_container, interval)
