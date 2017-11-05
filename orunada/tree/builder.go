@@ -52,7 +52,3 @@ func UnitsBuilder(ranges []Range, dim int) map[Range]Unit{
 func NewIntervalTree(dim uint64) augmentedtree.Tree{
 	return augmentedtree.New(dim)
 }
-
-func NewKDTree(p ...PointInterface) *KDTree{
-	return &KDTree{}
-}
