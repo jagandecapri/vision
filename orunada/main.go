@@ -10,89 +10,22 @@ import (
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"sort"
-	"time"
 	"github.com/jagandecapri/vision/orunada/tree"
 	"github.com/jagandecapri/vision/orunada/server"
-	//"os"
 )
+
+var scale_factor = 5
+
+type Config struct{
+	min_dense_points int
+	min_cluster_points int
+}
 
 func getSorter() []string{
 	sorter := []string{}
 	sorter = append(sorter, "nbPacket", "nbSrcPort", "nbDstPort", "nbSrcs", "nbDsts", "perSyn", "perAck", "perRST", "perFIN", "perCWR", "perURG", "avgPktSize", "meanTTL")
 	sort.Strings(sorter)
 	return sorter
-}
-
-type DimMinMax struct{
-	Min, Max float64
- 	Range float64
-}
-
-func scale(elem float64, scale_factor float64) float64{
-	return elem * scale_factor
-}
-
-func norm_mat(elem float64, col_min float64, col_max float64) float64{
-	return (elem - col_min)/(col_max - col_min)
-}
-
-func normalize(mat []tree.Point, sorter []string) ([]tree.Point, map[string]DimMinMax){
-	rows := len(mat)
-
-	dim_min_max := map[string]DimMinMax{}
-	for _,c := range sorter {
-		min := mat[0].Vec_map[c]
-		max := mat[0].Vec_map[c]
-		for j := 0; j < rows; j++{
-			val := mat[j].Vec_map[c]
-			if val < min{
-				min = val
-			} else if  val > max{
-				max = val
-			}
-		}
-		range_ := max - min
-		dim_min_max[c] = DimMinMax{min, max, range_}
-	}
-
-	for i := 0; i < rows; i++{
-		for _, c := range sorter{
-			col_min := dim_min_max[c].Min
-			col_max := dim_min_max[c].Max
-			elem := mat[i].Vec_map[c]
-			if col_min == 0 && col_max == 0{
-				//mat[i].Vec_map[c] = scale(elem, float64(scale_factor))
-				mat[i].Vec_map[c] = elem
-			} else {
-				//mat[i].Vec_map[c] = scale(norm_mat(elem, col_min, col_max), float64(scale_factor)) //(elem - col_min)/(col_max - col_min)
-				mat[i].Vec_map[c] = norm_mat(elem, col_min, col_max) //(elem - col_min)/(col_max - col_min)
-			}
-		}
-	}
-
-	//Assign normalized min-max
-	for _,c := range sorter{
-		norm_col_min := 0.0
-		tmp := dim_min_max[c]
-		tmp.Min = norm_col_min
-		norm_col_max := 1.0
-		tmp.Max = norm_col_max
-		dim_min_max[c] = tmp
-	}
-
-	return mat, dim_min_max
-}
-
-//TODO: Refactor this as this is duplicate with window_time_slide.go
-var delta_t time.Duration = 300 * time.Millisecond
-var window time.Duration = 15 * time.Second
-var window_arr_len = int(window.Seconds()/delta_t.Seconds())
-var time_counter time.Time
-var scale_factor = 5
-
-type Config struct{
-	min_dense_points int
-	min_cluster_points int
 }
 
 func updateFS(acc chan preprocess.PacketAcc, data chan server.HttpData, sorter []string, subspaces map[[2]string]preprocess.Subspace, config Config){
@@ -105,23 +38,29 @@ func updateFS(acc chan preprocess.PacketAcc, data chan server.HttpData, sorter [
 			x := packet_acc.ExtractDeltaPacketFeature()
 			point_ctr += 1
 			p := tree.Point{Id: point_ctr, Vec_map: x}
-			if len(base_matrix) < window_arr_len - 1{
+			if len(base_matrix) < preprocess.WINDOW_ARR_LEN - 1{
 				base_matrix = append(base_matrix, p)
-			} else if len(base_matrix) == window_arr_len - 1{
-				base_matrix = append(base_matrix, p)
-				//TODO: normalization need to be done here, x_old and x_new will be what here?
 			} else {
-				fmt.Println("flow processing")
 				base_matrix = append(base_matrix, p)
-				norm_mat, _  := normalize(base_matrix, sorter)
-				for _, subspace := range subspaces{
-					subspace.ComputeSubspace(norm_mat)
-					subspace.Cluster(config.min_dense_points, config.min_cluster_points)
-					//os.Exit(2)
-				}
-				base_matrix = base_matrix[1:]
-			}
+				norm_mat, _  := preprocess.Normalize(base_matrix, sorter)
+				var x_old, x_new_update []tree.Point
 
+				if len(base_matrix) == preprocess.WINDOW_ARR_LEN{
+					fmt.Println("before flow processing data", preprocess.WINDOW_ARR_LEN, len(base_matrix))
+					fmt.Println("before flow processing")
+					x_old, x_new_update = []tree.Point{}, norm_mat
+				} else if len(base_matrix) > preprocess.WINDOW_ARR_LEN{
+					fmt.Println("flow processing data", preprocess.WINDOW_ARR_LEN, len(base_matrix))
+					fmt.Println("flow processing")
+					x_old, x_new_update = []tree.Point{norm_mat[0]}, norm_mat[1:]
+					base_matrix = base_matrix[1:]
+				}
+				for _, subspace := range subspaces{
+					subspace.ComputeSubspace(x_old, x_new_update)
+					subspace.Cluster(config.min_dense_points, config.min_cluster_points)
+				}
+				//os.Exit(2)
+			}
 		}
 	}
 }
@@ -146,7 +85,7 @@ func main(){
 		copy(tmp[:], subspace_key)
 		Int_tree := tree.NewIntervalTree(uint64(dim))
 		Units := tree.NewUnits()
-		subspace := preprocess.Subspace{Interval_tree: &Int_tree, Units: &Units}
+		subspace := preprocess.Subspace{Interval_tree: &Int_tree, Units: &Units, Subspace_key: tmp, Scale_factor: scale_factor}
 		for _, interval := range intervals{
 			Int_tree.Add(interval)
 		}
