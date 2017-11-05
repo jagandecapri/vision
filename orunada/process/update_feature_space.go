@@ -7,7 +7,7 @@ import (
 	"github.com/jagandecapri/vision/orunada/tree"
 )
 
-func UpdateFS(acc chan preprocess.PacketAcc, data chan server.HttpData, sorter []string, subspaces map[[2]string]Subspace, config Config){
+func UpdateFeatureSpace(acc chan preprocess.PacketAcc, data chan server.HttpData, sorter []string, subspaces map[[2]string]Subspace, config Config){
 	base_matrix := []tree.Point{}
 	point_ctr := 0
 	for{

@@ -63,7 +63,7 @@ func main(){
 
 	config := process.Config{Min_dense_points: 10, Min_cluster_points: 15}
 	go preprocess.WindowTimeSlide(ch, acc, quit)
-	go process.UpdateFS(acc, data, sorter, subspaces, config)
+	go process.UpdateFeatureSpace(acc, data, sorter, subspaces, config)
 
 	if(err != nil){
 		log.Fatal(err)
