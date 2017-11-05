@@ -43,5 +43,5 @@ func TestIntervalQueryInt(t *testing.T) {
 	interval_test_query := tree.Query(IntervalContainerTest{Id: 1, Low: []int64{0, 0}, High: []int64{0, 0}})
 	assert.Len(t, interval_test_query, 1, "Interval not found: %v", interval_test_query)
 	interval_test_query1 := tree.Query(IntervalContainerTest{Id: 1, Low: []int64{1, 1}, High: []int64{1, 1}})
-	assert.Len(t, interval_test_query1, 0, "Interval not found: %v", interval_test_query)
+	assert.Len(t, interval_test_query1, 0, "Interval not found: %v", interval_test_query1)
 }
