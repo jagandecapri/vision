@@ -48,15 +48,19 @@ func (us *Units) GetClusterMap() map[int]Cluster{
 }
 
 func (us *Units) RemovePoint(point PointContainer, rg Range){
-	unit := us.Store[rg]
-	unit.RemovePoint(point)
-	delete(us.Point_unit_map, point.GetID())
+	unit, ok := us.Store[rg]
+	if ok{
+		unit.RemovePoint(point)
+		delete(us.Point_unit_map, point.GetID())
+	}
 }
 
 func (us *Units) AddPoint(point PointContainer, rg Range){
-	unit := us.Store[rg]
-	unit.AddPoint(point)
-	us.Point_unit_map[point.GetID()] = rg
+	unit, ok := us.Store[rg]
+	if ok{
+		unit.AddPoint(point)
+		us.Point_unit_map[point.GetID()] = rg
+	}
 }
 
 func (us *Units) UpdatePoint(point PointContainer, new_range Range){

@@ -50,6 +50,10 @@ func TestUnits_AddPoint(t *testing.T) {
 	assert.Equal(t, units.Point_unit_map[1], rg)
 	assert.Equal(t, units.Store[rg].points[1].Id, 1)
 	assert.False(t, units.Store[rg].Center_calculated)
+
+	p1 := PointContainer{Point: Point{Id: 2}}
+	rg1 := Range{Low: [2]float64{0.5, 0.5}, High: [2]float64{1.0, 1.0}}
+	assert.NotPanics(t, func(){units.AddPoint(p1, rg1)})
 }
 
 func TestUnits_RemovePoint(t *testing.T) {
@@ -66,6 +70,10 @@ func TestUnits_RemovePoint(t *testing.T) {
 	_, ok = units.Store[rg].points[1]
 	assert.False(t, ok)
 	assert.False(t, units.Store[rg].Center_calculated)
+
+	p1 := PointContainer{Point: Point{Id: 2}}
+	rg1 := Range{Low: [2]float64{0.5, 0.5}, High: [2]float64{1.0, 1.0}}
+	assert.NotPanics(t, func(){units.RemovePoint(p1, rg1)})
 }
 
 func TestUnits_UpdatePoint(t *testing.T) {
