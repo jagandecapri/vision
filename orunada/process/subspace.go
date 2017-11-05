@@ -1,4 +1,4 @@
-package preprocess
+package process
 
 import (
 	"github.com/jagandecapri/vision/orunada/tree"

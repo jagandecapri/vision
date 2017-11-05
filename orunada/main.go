@@ -4,7 +4,6 @@ import (
 	"github.com/jagandecapri/vision/orunada/utils"
 	"github.com/jagandecapri/vision/orunada/preprocess"
 	"github.com/jagandecapri/vision/orunada/process"
-	"fmt"
 	"github.com/google/gopacket/pcap"
 	"log"
 	"io"
@@ -17,53 +16,11 @@ import (
 
 var scale_factor = 5
 
-type Config struct{
-	min_dense_points int
-	min_cluster_points int
-}
-
 func getSorter() []string{
 	sorter := []string{}
 	sorter = append(sorter, "nbPacket", "nbSrcPort", "nbDstPort", "nbSrcs", "nbDsts", "perSyn", "perAck", "perRST", "perFIN", "perCWR", "perURG", "avgPktSize", "meanTTL")
 	sort.Strings(sorter)
 	return sorter
-}
-
-func updateFS(acc chan preprocess.PacketAcc, data chan server.HttpData, sorter []string, subspaces map[[2]string]process.Subspace, config Config){
-	base_matrix := []tree.Point{}
-	point_ctr := 0
-	for{
-		select{
-		case packet_acc := <- acc:
-			fmt.Print(".")
-			x := packet_acc.ExtractDeltaPacketFeature()
-			point_ctr += 1
-			p := tree.Point{Id: point_ctr, Vec_map: x}
-			if len(base_matrix) < preprocess.WINDOW_ARR_LEN - 1{
-				base_matrix = append(base_matrix, p)
-			} else {
-				base_matrix = append(base_matrix, p)
-				norm_mat, _  := preprocess.Normalize(base_matrix, sorter)
-				var x_old, x_new_update []tree.Point
-
-				if len(base_matrix) == preprocess.WINDOW_ARR_LEN{
-					fmt.Println("before flow processing data", preprocess.WINDOW_ARR_LEN, len(base_matrix))
-					fmt.Println("before flow processing")
-					x_old, x_new_update = []tree.Point{}, norm_mat
-				} else if len(base_matrix) > preprocess.WINDOW_ARR_LEN{
-					fmt.Println("flow processing data", preprocess.WINDOW_ARR_LEN, len(base_matrix))
-					fmt.Println("flow processing")
-					x_old, x_new_update = []tree.Point{norm_mat[0]}, norm_mat[1:]
-					base_matrix = base_matrix[1:]
-				}
-				for _, subspace := range subspaces{
-					subspace.ComputeSubspace(x_old, x_new_update)
-					subspace.Cluster(config.min_dense_points, config.min_cluster_points)
-				}
-				//os.Exit(2)
-			}
-		}
-	}
 }
 
 func main(){
@@ -104,9 +61,9 @@ func main(){
 	acc := make(chan preprocess.PacketAcc)
 	quit := make(chan int)
 
-	config := Config{min_dense_points: 10, min_cluster_points: 15}
+	config := process.Config{Min_dense_points: 10, Min_cluster_points: 15}
 	go preprocess.WindowTimeSlide(ch, acc, quit)
-	go updateFS(acc, data, sorter, subspaces, config)
+	go process.UpdateFS(acc, data, sorter, subspaces, config)
 
 	if(err != nil){
 		log.Fatal(err)
