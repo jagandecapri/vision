@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/jagandecapri/vision/orunada/utils"
 	"github.com/jagandecapri/vision/orunada/preprocess"
+	"github.com/jagandecapri/vision/orunada/process"
 	"fmt"
 	"github.com/google/gopacket/pcap"
 	"log"
@@ -28,7 +29,7 @@ func getSorter() []string{
 	return sorter
 }
 
-func updateFS(acc chan preprocess.PacketAcc, data chan server.HttpData, sorter []string, subspaces map[[2]string]preprocess.Subspace, config Config){
+func updateFS(acc chan preprocess.PacketAcc, data chan server.HttpData, sorter []string, subspaces map[[2]string]process.Subspace, config Config){
 	base_matrix := []tree.Point{}
 	point_ctr := 0
 	for{
@@ -78,14 +79,14 @@ func main(){
 	ranges := tree.RangeBuilder(min_interval, max_interval, interval_length)
 	intervals := tree.IntervalBuilder(ranges, scale_factor)
 	units := tree.UnitsBuilder(ranges, dim)
-	subspaces := make(map[[2]string]preprocess.Subspace)
+	subspaces := make(map[[2]string]process.Subspace)
 
 	for _, subspace_key := range subspace_keys{
 		tmp := [2]string{}
 		copy(tmp[:], subspace_key)
 		Int_tree := tree.NewIntervalTree(uint64(dim))
 		Units := tree.NewUnits()
-		subspace := preprocess.Subspace{Interval_tree: &Int_tree, Units: &Units, Subspace_key: tmp, Scale_factor: scale_factor}
+		subspace := process.Subspace{Interval_tree: &Int_tree, Units: &Units, Subspace_key: tmp, Scale_factor: scale_factor}
 		for _, interval := range intervals{
 			Int_tree.Add(interval)
 		}
