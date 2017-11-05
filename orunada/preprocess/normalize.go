@@ -36,11 +36,14 @@ func Normalize(mat []tree.Point, sorter []string) ([]tree.Point, map[string]DimM
 			col_max := dim_min_max[c].Max
 			elem := mat[i].Vec_map[c]
 			if col_min == 0 && col_max == 0{
-				//mat[i].Vec_map[c] = scale(elem, float64(scale_factor))
 				mat[i].Vec_map[c] = elem
 			} else {
-				//mat[i].Vec_map[c] = scale(norm_mat(elem, col_min, col_max), float64(scale_factor)) //(elem - col_min)/(col_max - col_min)
-				mat[i].Vec_map[c] = norm_mat(elem, col_min, col_max) //(elem - col_min)/(col_max - col_min)
+				tmp := norm_mat(elem, col_min, col_max)
+				if tmp == 1.0{
+					mat[i].Vec_map[c] = tmp - 0.0000001 //Trick for points having highs at 1.0
+				} else {
+					mat[i].Vec_map[c] = norm_mat(elem, col_min, col_max)
+				}
 			}
 		}
 	}
