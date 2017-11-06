@@ -42,16 +42,16 @@ func main(){
 		tmp := [2]string{}
 		copy(tmp[:], subspace_key)
 		Int_tree := tree.NewIntervalTree(uint64(dim))
-		Units := tree.NewUnits()
-		subspace := process.Subspace{Interval_tree: &Int_tree, Units: &Units, Subspace_key: tmp, Scale_factor: scale_factor}
+		grid := tree.NewGrid()
+		subspace := process.Subspace{Interval_tree: &Int_tree, Grid: &grid, Subspace_key: tmp, Scale_factor: scale_factor}
 		for _, interval := range intervals{
 			Int_tree.Add(interval)
 		}
 
 		for rg, unit := range units{
-			Units.AddUnit(&unit, rg)
+			grid.AddUnit(&unit, rg)
 		}
-		Units.SetupGrid(interval_length)
+		grid.SetupGrid(interval_length)
 		subspaces[tmp] = subspace
 	}
 

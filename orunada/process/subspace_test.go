@@ -18,7 +18,7 @@ func TestSubspace_ComputeSubspace(t *testing.T) {
 	units := tree.UnitsBuilder(ranges, dim)
 
 	int_tree := tree.NewIntervalTree(uint64(dim))
-	Unit := tree.NewUnits()
+	Unit := tree.NewGrid()
 
 	for _, interval := range intervals{
 		int_tree.Add(interval)
@@ -29,7 +29,7 @@ func TestSubspace_ComputeSubspace(t *testing.T) {
 	}
 
 	subspace := Subspace{Interval_tree: &int_tree,
-		Units: &Unit,
+		Grid: &Unit,
 		Subspace_key: subspace_key,
 		Scale_factor: scale_factor,
 	}
@@ -49,8 +49,8 @@ func TestSubspace_ComputeSubspace(t *testing.T) {
 	points := []tree.Point{p1, p2}
 	subspace.ComputeSubspace([]tree.Point{}, points)
 
-	assert.Equal(t, tree.Range{Low: [2]float64{0, 0}, High: [2]float64{0.1, 0.1}}, subspace.Units.Point_unit_map[1])
-	assert.Equal(t, tree.Range{Low: [2]float64{0.1, 0.1}, High: [2]float64{0.2, 0.2}}, subspace.Units.Point_unit_map[2])
+	assert.Equal(t, tree.Range{Low: [2]float64{0, 0}, High: [2]float64{0.1, 0.1}}, subspace.Grid.Point_unit_map[1])
+	assert.Equal(t, tree.Range{Low: [2]float64{0.1, 0.1}, High: [2]float64{0.2, 0.2}}, subspace.Grid.Point_unit_map[2])
 
 	//To test updating points
 	p1 = tree.Point{Id: 1, Vec_map: map[string]float64{
@@ -67,8 +67,8 @@ func TestSubspace_ComputeSubspace(t *testing.T) {
 	points = []tree.Point{p1, p2}
 	subspace.ComputeSubspace([]tree.Point{}, points)
 
-	assert.Equal(t, tree.Range{Low: [2]float64{0.1, 0.1}, High: [2]float64{0.2, 0.2}}, subspace.Units.Point_unit_map[1])
-	assert.Equal(t, tree.Range{Low: [2]float64{0, 0}, High: [2]float64{0.1, 0.1}}, subspace.Units.Point_unit_map[2])
+	assert.Equal(t, tree.Range{Low: [2]float64{0.1, 0.1}, High: [2]float64{0.2, 0.2}}, subspace.Grid.Point_unit_map[1])
+	assert.Equal(t, tree.Range{Low: [2]float64{0, 0}, High: [2]float64{0.1, 0.1}}, subspace.Grid.Point_unit_map[2])
 
 	//To test removing points
 	p1 = tree.Point{Id: 1, Vec_map: map[string]float64{
@@ -85,6 +85,6 @@ func TestSubspace_ComputeSubspace(t *testing.T) {
 	points = []tree.Point{p1, p2}
 	subspace.ComputeSubspace(points, []tree.Point{})
 
-	assert.Equal(t, tree.Range{}, subspace.Units.Point_unit_map[1])
-	assert.Equal(t, tree.Range{}, subspace.Units.Point_unit_map[2])
+	assert.Equal(t, tree.Range{}, subspace.Grid.Point_unit_map[1])
+	assert.Equal(t, tree.Range{}, subspace.Grid.Point_unit_map[2])
 }

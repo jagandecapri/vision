@@ -1,6 +1,6 @@
 package tree
 
-type Units struct{
+type Grid struct{
 	Store map[Range]*Unit
 	Point_unit_map map[int]Range
 	Cluster_map map[int]Cluster
@@ -11,8 +11,8 @@ type Units struct{
 	tmpUnitToCluster map[Range]*Unit
 }
 
-func NewUnits() Units{
-	units := Units{
+func NewGrid() Grid {
+	units := Grid{
 		Store: make(map[Range]*Unit),
 		Point_unit_map: make(map[int]Range),
 		Cluster_map: make(map[int]Cluster),
@@ -22,7 +22,7 @@ func NewUnits() Units{
 	return units
 }
 
-func (us *Units) GetUnits() map[Range]*Unit{
+func (us *Grid) GetUnits() map[Range]*Unit{
 	if len(us.tmpUnitToCluster) == 0{
 		return us.Store
 	} else {
@@ -30,24 +30,24 @@ func (us *Units) GetUnits() map[Range]*Unit{
 	}
 }
 
-func (us *Units) GetMinDensePoints() int{
+func (us *Grid) GetMinDensePoints() int{
 	return us.MinDensePoints
 }
 
-func (us *Units) GetMinClusterPoints() int{
+func (us *Grid) GetMinClusterPoints() int{
 	return us.MinClusterPoints
 }
 
-func (us *Units) GetNextClusterID() int{
+func (us *Grid) GetNextClusterID() int{
 	us.cluster_id_counter += 1
 	return us.cluster_id_counter
 }
 
-func (us *Units) GetClusterMap() map[int]Cluster{
+func (us *Grid) GetClusterMap() map[int]Cluster{
 	return us.Cluster_map
 }
 
-func (us *Units) RemovePoint(point PointContainer, rg Range){
+func (us *Grid) RemovePoint(point PointContainer, rg Range){
 	unit, ok := us.Store[rg]
 	if ok{
 		unit.RemovePoint(point)
@@ -55,7 +55,7 @@ func (us *Units) RemovePoint(point PointContainer, rg Range){
 	}
 }
 
-func (us *Units) AddPoint(point PointContainer, rg Range){
+func (us *Grid) AddPoint(point PointContainer, rg Range){
 	unit, ok := us.Store[rg]
 	if ok{
 		unit.AddPoint(point)
@@ -63,7 +63,7 @@ func (us *Units) AddPoint(point PointContainer, rg Range){
 	}
 }
 
-func (us *Units) UpdatePoint(point PointContainer, new_range Range){
+func (us *Grid) UpdatePoint(point PointContainer, new_range Range){
 	point_id := point.GetID()
 	cur_range := us.Point_unit_map[point_id]
 	if cur_range != new_range{
@@ -72,22 +72,22 @@ func (us *Units) UpdatePoint(point PointContainer, new_range Range){
 	}
 }
 
-func (us *Units) GetPointRange(id int) Range{
+func (us *Grid) GetPointRange(id int) Range{
 	return us.Point_unit_map[id]
 }
 
-func (us *Units) AddUnit(unit *Unit, rg Range){
+func (us *Grid) AddUnit(unit *Unit, rg Range){
 	us.Store[rg] = unit
 }
 
-func (us *Units) SetupGrid(interval_l float64){
+func (us *Grid) SetupGrid(interval_l float64){
 	for rg, unit := range us.Store{
 		unit.Neighbour_units = us.GetNeighbouringUnits(rg, interval_l)
 		us.Store[rg] = unit
 	}
 }
 
-func (us *Units) RecomputeDenseUnits(min_dense_points int) (map[Range]*Unit, map[Range]*Unit){
+func (us *Grid) RecomputeDenseUnits(min_dense_points int) (map[Range]*Unit, map[Range]*Unit){
 	listNewDenseUnits := make(map[Range]*Unit)
 	listOldDenseUnits := make(map[Range]*Unit)
 
@@ -109,7 +109,7 @@ func (us *Units) RecomputeDenseUnits(min_dense_points int) (map[Range]*Unit, map
 	return listNewDenseUnits, listOldDenseUnits
 }
 
-func (us *Units) ProcessOldDenseUnits(listOldDenseUnits map[Range]*Unit) map[Range]*Unit {
+func (us *Grid) ProcessOldDenseUnits(listOldDenseUnits map[Range]*Unit) map[Range]*Unit {
 	listUnitToRep := make(map[Range]*Unit)
 	for _, unit := range listOldDenseUnits{
 		cluster_id := unit.Cluster_id
@@ -135,7 +135,7 @@ func (us *Units) ProcessOldDenseUnits(listOldDenseUnits map[Range]*Unit) map[Ran
 	return listUnitToRep
 }
 
-func (us *Units) RemoveCluster(cluster_id int) map[Range]*Unit{
+func (us *Grid) RemoveCluster(cluster_id int) map[Range]*Unit{
 	tmp := make(map[Range]*Unit)
 	for rg, unit := range us.Cluster_map[cluster_id].ListOfUnits{
 		tmp[rg] = unit
@@ -144,7 +144,7 @@ func (us *Units) RemoveCluster(cluster_id int) map[Range]*Unit{
 	return tmp
 }
 
-func (us *Units) Cluster(min_dense_points int, min_cluster_points int){
+func (us *Grid) Cluster(min_dense_points int, min_cluster_points int){
 	listNewDenseUnits, listOldDenseUnits := us.RecomputeDenseUnits(min_dense_points)
 	us.tmpUnitToCluster = listNewDenseUnits
 	_, us.Cluster_map = IGDCA(*us, min_dense_points, min_cluster_points)
@@ -154,11 +154,11 @@ func (us *Units) Cluster(min_dense_points int, min_cluster_points int){
 	_, us.Cluster_map = IGDCA(*us, min_dense_points, min_cluster_points)
 }
 
-func (us *Units) isDenseUnit(unit *Unit, min_dense_points int) bool{
+func (us *Grid) isDenseUnit(unit *Unit, min_dense_points int) bool{
 	return unit.GetNumberOfPoints() >= min_dense_points
 }
 
-func (us *Units) GetNeighbouringUnits(rg Range, interval_l float64) map[Range]*Unit {
+func (us *Grid) GetNeighbouringUnits(rg Range, interval_l float64) map[Range]*Unit {
 	/**
 	U = unit; n{x} => neighbouring units
 	|n3|n5|n8|

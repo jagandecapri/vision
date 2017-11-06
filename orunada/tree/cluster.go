@@ -26,10 +26,10 @@ type Cluster struct{
 	ListOfUnits map[Range]*Unit
 }
 
-func IGDCA(Units Units, min_dense_points int, min_cluster_points int) (map[Range]*Unit, map[int]Cluster){
-	units := Units.GetUnits()
-	cluster_id := Units.GetNextClusterID()
-	cluster_map := Units.GetClusterMap()
+func IGDCA(grid Grid, min_dense_points int, min_cluster_points int) (map[Range]*Unit, map[int]Cluster){
+	units := grid.GetUnits()
+	cluster_id := grid.GetNextClusterID()
+	cluster_map := grid.GetClusterMap()
 
 	for rg, unit := range units{
 		if unit.Cluster_id == UNCLASSIFIED{
@@ -48,7 +48,7 @@ func IGDCA(Units Units, min_dense_points int, min_cluster_points int) (map[Range
 					}
 				}else if ret == FAILURE{
 					cluster_map = NewCluster(unit, rg, cluster_id, min_dense_points, min_cluster_points, cluster_map)
-					cluster_id = Units.GetNextClusterID()
+					cluster_id = grid.GetNextClusterID()
 				}
 			}
 		}

@@ -20,34 +20,34 @@ func CountClusterTypes(cluster_list map[int]Cluster) (int, int){
 }
 
 func TestCluster2by2Grid(t *testing.T) {
-	units := NewUnits()
+	grid := NewGrid()
 	interval_l := 1.0
 
 	u1 := Unit{Id: 1, Center: PointContainer{Vec: []float64{0.5,0.5}},
 		points: map[int]PointContainer{1: {},2: {},3: {},4: {},5: {}}}
 	r1 := Range{Low: [2]float64{0, 0}, High: [2]float64{1, 1}}
-	units.AddUnit(&u1, r1)
+	grid.AddUnit(&u1, r1)
 
 	u2 := Unit{Id: 2, Center: PointContainer{Vec: []float64{0.5,1.5}},
 		points: map[int]PointContainer{1: {},2: {}}}
 	r2 := Range{Low: [2]float64{0, 1}, High: [2]float64{1, 2}}
-	units.AddUnit(&u2, r2)
+	grid.AddUnit(&u2, r2)
 
 	u3 := Unit{Id: 3, Center: PointContainer{Vec: []float64{1.5,0.5}},
 		points: map[int]PointContainer{1: {},2: {}}}
 	r3 := Range{Low: [2]float64{1, 0}, High: [2]float64{2, 1}}
-	units.AddUnit(&u3, r3)
+	grid.AddUnit(&u3, r3)
 
 	u4 := Unit{Id: 4, Center: PointContainer{Vec: []float64{1.5,1.5}}}
 	r4 := Range{Low: [2]float64{1, 1}, High: [2]float64{2, 2}}
-	units.AddUnit(&u4, r4)
+	grid.AddUnit(&u4, r4)
 
-	units.SetupGrid(interval_l)
+	grid.SetupGrid(interval_l)
 
 	min_dense_points := 2
 	min_cluster_points := 5
 
-	res, cluster_map := IGDCA(units, min_dense_points, min_cluster_points)
+	res, cluster_map := IGDCA(grid, min_dense_points, min_cluster_points)
 	assert.True(t, res[r1].Cluster_id == res[r2].Cluster_id && res[r2].Cluster_id == res[r3].Cluster_id,
 		"%v %v %v", res[r1].Cluster_id, res[r2].Cluster_id, res[r3].Cluster_id)
 	outlier_cluster_count, non_outlier_cluster_count := CountClusterTypes(cluster_map)
@@ -56,33 +56,33 @@ func TestCluster2by2Grid(t *testing.T) {
 }
 
 func TestCluster2by2GridAbsorbCluster(t *testing.T) {
-	units := NewUnits()
+	grid := NewGrid()
 	interval_l := 1.0
 
 	u1 := Unit{Id: 1, Center: PointContainer{Vec: []float64{0.5,0.5}},
 		points: map[int]PointContainer{1: {},2: {},3: {},4: {},5: {}}}
 	r1 := Range{Low: [2]float64{0, 0}, High: [2]float64{1, 1}}
-	units.AddUnit(&u1, r1)
+	grid.AddUnit(&u1, r1)
 
 	u2 := Unit{Id: 2, Cluster_id: 1, Center: PointContainer{Vec: []float64{0.5,1.5}},
 		points: map[int]PointContainer{1: {},2: {}}}
 	r2 := Range{Low: [2]float64{0, 1}, High: [2]float64{1, 2}}
-	units.AddUnit(&u2, r2)
+	grid.AddUnit(&u2, r2)
 
 	u3 := Unit{Id: 3, Cluster_id: 1, Center: PointContainer{Vec: []float64{1.5,0.5}},
 		points: map[int]PointContainer{1: {},2: {}}}
 	r3 := Range{Low: [2]float64{1, 0}, High: [2]float64{2, 1}}
-	units.AddUnit(&u3, r3)
+	grid.AddUnit(&u3, r3)
 
 	u4 := Unit{Id: 4, Center: PointContainer{Vec: []float64{1.5,1.5}}}
 	r4 := Range{Low: [2]float64{1, 1}, High: [2]float64{2, 2}}
-	units.AddUnit(&u4, r4)
+	grid.AddUnit(&u4, r4)
 
-	units.SetupGrid(interval_l)
+	grid.SetupGrid(interval_l)
 
 	min_dense_points := 2
 
-	units.Cluster_map = map[int]Cluster{
+	grid.Cluster_map = map[int]Cluster{
 		1: {
 			Cluster_id: 1,
 			ListOfUnits: map[Range]*Unit{
@@ -92,7 +92,7 @@ func TestCluster2by2GridAbsorbCluster(t *testing.T) {
 		},
 	}
 
-	res, cluster_ids, cluster_map := AbsorbIntoCluster(&u1, r1, units.Cluster_map, min_dense_points)
+	res, cluster_ids, cluster_map := AbsorbIntoCluster(&u1, r1, grid.Cluster_map, min_dense_points)
 	assert.Equal(t, res, SUCCESS)
 	assert.Equal(t, 1, len(cluster_ids), "%v", cluster_ids)
 	assert.Contains(t, cluster_ids, 1)
@@ -102,31 +102,31 @@ func TestCluster2by2GridAbsorbCluster(t *testing.T) {
 }
 
 func TestCluster2by2GridMergeClusters1(t *testing.T) {
-	units := NewUnits()
+	grid := NewGrid()
 	interval_l := 1.0
 
 	u1 := Unit{Id: 1, Cluster_id: 1, Center: PointContainer{Vec: []float64{0.5,0.5}},
 		points: map[int]PointContainer{1: {},2: {},3: {},4: {},5: {}}}
 	r1 := Range{Low: [2]float64{0, 0}, High: [2]float64{1, 1}}
-	units.AddUnit(&u1, r1)
+	grid.AddUnit(&u1, r1)
 
 	u2 := Unit{Id: 2, Cluster_id: 1, Center: PointContainer{Vec: []float64{0.5,1.5}},
 		points: map[int]PointContainer{1: {},2: {}}}
 	r2 := Range{Low: [2]float64{0, 1}, High: [2]float64{1, 2}}
-	units.AddUnit(&u2, r2)
+	grid.AddUnit(&u2, r2)
 
 	u3 := Unit{Id: 3, Cluster_id: 2, Center: PointContainer{Vec: []float64{1.5,0.5}},
 		points: map[int]PointContainer{1: {},2: {}}}
 	r3 := Range{Low: [2]float64{1, 0}, High: [2]float64{2, 1}}
-	units.AddUnit(&u3, r3)
+	grid.AddUnit(&u3, r3)
 
 	u4 := Unit{Id: 4, Center: PointContainer{Vec: []float64{1.5,1.5}}}
 	r4 := Range{Low: [2]float64{1, 1}, High: [2]float64{2, 2}}
-	units.AddUnit(&u4, r4)
+	grid.AddUnit(&u4, r4)
 
-	units.SetupGrid(interval_l)
+	grid.SetupGrid(interval_l)
 
-	units.Cluster_map = map[int]Cluster{
+	grid.Cluster_map = map[int]Cluster{
 		1: {
 			Cluster_id: 1,
 			ListOfUnits: map[Range]*Unit{
@@ -149,7 +149,7 @@ func TestCluster2by2GridMergeClusters1(t *testing.T) {
 	var ok bool
 
 	cluster_ids = []int{1,2}
-	res, merged_cluster_id,cluster_map = MergeClusters(units.Cluster_map,cluster_ids)
+	res, merged_cluster_id,cluster_map = MergeClusters(grid.Cluster_map,cluster_ids)
 	assert.Equal(t, res, SUCCESS)
 	assert.Equal(t, 1, u1.Cluster_id)
 	assert.Equal(t, 1, u2.Cluster_id)
@@ -161,31 +161,31 @@ func TestCluster2by2GridMergeClusters1(t *testing.T) {
 }
 
 func TestCluster2by2GridMergeClusters2(t *testing.T) {
-	units := NewUnits()
+	grid := NewGrid()
 	interval_l := 1.0
 
 	u1 := Unit{Id: 1, Cluster_id: 1, Center: PointContainer{Vec: []float64{0.5,0.5}},
 		points: map[int]PointContainer{1: {},2: {},3: {},4: {},5: {}}}
 	r1 := Range{Low: [2]float64{0, 0}, High: [2]float64{1, 1}}
-	units.AddUnit(&u1, r1)
+	grid.AddUnit(&u1, r1)
 
 	u2 := Unit{Id: 2, Cluster_id: 1, Center: PointContainer{Vec: []float64{0.5,1.5}},
 		points: map[int]PointContainer{1: {},2: {}}}
 	r2 := Range{Low: [2]float64{0, 1}, High: [2]float64{1, 2}}
-	units.AddUnit(&u2, r2)
+	grid.AddUnit(&u2, r2)
 
 	u3 := Unit{Id: 3, Cluster_id: 2, Center: PointContainer{Vec: []float64{1.5,0.5}},
 		points: map[int]PointContainer{1: {},2: {}}}
 	r3 := Range{Low: [2]float64{1, 0}, High: [2]float64{2, 1}}
-	units.AddUnit(&u3, r3)
+	grid.AddUnit(&u3, r3)
 
 	u4 := Unit{Id: 4, Center: PointContainer{Vec: []float64{1.5,1.5}}}
 	r4 := Range{Low: [2]float64{1, 1}, High: [2]float64{2, 2}}
-	units.AddUnit(&u4, r4)
+	grid.AddUnit(&u4, r4)
 
-	units.SetupGrid(interval_l)
+	grid.SetupGrid(interval_l)
 
-	units.Cluster_map = map[int]Cluster{
+	grid.Cluster_map = map[int]Cluster{
 		1: {
 			Cluster_id: 1,
 			ListOfUnits: map[Range]*Unit{
@@ -208,7 +208,7 @@ func TestCluster2by2GridMergeClusters2(t *testing.T) {
 	var ok bool
 
 	cluster_ids = []int{2,1}
-	res, merged_cluster_id,cluster_map = MergeClusters(units.Cluster_map,cluster_ids)
+	res, merged_cluster_id,cluster_map = MergeClusters(grid.Cluster_map,cluster_ids)
 	assert.Equal(t, res, SUCCESS)
 	assert.Equal(t, 2, u1.Cluster_id)
 	assert.Equal(t, 2, u2.Cluster_id)
@@ -220,57 +220,57 @@ func TestCluster2by2GridMergeClusters2(t *testing.T) {
 }
 
 func TestCluster3by3Grid(t *testing.T) {
-	units := NewUnits()
+	grid := NewGrid()
 	interval_l := 1.0
 
 	u1 := Unit{Id: 1, Center: PointContainer{Vec: []float64{0.5,0.5}},
 		points: map[int]PointContainer{1: {},2: {},3: {},4: {},5: {}}}
 	r1 := Range{Low: [2]float64{0, 0}, High: [2]float64{1, 1}}
-	units.AddUnit(&u1, r1)
+	grid.AddUnit(&u1, r1)
 
 	u2 := Unit{Id: 2, Center: PointContainer{Vec: []float64{0.5,0.5}},
 		points: map[int]PointContainer{1: {},2: {}}}
 	r2 := Range{Low: [2]float64{0, 1}, High: [2]float64{1, 2}}
-	units.AddUnit(&u2, r2)
+	grid.AddUnit(&u2, r2)
 
 	u3 := Unit{Id: 3, Center: PointContainer{Vec: []float64{0.5,2.5}},
 		points: map[int]PointContainer{1: {},2: {},3: {}}}
 	r3 := Range{Low: [2]float64{0, 2}, High: [2]float64{1, 3}}
-	units.AddUnit(&u3, r3)
+	grid.AddUnit(&u3, r3)
 
 	u4 := Unit{Id: 4, Center: PointContainer{Vec: []float64{1.5,0.5}},
 		points: map[int]PointContainer{1: {}}}
 	r4 := Range{Low: [2]float64{1, 0}, High: [2]float64{2, 1}}
-	units.AddUnit(&u4, r4)
+	grid.AddUnit(&u4, r4)
 
 	u5 := Unit{Id: 5, Center: PointContainer{Vec: []float64{1.5,1.5}}}
 	r5 := Range{Low: [2]float64{1, 1}, High: [2]float64{2, 2}}
-	units.AddUnit(&u5, r5)
+	grid.AddUnit(&u5, r5)
 
 	u6 := Unit{Id: 6, Center: PointContainer{Vec: []float64{1.5,2.5}}}
 	r6 := Range{Low: [2]float64{1, 2}, High: [2]float64{2, 3}}
-	units.AddUnit(&u6, r6)
+	grid.AddUnit(&u6, r6)
 
 	u7 := Unit{Id: 7, Center: PointContainer{Vec: []float64{2.5,0.5}}}
 	r7 := Range{Low: [2]float64{2, 0}, High: [2]float64{3, 1}}
-	units.AddUnit(&u7, r7)
+	grid.AddUnit(&u7, r7)
 
 	u8 := Unit{Id: 8, Center: PointContainer{Vec: []float64{2.5,1.5}},
 		points: map[int]PointContainer{1: {},2: {}, 3: {},4: {}}}
 	r8 := Range{Low: [2]float64{2, 1}, High: [2]float64{3, 2}}
-	units.AddUnit(&u8, r8)
+	grid.AddUnit(&u8, r8)
 
 	u9 := Unit{Id: 9, Center: PointContainer{Vec: []float64{0.5,0.5}},
 		points: map[int]PointContainer{1: {}}}
 	r9 := Range{Low: [2]float64{2, 2}, High: [2]float64{3, 3}}
-	units.AddUnit(&u9, r9)
+	grid.AddUnit(&u9, r9)
 
-	units.SetupGrid(interval_l)
+	grid.SetupGrid(interval_l)
 
 	min_dense_points := 2
 	min_cluster_points := 5
 
-	res, cluster_map := IGDCA(units, min_dense_points, min_cluster_points)
+	res, cluster_map := IGDCA(grid, min_dense_points, min_cluster_points)
 	assert.True(t, res[r1].Cluster_id == res[r2].Cluster_id && res[r2].Cluster_id == res[r3].Cluster_id,
 	"%v %v %v", res[r1].Cluster_id, res[r2].Cluster_id, res[r3].Cluster_id)
 	for _, unit := range res{
@@ -289,7 +289,7 @@ func TestCluster3by3Grid(t *testing.T) {
 }
 
 func TestGDA(t *testing.T){
-	units := NewUnits()
+	grid := NewGrid()
 	interval_l := 1.0
 
 	for i:= 0; i < 5; i++{
@@ -297,13 +297,13 @@ func TestGDA(t *testing.T){
 		u := Unit{Id: i, Cluster_id: UNCLASSIFIED, Center: PointContainer{Vec: []float64{(( i_float + (i_float + 1.0))/2.0),0.5}},
 			points: map[int]PointContainer{1: {},2: {},3: {},4: {},5: {}}}
 		r := Range{Low: [2]float64{i_float, 0}, High: [2]float64{i_float + 1.0, 1.0}}
-		units.AddUnit(&u, r)
+		grid.AddUnit(&u, r)
 	}
-	units.SetupGrid(interval_l)
+	grid.SetupGrid(interval_l)
 	min_dense_points := 2
 	min_cluster_points := 5
 
-	_, cluster_map := IGDCA(units, min_dense_points, min_cluster_points)
+	_, cluster_map := IGDCA(grid, min_dense_points, min_cluster_points)
 	outlier_cluster_count, non_outlier_cluster_count := CountClusterTypes(cluster_map)
 	assert.Equal(t, 0, outlier_cluster_count)
 	assert.Equal(t, 1, non_outlier_cluster_count)
@@ -311,7 +311,7 @@ func TestGDA(t *testing.T){
 
 func BenchmarkGDA(t *testing.B) {
 	for i:=0; i < t.N; i++{
-		units := Units{Store: make(map[Range]*Unit)}
+		grid := Grid{Store: make(map[Range]*Unit)}
 		interval_l := 1.0
 
 		for i:= 0; i < 5; i++{
@@ -319,12 +319,12 @@ func BenchmarkGDA(t *testing.B) {
 			u := Unit{Id: i, Center: PointContainer{Vec: []float64{(( i_float + (i_float + 1.0))/2.0),0.5}},
 				points: map[int]PointContainer{1: {},2: {},3: {},4: {},5: {}}}
 			r := Range{Low: [2]float64{i_float, 0}, High: [2]float64{i_float + 1.0, 1.0}}
-			units.AddUnit(&u, r)
+			grid.AddUnit(&u, r)
 		}
-		units.SetupGrid(interval_l)
+		grid.SetupGrid(interval_l)
 		min_dense_points := 2
 		min_cluster_points := 5
-		_, cluster_map := IGDCA(units, min_dense_points, min_cluster_points)
+		_, cluster_map := IGDCA(grid, min_dense_points, min_cluster_points)
 		outlier_cluster_count, non_outlier_cluster_count := CountClusterTypes(cluster_map)
 		assert.Equal(t, 0, outlier_cluster_count)
 		assert.Equal(t, 1, non_outlier_cluster_count)
