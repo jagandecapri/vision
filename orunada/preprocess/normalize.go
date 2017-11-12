@@ -11,7 +11,7 @@ func norm_mat(elem float64, col_min float64, col_max float64) float64{
 	return (elem - col_min)/(col_max - col_min)
 }
 
-func Normalize(mat []tree.Point, sorter []string) ([]tree.Point, map[string]DimMinMax){
+func Normalize(mat []tree.Point, sorter []string) []tree.Point{
 	rows := len(mat)
 
 	dim_min_max := map[string]DimMinMax{}
@@ -48,15 +48,5 @@ func Normalize(mat []tree.Point, sorter []string) ([]tree.Point, map[string]DimM
 		}
 	}
 
-	//Assign normalized min-max
-	for _,c := range sorter{
-		norm_col_min := 0.0
-		tmp := dim_min_max[c]
-		tmp.Min = norm_col_min
-		norm_col_max := 1.0
-		tmp.Max = norm_col_max
-		dim_min_max[c] = tmp
-	}
-
-	return mat, dim_min_max
+	return mat
 }
