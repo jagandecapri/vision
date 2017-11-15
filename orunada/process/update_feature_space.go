@@ -21,7 +21,7 @@ func UpdateFeatureSpace(acc chan preprocess.PacketAcc, data chan server.HttpData
 				base_matrix = append(base_matrix, p)
 			} else {
 				base_matrix = append(base_matrix, p)
-				norm_mat, _  := preprocess.Normalize(base_matrix, sorter)
+				norm_mat := preprocess.Normalize(base_matrix, sorter)
 				var x_old, x_new_update []tree.Point
 
 				if len(base_matrix) == preprocess.WINDOW_ARR_LEN{
