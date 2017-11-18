@@ -33,9 +33,6 @@ func main(){
 	max_interval := 1.0
 	interval_length := 0.1
 	dim := 2
-	ranges := tree.RangeBuilder(min_interval, max_interval, interval_length)
-	intervals := tree.IntervalBuilder(ranges, scale_factor)
-	units := tree.UnitsBuilder(ranges, dim)
 	subspaces := make(map[[2]string]process.Subspace)
 
 	for _, subspace_key := range subspace_keys{
@@ -43,6 +40,10 @@ func main(){
 		copy(tmp[:], subspace_key)
 		Int_tree := tree.NewIntervalTree(uint64(dim))
 		grid := tree.NewGrid()
+		ranges := tree.RangeBuilder(min_interval, max_interval, interval_length)
+		intervals := tree.IntervalBuilder(ranges, scale_factor)
+		units := tree.UnitsBuilder(ranges, dim)
+
 		subspace := process.Subspace{Interval_tree: &Int_tree, Grid: &grid, Subspace_key: tmp, Scale_factor: scale_factor}
 		for _, interval := range intervals{
 			Int_tree.Add(interval)
@@ -61,7 +62,7 @@ func main(){
 	acc := make(chan preprocess.PacketAcc)
 	quit := make(chan int)
 
-	config := process.Config{Min_dense_points: 10, Min_cluster_points: 15}
+	config := process.Config{Min_dense_points: 10, Min_cluster_points: 15, Execution_type: process.PARALLEL}
 	go preprocess.WindowTimeSlide(ch, acc, quit)
 	go process.UpdateFeatureSpace(acc, data, sorter, subspaces, config)
 
