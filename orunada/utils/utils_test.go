@@ -22,3 +22,24 @@ func TestUniqInt2(t *testing.T) {
 	})
 	assert.Equal(t, 0, len(output))
 }
+
+func TestGetKeyComb(t *testing.T) {
+	sorter := []string{"dola", "lala", "mola"}
+	feature_cnt := 2
+	comb := GetKeyComb(sorter, feature_cnt)
+	exp := [][]string{
+		[]string{
+			"dola",
+			"lala",
+		},
+		[]string{
+			"dola",
+			"mola",
+		},
+		[]string{
+			"lala",
+			"mola",
+		},
+	}
+	assert.Equal(t, exp, comb)
+}
