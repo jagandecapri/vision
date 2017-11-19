@@ -42,12 +42,11 @@ func UpdateFeatureSpace(acc chan preprocess.PacketAcc, data chan server.HttpData
 						fmt.Println(r)
 					}
 				} else if (config.Execution_type == PARALLEL){
-					done := make(chan struct{})
-					c := ParallelClustering(done, subspaces, config, x_old, x_new_update)
-					for r := range c{
+					num_clusterer := len(subspaces)
+					m := ParallelClustering(num_clusterer, subspaces, config, x_old, x_new_update)
+					for _, r := range m{
 						fmt.Printf("%v", r)
 					}
-					close(done)
 				}
 
 				//os.Exit(2)
@@ -68,37 +67,78 @@ func SequentialClustering(subspaces map[[2]string]Subspace, config Config, x_old
 	return []result{}
 }
 
-func ParallelClustering(done chan struct{}, subspaces map[[2]string]Subspace, config Config, x_old []tree.Point, x_new_update []tree.Point)(<- chan result){
-	c := make(chan result)
-	go func(){
-		var wg sync.WaitGroup
+type processPackage struct{
+	subspace Subspace
+	config Config
+	x_old []tree.Point
+	x_new_update []tree.Point
+}
 
-		for _, subspace := range subspaces{
-
-			wg.Add(1)
-			go func(subspace Subspace, config Config, x_old []tree.Point, x_new_update []tree.Point){
-				subspace.ComputeSubspace(x_old, x_new_update)
-				subspace.Cluster(config.Min_dense_points, config.Min_cluster_points)
-				select {
-				case c <- result{}:
-				case <- done:
-				}
-				wg.Done()
-			}(subspace, config, x_old, x_new_update)
-
-			//select {
-			//case <- done:
-			//	return errors.New("Canceled")
-			//default:
-			//	return nil
-			//}
+func Clusterer(done <-chan struct{}, processPackages <-chan processPackage , c chan<- result){
+	for processPackage := range processPackages{
+		subspace := processPackage.subspace
+		config := processPackage.config
+		x_old := processPackage.x_old
+		x_new_update := processPackage.x_new_update
+		subspace.ComputeSubspace(x_old, x_new_update)
+		subspace.Cluster(config.Min_dense_points, config.Min_cluster_points)
+		select {
+		case c <- result{}:
+		case <- done:
+			return
 		}
+	}
+}
 
+func SubspaceIterator(done <- chan struct{}, subspaces map[[2]string]Subspace, config Config, x_old []tree.Point, x_new_update []tree.Point) (<-chan processPackage){
+	processPackages := make(chan processPackage)
+	go func(){
+		fmt.Println("Subspace len:", len(subspaces))
+		defer close(processPackages)
+
+		for _, subspace := range subspaces {
+			processPackage := processPackage{
+				subspace: subspace,
+				config: config,
+				x_old: x_old,
+				x_new_update: x_new_update,
+			}
+			select {
+			case processPackages <- processPackage:
+			case <-done:
+				break
+			}
+		}
+		return
+	}()
+	return processPackages
+}
+
+func ParallelClustering(num_clusterers int, subspaces map[[2]string]Subspace, config Config, x_old []tree.Point, x_new_update []tree.Point) []result{
+	done := make(chan struct{})
+	defer close(done)
+
+	processPackages := SubspaceIterator(done, subspaces, config ,x_old, x_new_update)
+
+	c := make(chan result)
+	var wg sync.WaitGroup
+	wg.Add(num_clusterers)
+	for i := 0; i < num_clusterers; i++{
 		go func(){
-			wg.Wait()
-			close(c)
+			Clusterer(done, processPackages, c)
+			wg.Done()
 		}()
+	}
+	go func(){
+		wg.Wait()
+		close(c)
 	}()
 
-	return c
+	m := []result{}
+	for r := range c{
+		//to extract needed data for server visualization
+		m = append(m, r)
+	}
+
+	return m
 }
