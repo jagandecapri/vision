@@ -1,5 +1,10 @@
 package utils
 
+import (
+	"time"
+	"log"
+)
+
 func Comb(n, m int, emit func([]int)) {
 	s := make([]int, m)
 	last := m - 1
@@ -77,3 +82,7 @@ func Round(x float64, unit float64) float64 {
 	return float64(int64(x/unit-0.5)) * unit
 }
 
+func TimeTrack(start time.Time, name string) {
+	elapsed := time.Since(start)
+	log.Printf("%s took %s", name, elapsed)
+}
