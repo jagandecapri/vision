@@ -6,6 +6,9 @@ import (
 	"github.com/jagandecapri/vision/orunada/tree"
 	"sync"
 	"fmt"
+	"runtime"
+	"time"
+	"github.com/jagandecapri/vision/orunada/utils"
 )
 
 func UpdateFeatureSpace(acc chan preprocess.PacketAcc, data chan server.HttpData, sorter []string, subspaces map[[2]string]Subspace, config Config){
@@ -42,11 +45,18 @@ func UpdateFeatureSpace(acc chan preprocess.PacketAcc, data chan server.HttpData
 						fmt.Println(r)
 					}
 				} else if (config.Execution_type == PARALLEL){
-					num_clusterer := len(subspaces)
-					m := ParallelClustering(num_clusterer, subspaces, config, x_old, x_new_update)
-					for _, r := range m{
-						fmt.Printf("%v", r)
-					}
+					//cur_CPU := runtime.GOMAXPROCS(1)
+					cur_CPU := runtime.GOMAXPROCS(0) //gets the current number of cores
+					num_clusterer := cur_CPU
+					fmt.Println("cur num CPU", cur_CPU)
+					func (){
+						defer utils.TimeTrack(time.Now(), "Clustering")
+						m := ParallelClustering(num_clusterer, subspaces, config, x_old, x_new_update)
+						for _, r := range m{
+							fmt.Printf("%v", r)
+						}
+						return
+					}()
 				}
 
 				//os.Exit(2)
