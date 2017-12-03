@@ -48,11 +48,10 @@ func UpdateFeatureSpace(acc chan preprocess.PacketAcc, data chan server.HttpData
 					}
 				} else if (config.Execution_type == PARALLEL){
 					//cur_CPU := runtime.GOMAXPROCS(1)
-					num_CPU := runtime.GOMAXPROCS(0) //gets the current number of cores
-					num_clusterer := num_CPU
+					num_clusterer := runtime.GOMAXPROCS(config.Num_cpu) //gets the current number of cores
 					//fmt.Println("cur num CPU", num_CPU)
 					func (){
-						defer utils.TimeTrack(time.Now(),  "Clustering", num_CPU, logger)
+						defer utils.TimeTrack(time.Now(),  "Clustering", num_clusterer, logger)
 						ParallelClustering(num_clusterer, subspaces, config, x_old, x_new_update)
 						//m := ParallelClustering(num_clusterer, subspaces, config, x_old, x_new_update)
 						//for _, r := range m{

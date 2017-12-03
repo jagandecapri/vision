@@ -12,6 +12,7 @@ import (
 	"sort"
 	"github.com/jagandecapri/vision/orunada/tree"
 	"github.com/jagandecapri/vision/orunada/server"
+	"flag"
 )
 
 var scale_factor = 5
@@ -24,6 +25,9 @@ func getSorter() []string{
 }
 
 func main(){
+	num_cpu := flag.Int("num-cpu", 0, "Number of CPUs to use")
+	flag.Parse()
+
 	data := make(chan server.HttpData)
 	//go BootServer(data)
 
@@ -56,13 +60,12 @@ func main(){
 		subspaces[tmp] = subspace
 	}
 
-	//os.Exit(2)
 	handleRead, err := pcap.OpenOffline("C:\\Users\\Jack\\Downloads\\201705021400.pcap")
 	ch := make(chan preprocess.PacketData)
 	acc := make(chan preprocess.PacketAcc)
 	quit := make(chan int)
 
-	config := process.Config{Min_dense_points: 10, Min_cluster_points: 15, Execution_type: process.PARALLEL}
+	config := process.Config{Min_dense_points: 10, Min_cluster_points: 15, Execution_type: process.PARALLEL, Num_cpu: *num_cpu}
 	go preprocess.WindowTimeSlide(ch, acc, quit)
 	go process.UpdateFeatureSpace(acc, data, sorter, subspaces, config)
 
