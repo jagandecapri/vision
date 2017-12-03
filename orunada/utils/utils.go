@@ -2,7 +2,7 @@ package utils
 
 import (
 	"time"
-	"log"
+	"go.uber.org/zap"
 )
 
 func Comb(n, m int, emit func([]int)) {
@@ -82,7 +82,11 @@ func Round(x float64, unit float64) float64 {
 	return float64(int64(x/unit-0.5)) * unit
 }
 
-func TimeTrack(start time.Time, name string) {
+func TimeTrack(start time.Time, name string, num_CPU int, logger *zap.Logger) {
 	elapsed := time.Since(start)
-	log.Printf("%s took %s", name, elapsed)
+	logger.Info("Log",
+		zap.String("method_name", name),
+		zap.Int("num_cpu", num_CPU),
+		zap.Duration("elapsed_time", elapsed),
+	)
 }

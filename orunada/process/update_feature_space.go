@@ -13,6 +13,8 @@ import (
 
 func UpdateFeatureSpace(acc chan preprocess.PacketAcc, data chan server.HttpData, sorter []string, subspaces map[[2]string]Subspace, config Config){
 	base_matrix := []tree.Point{}
+	l := utils.Logger{}
+	logger := l.New()
 	point_ctr := 0
 	for{
 		select{
@@ -46,20 +48,19 @@ func UpdateFeatureSpace(acc chan preprocess.PacketAcc, data chan server.HttpData
 					}
 				} else if (config.Execution_type == PARALLEL){
 					//cur_CPU := runtime.GOMAXPROCS(1)
-					cur_CPU := runtime.GOMAXPROCS(0) //gets the current number of cores
-					num_clusterer := cur_CPU
-					fmt.Println("cur num CPU", cur_CPU)
+					num_CPU := runtime.GOMAXPROCS(0) //gets the current number of cores
+					num_clusterer := num_CPU
+					//fmt.Println("cur num CPU", num_CPU)
 					func (){
-						defer utils.TimeTrack(time.Now(), "Clustering")
-						m := ParallelClustering(num_clusterer, subspaces, config, x_old, x_new_update)
-						for _, r := range m{
-							fmt.Printf("%v", r)
-						}
+						defer utils.TimeTrack(time.Now(),  "Clustering", num_CPU, logger)
+						ParallelClustering(num_clusterer, subspaces, config, x_old, x_new_update)
+						//m := ParallelClustering(num_clusterer, subspaces, config, x_old, x_new_update)
+						//for _, r := range m{
+						//	fmt.Printf("%v", r)
+						//}
 						return
 					}()
 				}
-
-				//os.Exit(2)
 			}
 		}
 	}
