@@ -60,7 +60,6 @@ func main(){
 		subspaces[tmp] = subspace
 	}
 
-	handleRead, err := pcap.OpenOffline("C:\\Users\\Jack\\Downloads\\201705021400.pcap")
 	ch := make(chan preprocess.PacketData)
 	acc := make(chan preprocess.PacketAcc)
 	quit := make(chan int)
@@ -69,21 +68,41 @@ func main(){
 	go preprocess.WindowTimeSlide(ch, acc, quit)
 	go process.UpdateFeatureSpace(acc, data, sorter, subspaces, config)
 
-	if(err != nil){
-		log.Fatal(err)
-	}
+	//handleRead, err := pcap.OpenOffline("C:\\Users\\Jack\\Downloads\\201705021400.pcap")
+	//
+	//if(err != nil){
+	//	log.Fatal(err)
+	//}
+	//
+	//for {
+	//	data, ci, err := handleRead.ReadPacketData()
+	//	if err != nil && err != io.EOF {
+	//		quit <- 0
+	//		log.Fatal(err)
+	//	} else if err == io.EOF {
+	//		quit <- 0
+	//		break
+	//	} else {
+	//		packet := gopacket.NewPacket(data, layers.LayerTypeEthernet, gopacket.Default)
+	//		ch <- preprocess.PacketData{packet, ci}
+	//	}
+	//}
 
-	for {
-		data, ci, err := handleRead.ReadPacketData()
-		if err != nil && err != io.EOF {
-			quit <- 0
-			log.Fatal(err)
-		} else if err == io.EOF {
-			quit <- 0
-			break
-		} else {
-			packet := gopacket.NewPacket(data, layers.LayerTypeEthernet, gopacket.Default)
-			ch <- preprocess.PacketData{packet, ci}
+	if handle, err := pcap.OpenLive("eth0", 1600, true, pcap.BlockForever); err != nil {
+		panic(err)
+	} else {
+		for {
+			data, ci, err := handle.ReadPacketData()
+			if err != nil && err != io.EOF {
+				quit <- 0
+				log.Fatal(err)
+			} else if err == io.EOF {
+				quit <- 0
+				break
+			} else {
+				packet := gopacket.NewPacket(data, layers.LayerTypeEthernet, gopacket.Default)
+				ch <- preprocess.PacketData{packet, ci}
+			}
 		}
 	}
 }
