@@ -1,5 +1,7 @@
-package grid
+package server
+
+import "github.com/jagandecapri/vision/orunada/tree"
 
 type HttpData struct{
-	Data []Point
+	Data []tree.Unit
 }
