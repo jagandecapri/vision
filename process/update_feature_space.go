@@ -1,21 +1,23 @@
 package process
 
 import (
-	"github.com/jagandecapri/vision/orunada/preprocess"
-	"github.com/jagandecapri/vision/orunada/server"
-	"github.com/jagandecapri/vision/orunada/tree"
+	"github.com/jagandecapri/vision/preprocess"
+	"github.com/jagandecapri/vision/server"
+	"github.com/jagandecapri/vision/tree"
 	"sync"
 	"fmt"
 	"runtime"
 	"time"
-	"github.com/jagandecapri/vision/orunada/utils"
+	"github.com/jagandecapri/vision/utils"
 )
+
 
 func UpdateFeatureSpace(acc chan preprocess.PacketAcc, data chan server.HttpData, sorter []string, subspaces map[[2]string]Subspace, config Config){
 	base_matrix := []tree.Point{}
 	l := utils.Logger{}
 	logger := l.New()
 	point_ctr := 0
+	count := 0
 	for{
 		select{
 		case packet_acc := <- acc:
@@ -31,12 +33,12 @@ func UpdateFeatureSpace(acc chan preprocess.PacketAcc, data chan server.HttpData
 				var x_old, x_new_update []tree.Point
 
 				if len(base_matrix) == preprocess.WINDOW_ARR_LEN{
-					fmt.Println("before flow processing data", preprocess.WINDOW_ARR_LEN, len(base_matrix))
-					fmt.Println("before flow processing")
+					//fmt.Println("before flow processing data", preprocess.WINDOW_ARR_LEN, len(base_matrix))
+					//fmt.Println("before flow processing")
 					x_old, x_new_update = []tree.Point{}, norm_mat
 				} else if len(base_matrix) > preprocess.WINDOW_ARR_LEN{
-					fmt.Println("flow processing data", preprocess.WINDOW_ARR_LEN, len(base_matrix))
-					fmt.Println("flow processing")
+					//fmt.Println("flow processing data", preprocess.WINDOW_ARR_LEN, len(base_matrix))
+					//fmt.Println("flow processing")
 					x_old, x_new_update = []tree.Point{norm_mat[0]}, norm_mat[1:]
 					base_matrix = base_matrix[1:]
 				}
@@ -47,9 +49,7 @@ func UpdateFeatureSpace(acc chan preprocess.PacketAcc, data chan server.HttpData
 						fmt.Println(r)
 					}
 				} else if (config.Execution_type == PARALLEL){
-					//cur_CPU := runtime.GOMAXPROCS(1)
 					num_clusterer := runtime.GOMAXPROCS(config.Num_cpu) //gets the current number of cores
-					//fmt.Println("cur num CPU", num_CPU)
 					func (){
 						defer utils.TimeTrack(time.Now(),  "Clustering", num_clusterer, logger)
 						ParallelClustering(num_clusterer, subspaces, config, x_old, x_new_update)
@@ -57,6 +57,7 @@ func UpdateFeatureSpace(acc chan preprocess.PacketAcc, data chan server.HttpData
 						//for _, r := range m{
 						//	fmt.Printf("%v", r)
 						//}
+						count++
 						return
 					}()
 				}
@@ -103,7 +104,7 @@ func Clusterer(done <-chan struct{}, processPackages <-chan processPackage , c c
 func SubspaceIterator(done <- chan struct{}, subspaces map[[2]string]Subspace, config Config, x_old []tree.Point, x_new_update []tree.Point) (<-chan processPackage){
 	processPackages := make(chan processPackage)
 	go func(){
-		fmt.Println("Subspace len:", len(subspaces))
+		//fmt.Println("Subspace len:", len(subspaces))
 		defer close(processPackages)
 
 		for _, subspace := range subspaces {

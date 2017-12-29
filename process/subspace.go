@@ -1,7 +1,7 @@
 package process
 
 import (
-	"github.com/jagandecapri/vision/orunada/tree"
+	"github.com/jagandecapri/vision/tree"
 	"github.com/Workiva/go-datastructures/augmentedtree"
 )
 

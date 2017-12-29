@@ -1,17 +1,17 @@
 package main
 
 import (
-	"github.com/jagandecapri/vision/orunada/utils"
-	"github.com/jagandecapri/vision/orunada/preprocess"
-	"github.com/jagandecapri/vision/orunada/process"
+	"github.com/jagandecapri/vision/utils"
+	"github.com/jagandecapri/vision/preprocess"
+	"github.com/jagandecapri/vision/process"
 	"github.com/google/gopacket/pcap"
 	"log"
 	"io"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"sort"
-	"github.com/jagandecapri/vision/orunada/tree"
-	"github.com/jagandecapri/vision/orunada/server"
+	"github.com/jagandecapri/vision/tree"
+	"github.com/jagandecapri/vision/server"
 	"flag"
 )
 
@@ -68,41 +68,41 @@ func main(){
 	go preprocess.WindowTimeSlide(ch, acc, quit)
 	go process.UpdateFeatureSpace(acc, data, sorter, subspaces, config)
 
-	//handleRead, err := pcap.OpenOffline("C:\\Users\\Jack\\Downloads\\201705021400.pcap")
-	//
-	//if(err != nil){
-	//	log.Fatal(err)
-	//}
-	//
-	//for {
-	//	data, ci, err := handleRead.ReadPacketData()
-	//	if err != nil && err != io.EOF {
-	//		quit <- 0
-	//		log.Fatal(err)
-	//	} else if err == io.EOF {
-	//		quit <- 0
-	//		break
-	//	} else {
-	//		packet := gopacket.NewPacket(data, layers.LayerTypeEthernet, gopacket.Default)
-	//		ch <- preprocess.PacketData{packet, ci}
-	//	}
-	//}
+	handleRead, err := pcap.OpenOffline("C:\\Users\\Jack\\Downloads\\201705021400.pcap")
 
-	if handle, err := pcap.OpenLive("eth0", 1600, true, pcap.BlockForever); err != nil {
-		panic(err)
-	} else {
-		for {
-			data, ci, err := handle.ReadPacketData()
-			if err != nil && err != io.EOF {
-				quit <- 0
-				log.Fatal(err)
-			} else if err == io.EOF {
-				quit <- 0
-				break
-			} else {
-				packet := gopacket.NewPacket(data, layers.LayerTypeEthernet, gopacket.Default)
-				ch <- preprocess.PacketData{packet, ci}
-			}
+	if(err != nil){
+		log.Fatal(err)
+	}
+
+	for {
+		data, ci, err := handleRead.ReadPacketData()
+		if err != nil && err != io.EOF {
+			quit <- 0
+			log.Fatal(err)
+		} else if err == io.EOF {
+			quit <- 0
+			break
+		} else {
+			packet := gopacket.NewPacket(data, layers.LayerTypeEthernet, gopacket.Default)
+			ch <- preprocess.PacketData{packet, ci}
 		}
 	}
+
+	//if handle, err := pcap.OpenLive("eth0", 1600, true, pcap.BlockForever); err != nil {
+	//	panic(err)
+	//} else {
+	//	for {
+	//		data, ci, err := handle.ReadPacketData()
+	//		if err != nil && err != io.EOF {
+	//			quit <- 0
+	//			log.Fatal(err)
+	//		} else if err == io.EOF {
+	//			quit <- 0
+	//			break
+	//		} else {
+	//			packet := gopacket.NewPacket(data, layers.LayerTypeEthernet, gopacket.Default)
+	//			ch <- preprocess.PacketData{packet, ci}
+	//		}
+	//	}
+	//}
 }

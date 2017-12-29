@@ -1,7 +1,7 @@
 package preprocess
 
 import (
-	"github.com/jagandecapri/vision/orunada/utils"
+	"github.com/jagandecapri/vision/utils"
 )
 
 type PacketAcc []PacketFeature

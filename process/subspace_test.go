@@ -2,7 +2,7 @@ package process
 
 import (
 	"testing"
-	"github.com/jagandecapri/vision/orunada/tree"
+	"github.com/jagandecapri/vision/tree"
 	"github.com/stretchr/testify/assert"
 )
 

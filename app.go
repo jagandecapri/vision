@@ -8,9 +8,9 @@ import (
 	"path/filepath"
 	"github.com/gorilla/websocket"
 	"fmt"
-	"github.com/jagandecapri/vision/orunada/server"
+	"github.com/jagandecapri/vision/server"
 	"encoding/json"
-	"github.com/jagandecapri/vision/orunada/tree"
+	"github.com/jagandecapri/vision/tree"
 )
 
 var upgrader = websocket.Upgrader{} // use default options
