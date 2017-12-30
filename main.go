@@ -29,7 +29,7 @@ func main(){
 	flag.Parse()
 
 	data := make(chan server.HttpData)
-	//go BootServer(data)
+	go BootServer(data)
 
 	sorter:= getSorter()
 	subspace_keys := utils.GetKeyComb(sorter, 2)
