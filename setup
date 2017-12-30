@@ -1,6 +1,0 @@
-1. Install Go x64
-2. Add environment variable GOPATH
-3. Add go src bin directory to PATH
-4. Install MinGW-w64
-5. Add \bin environment variables for MinGW
-6. Install WinPCAP developer resources
