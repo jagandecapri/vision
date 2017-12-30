@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 	"github.com/gorilla/websocket"
-	"fmt"
 	"github.com/jagandecapri/vision/server"
 	"encoding/json"
 	"github.com/jagandecapri/vision/tree"
@@ -58,6 +57,7 @@ func serveTemplate(w http.ResponseWriter, r *http.Request) {
 	// Return a 404 if the template doesn't exist
 	info, err := os.Stat(fp)
 	if err != nil {
+		log.Println("err file: ", err)
 		if os.IsNotExist(err) {
 			http.NotFound(w, r)
 			return
@@ -66,6 +66,7 @@ func serveTemplate(w http.ResponseWriter, r *http.Request) {
 
 	// Return a 404 if the request is for a directory
 	if info.IsDir() {
+		log.Println("request to dir")
 		http.NotFound(w, r)
 		return
 	}
@@ -73,7 +74,7 @@ func serveTemplate(w http.ResponseWriter, r *http.Request) {
 	tmpl := template.Must(template.ParseFiles(lp, fp))
 
 	data := Socket{URI: "ws://"+r.Host+"/echo"}
-	fmt.Println(data)
+	log.Println(data)
 	if err := tmpl.ExecuteTemplate(w, "layout", data); err != nil {
 		log.Println(err.Error())
 		http.Error(w, http.StatusText(500), 500)
