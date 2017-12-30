@@ -3,5 +3,5 @@ package server
 import "github.com/jagandecapri/vision/tree"
 
 type HttpData struct{
-	Data []tree.Unit
+	Data []*tree.Grid
 }
