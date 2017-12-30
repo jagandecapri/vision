@@ -43,39 +43,45 @@ func UpdateFeatureSpace(acc chan preprocess.PacketAcc, data chan server.HttpData
 					base_matrix = base_matrix[1:]
 				}
 
+				m := []result{}
+
 				if (config.Execution_type == SEQUENTIAL){
-					c := SequentialClustering(subspaces, config, x_old, x_new_update)
-					for r := range c{
-						fmt.Println(r)
-					}
+					m = SequentialClustering(subspaces, config, x_old, x_new_update)
+
 				} else if (config.Execution_type == PARALLEL){
 					num_clusterer := runtime.GOMAXPROCS(config.Num_cpu) //gets the current number of cores
 					func (){
 						defer utils.TimeTrack(time.Now(),  "Clustering", num_clusterer, logger)
-						ParallelClustering(num_clusterer, subspaces, config, x_old, x_new_update)
-						//m := ParallelClustering(num_clusterer, subspaces, config, x_old, x_new_update)
-						//for _, r := range m{
-						//	fmt.Printf("%v", r)
-						//}
+						//ParallelClustering(num_clusterer, subspaces, config, x_old, x_new_update)
+						m = ParallelClustering(num_clusterer, subspaces, config, x_old, x_new_update)
 						count++
 						return
 					}()
 				}
+
+				http_data := server.HttpData{}
+				for _, r := range m{
+					http_data.Data = append(http_data.Data, r.grid)
+				}
+				data <- http_data
 			}
 		}
 	}
 }
 
 type result struct{
-	data int
+	grid *tree.Grid
 }
 
 func SequentialClustering(subspaces map[[2]string]Subspace, config Config, x_old []tree.Point, x_new_update []tree.Point) []result{
+	m := []result{}
 	for _, subspace := range subspaces{
 		subspace.ComputeSubspace(x_old, x_new_update)
 		subspace.Cluster(config.Min_dense_points, config.Min_cluster_points)
+		r := result{subspace.Grid}
+		m = append(m, r)
 	}
-	return []result{}
+	return m
 }
 
 type processPackage struct{
@@ -94,7 +100,7 @@ func Clusterer(done <-chan struct{}, processPackages <-chan processPackage , c c
 		subspace.ComputeSubspace(x_old, x_new_update)
 		subspace.Cluster(config.Min_dense_points, config.Min_cluster_points)
 		select {
-		case c <- result{}:
+		case c <- result{subspace.Grid}:
 		case <- done:
 			return
 		}
