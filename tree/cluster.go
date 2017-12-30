@@ -1,7 +1,7 @@
 package tree
 
 import (
-	"github.com/jagandecapri/vision/orunada/utils"
+	"github.com/jagandecapri/vision/utils"
 )
 
 const UNCLASSIFIED = 0
