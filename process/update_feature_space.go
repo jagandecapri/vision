@@ -12,7 +12,7 @@ import (
 )
 
 
-func UpdateFeatureSpace(acc chan preprocess.PacketAcc, data chan server.HttpData, sorter []string, subspaces map[[2]string]Subspace, config Config){
+func UpdateFeatureSpace(acc chan preprocess.PacketAcc, data chan server.HttpData, sorter []string, subspaces map[[2]string]tree.Subspace, config Config){
 	base_matrix := []tree.Point{}
 	l := utils.Logger{}
 	logger := l.New()
@@ -73,7 +73,7 @@ type result struct{
 	grid *tree.Grid
 }
 
-func SequentialClustering(subspaces map[[2]string]Subspace, config Config, x_old []tree.Point, x_new_update []tree.Point) []result{
+func SequentialClustering(subspaces map[[2]string]tree.Subspace, config Config, x_old []tree.Point, x_new_update []tree.Point) []result{
 	m := []result{}
 	for _, subspace := range subspaces{
 		subspace.ComputeSubspace(x_old, x_new_update)
@@ -85,7 +85,7 @@ func SequentialClustering(subspaces map[[2]string]Subspace, config Config, x_old
 }
 
 type processPackage struct{
-	subspace Subspace
+	subspace tree.Subspace
 	config Config
 	x_old []tree.Point
 	x_new_update []tree.Point
@@ -107,7 +107,7 @@ func Clusterer(done <-chan struct{}, processPackages <-chan processPackage , c c
 	}
 }
 
-func SubspaceIterator(done <- chan struct{}, subspaces map[[2]string]Subspace, config Config, x_old []tree.Point, x_new_update []tree.Point) (<-chan processPackage){
+func SubspaceIterator(done <- chan struct{}, subspaces map[[2]string]tree.Subspace, config Config, x_old []tree.Point, x_new_update []tree.Point) (<-chan processPackage){
 	processPackages := make(chan processPackage)
 	go func(){
 		//fmt.Println("Subspace len:", len(subspaces))
@@ -131,7 +131,7 @@ func SubspaceIterator(done <- chan struct{}, subspaces map[[2]string]Subspace, c
 	return processPackages
 }
 
-func ParallelClustering(num_clusterers int, subspaces map[[2]string]Subspace, config Config, x_old []tree.Point, x_new_update []tree.Point) []result{
+func ParallelClustering(num_clusterers int, subspaces map[[2]string]tree.Subspace, config Config, x_old []tree.Point, x_new_update []tree.Point) []result{
 	done := make(chan struct{})
 	defer close(done)
 

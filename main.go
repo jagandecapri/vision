@@ -37,7 +37,7 @@ func main(){
 	max_interval := 1.0
 	interval_length := 0.1
 	dim := 2
-	subspaces := make(map[[2]string]process.Subspace)
+	subspaces := make(map[[2]string]tree.Subspace)
 
 	for _, subspace_key := range subspace_keys{
 		tmp := [2]string{}
@@ -48,7 +48,7 @@ func main(){
 		intervals := tree.IntervalBuilder(ranges, scale_factor)
 		units := tree.UnitsBuilder(ranges, dim)
 
-		subspace := process.Subspace{Interval_tree: &Int_tree, Grid: &grid, Subspace_key: tmp, Scale_factor: scale_factor}
+		subspace := tree.Subspace{Interval_tree: &Int_tree, Grid: &grid, Subspace_key: tmp, Scale_factor: scale_factor}
 		for _, interval := range intervals{
 			Int_tree.Add(interval)
 		}
