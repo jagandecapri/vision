@@ -43,8 +43,7 @@ func UpdateFeatureSpace(acc chan preprocess.PacketAcc, data chan server.HttpData
 					base_matrix = base_matrix[1:]
 				}
 
-				m := []result{}
-
+				m := map[[2]string]tree.Subspace{}
 				if (config.Execution_type == SEQUENTIAL){
 					m = SequentialClustering(subspaces, config, x_old, x_new_update)
 
@@ -59,32 +58,35 @@ func UpdateFeatureSpace(acc chan preprocess.PacketAcc, data chan server.HttpData
 					}()
 				}
 
-				http_data := server.HttpData{}
-				for _, r := range m{
-					http_data.Data = append(http_data.Data, r.grid)
-				}
-				data <- http_data
+				//http_data := server.HttpData{}
+				//for subspace_key, subspace := range m{
+				//	subspace_key_join := strings.Join(subspace_key[:], "-")
+				//	point_cluster := ProcessVisualizationDataSubspace(subspace)
+				//	http_data.Point_cluster[subspace_key_join] = point_cluster
+				//}
+				//http_data.Points = m[0].Grid.
+				//fmt.Println("Send HTTP data: ", http_data)
+				//data <- http_data
 			}
 		}
 	}
 }
 
-type result struct{
-	grid *tree.Grid
-}
-
-func SequentialClustering(subspaces map[[2]string]tree.Subspace, config Config, x_old []tree.Point, x_new_update []tree.Point) []result{
-	m := []result{}
+func SequentialClustering(subspaces map[[2]string]tree.Subspace, config Config, x_old []tree.Point, x_new_update []tree.Point)  map[[2]string]tree.Subspace{
 	for _, subspace := range subspaces{
 		subspace.ComputeSubspace(x_old, x_new_update)
 		subspace.Cluster(config.Min_dense_points, config.Min_cluster_points)
-		r := result{subspace.Grid}
-		m = append(m, r)
 	}
-	return m
+	return subspaces
+}
+
+type result struct{
+	subspace_key [2]string
+	subspace tree.Subspace
 }
 
 type processPackage struct{
+	subspace_key [2]string
 	subspace tree.Subspace
 	config Config
 	x_old []tree.Point
@@ -100,7 +102,7 @@ func Clusterer(done <-chan struct{}, processPackages <-chan processPackage , c c
 		subspace.ComputeSubspace(x_old, x_new_update)
 		subspace.Cluster(config.Min_dense_points, config.Min_cluster_points)
 		select {
-		case c <- result{subspace.Grid}:
+		case c <- result{processPackage.subspace_key, subspace}:
 		case <- done:
 			return
 		}
@@ -115,6 +117,7 @@ func SubspaceIterator(done <- chan struct{}, subspaces map[[2]string]tree.Subspa
 
 		for _, subspace := range subspaces {
 			processPackage := processPackage{
+				subspace_key: subspace.Subspace_key,
 				subspace: subspace,
 				config: config,
 				x_old: x_old,
@@ -131,7 +134,7 @@ func SubspaceIterator(done <- chan struct{}, subspaces map[[2]string]tree.Subspa
 	return processPackages
 }
 
-func ParallelClustering(num_clusterers int, subspaces map[[2]string]tree.Subspace, config Config, x_old []tree.Point, x_new_update []tree.Point) []result{
+func ParallelClustering(num_clusterers int, subspaces map[[2]string]tree.Subspace, config Config, x_old []tree.Point, x_new_update []tree.Point)  map[[2]string]tree.Subspace{
 	done := make(chan struct{})
 	defer close(done)
 
@@ -151,10 +154,10 @@ func ParallelClustering(num_clusterers int, subspaces map[[2]string]tree.Subspac
 		close(c)
 	}()
 
-	m := []result{}
+	m := make(map[[2]string]tree.Subspace)
 	for r := range c{
 		//to extract needed data for server visualization
-		m = append(m, r)
+		m[r.subspace_key] = r.subspace
 	}
 
 	return m
