@@ -5,24 +5,24 @@ import (
 )
 
 type Unit struct {
-	Id                 int
-	Cluster_id         int
-	Dimension          int
-	Center             PointContainer
-	Neighbour_units    map[Range]*Unit
-	points             map[int]PointContainer
+	Id                int
+	Cluster_id        int
+	Dimension         int
+	Center            PointContainer
+	Neighbour_units   map[Range]*Unit
+	Points            map[int]PointContainer
 	Center_calculated bool
 	Range
 }
 
 func (u *Unit) AddPoint(p PointContainer) {
 	u.Center_calculated = false
-	u.points[p.GetID()] = p
+	u.Points[p.GetID()] = p
 }
 
 func (u *Unit) RemovePoint(p PointContainer) {
 	u.Center_calculated = false
-	delete(u.points, p.GetID())
+	delete(u.Points, p.GetID())
 }
 
 func (u *Unit) CalculateCenter() {
@@ -34,20 +34,20 @@ func (u *Unit) GetCenter() PointContainer {
 		return u.Center
 	}
 	Center_vec := make([]float64, u.Dimension)
-	for _, p := range u.points {
+	for _, p := range u.Points {
 		for i := 0; i < p.Dim(); i++ {
 			Center_vec[i] = Center_vec[i] + p.GetValue(i)
 		}
 	}
 	for i, _ := range Center_vec {
-		Center_vec[i] = Center_vec[i] / float64(len(u.points))
+		Center_vec[i] = Center_vec[i] / float64(len(u.Points))
 	}
 	u.Center = PointContainer{Unit_id: u.Id, Vec: Center_vec}
 	return u.Center
 }
 
 func (u *Unit) GetNumberOfPoints() int {
-	return len(u.points)
+	return len(u.Points)
 }
 
 //Implementing PointInterface methods
@@ -85,7 +85,7 @@ func NewUnit(id int, dimension int, rg Range) Unit{
 		Id: id,
 		Dimension: dimension,
 		Neighbour_units: make(map[Range]*Unit),
-		points: make(map[int]PointContainer),
+		Points: make(map[int]PointContainer),
 		Range: rg,
 	}
 	return unit

@@ -5,11 +5,6 @@ import (
 	"math"
 )
 
-type Range struct{
-	Low          [2]float64
-	High         [2]float64
-}
-
 type IntervalContainer struct {
 	Id           int
 	Scale_factor int

@@ -9,6 +9,7 @@ type Grid struct{
 	cluster_id_counter int
 	listDenseUnits map[Range]*Unit
 	tmpUnitToCluster map[Range]*Unit
+	ClusterContainer
 }
 
 func NewGrid() Grid {
@@ -18,6 +19,7 @@ func NewGrid() Grid {
 		Cluster_map: make(map[int]Cluster),
 		listDenseUnits: make(map[Range]*Unit),
 		tmpUnitToCluster: make(map[Range]*Unit),
+		ClusterContainer: ClusterContainer{ListOfClusters: make(map[int]Cluster)},
 	}
 	return units
 }
@@ -127,7 +129,7 @@ func (us *Grid) ProcessOldDenseUnits(listOldDenseUnits map[Range]*Unit) map[Rang
 
 		if count_neighbour_same_cluster >= 2 {
 			src := us.RemoveCluster(cluster_id)
-			for rg, unit := range src{
+			for rg, unit := range src.ListOfUnits{
 				listUnitToRep[rg] = unit
 			}
 		}
@@ -135,23 +137,23 @@ func (us *Grid) ProcessOldDenseUnits(listOldDenseUnits map[Range]*Unit) map[Rang
 	return listUnitToRep
 }
 
-func (us *Grid) RemoveCluster(cluster_id int) map[Range]*Unit{
-	tmp := make(map[Range]*Unit)
-	for rg, unit := range us.Cluster_map[cluster_id].ListOfUnits{
-		tmp[rg] = unit
-	}
-	delete(us.Cluster_map, cluster_id)
-	return tmp
-}
+//func (us *Grid) RemoveCluster(cluster_id int) map[Range]*Unit{
+//	tmp := make(map[Range]*Unit)
+//	for rg, unit := range us.Cluster_map[cluster_id].ListOfUnits{
+//		tmp[rg] = unit
+//	}
+//	delete(us.Cluster_map, cluster_id)
+//	return tmp
+//}
 
 func (us *Grid) Cluster(min_dense_points int, min_cluster_points int){
 	listNewDenseUnits, listOldDenseUnits := us.RecomputeDenseUnits(min_dense_points)
 	us.tmpUnitToCluster = listNewDenseUnits
-	_, us.Cluster_map = IGDCA(*us, min_dense_points, min_cluster_points)
+	_ = IGDCA(*us, min_dense_points, min_cluster_points)
 
 	listUnitToRep := us.ProcessOldDenseUnits(listOldDenseUnits)
 	us.tmpUnitToCluster = listUnitToRep
-	_, us.Cluster_map = IGDCA(*us, min_dense_points, min_cluster_points)
+	_ = IGDCA(*us, min_dense_points, min_cluster_points)
 }
 
 func (us *Grid) isDenseUnit(unit *Unit, min_dense_points int) bool{

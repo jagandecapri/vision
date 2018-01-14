@@ -37,7 +37,7 @@ func TestGrid_GetNeighbouringUnits(t *testing.T) {
 }
 
 func TestGrid_ImplementsClusterInterface(t *testing.T){
-	assert.Implements(t, (*ClusterInterface)(nil), new(Grid))
+	assert.Implements(t, (*GridInterface)(nil), new(Grid))
 }
 
 func TestGrid_AddPoint(t *testing.T) {
@@ -48,7 +48,7 @@ func TestGrid_AddPoint(t *testing.T) {
 	grid.Store[rg] = &unit
 	grid.AddPoint(p, rg)
 	assert.Equal(t, grid.Point_unit_map[1], rg)
-	assert.Equal(t, grid.Store[rg].points[1].Id, 1)
+	assert.Equal(t, grid.Store[rg].Points[1].Id, 1)
 	assert.False(t, grid.Store[rg].Center_calculated)
 
 	p1 := PointContainer{Point: Point{Id: 2}}
@@ -67,7 +67,7 @@ func TestGrid_RemovePoint(t *testing.T) {
 	var ok bool
 	_, ok = grid.Point_unit_map[1]
 	assert.False(t, ok)
-	_, ok = grid.Store[rg].points[1]
+	_, ok = grid.Store[rg].Points[1]
 	assert.False(t, ok)
 	assert.False(t, grid.Store[rg].Center_calculated)
 
@@ -90,9 +90,9 @@ func TestGrid_UpdatePoint(t *testing.T) {
 	var ok bool
 	_, ok = grid.Point_unit_map[1]
 	assert.True(t, ok)
-	_, ok = grid.Store[cur_rg].points[1]
+	_, ok = grid.Store[cur_rg].Points[1]
 	assert.False(t, ok)
-	_, ok = grid.Store[new_rg].points[1]
+	_, ok = grid.Store[new_rg].Points[1]
 	assert.True(t, ok)
 }
 
@@ -101,7 +101,7 @@ func TestGrid_RecomputeDenseUnits(t *testing.T) {
 
 	rg := Range{Low: [2]float64{0, 0}, High: [2]float64{0.5, 0.5}}
 	unit := NewUnit(1,2,rg)
-	unit.points[1] = p
+	unit.Points[1] = p
 
 	rg1 := Range{Low: [2]float64{0.5, 0.5}, High: [2]float64{1.0, 1.0}}
 	unit1 := NewUnit(1,2,rg1)
@@ -146,7 +146,7 @@ func TestGrid_RecomputeDenseUnits(t *testing.T) {
 			us.listOldDenseUnits[rg] = unit
 		}
 	 */
-	unit.points = make(map[int]PointContainer)
+	unit.Points = make(map[int]PointContainer)
 	_, listOldDenseUnits = grid.RecomputeDenseUnits(1)
 	_, ok =  grid.listDenseUnits[rg]
 	assert.False(t, ok)
@@ -181,7 +181,10 @@ func TestGrid_ProcessOldDenseUnits(t *testing.T) {
 		Range{Low: [2]float64{0, 0}, High: [2]float64{1, 1}}: {Id: 1, Cluster_id: 1},
 		Range{Low: [2]float64{0, 1}, High: [2]float64{1, 2}}: {Id: 2, Cluster_id: 1},
 	}
-	grid.Cluster_map = map[int]Cluster{1: {ListOfUnits: list_of_units}}
+
+	c := Cluster{Cluster_id:0, ListOfUnits: list_of_units}
+	grid.AddUpdateCluster(c)
+
 	listOldDenseUnits := map[Range]*Unit{{Low: [2]float64{1, 1}, High: [2]float64{2, 2}}: &unit}
 
 	listUnitToRep := grid.ProcessOldDenseUnits(listOldDenseUnits)
