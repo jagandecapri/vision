@@ -167,7 +167,7 @@ func TestGrid_ProcessOldDenseUnits(t *testing.T) {
 	rg := Range{Low: [2]float64{1, 1}, High: [2]float64{2, 2}}
 	unit := NewUnit(1,2,rg)
 	unit.Id = 9
-	unit.Cluster_id = 1
+	unit.Cluster_id = 0
 	unit.Neighbour_units = map[Range]*Unit{{Low: [2]float64{0, 0}, High: [2]float64{1, 1}}: {Id: 1, Cluster_id: 1},
 		{Low: [2]float64{0, 1}, High: [2]float64{1, 2}}: {Id: 2, Cluster_id: 1},
 		{Low: [2]float64{0, 2}, High: [2]float64{1, 3}}: {Id: 3},
