@@ -3,7 +3,6 @@ package tree
 type Grid struct{
 	Store map[Range]*Unit
 	Point_unit_map map[int]Range
-	Cluster_map map[int]Cluster
 	MinDensePoints int
 	MinClusterPoints int
 	cluster_id_counter int
@@ -16,7 +15,6 @@ func NewGrid() Grid {
 	units := Grid{
 		Store: make(map[Range]*Unit),
 		Point_unit_map: make(map[int]Range),
-		Cluster_map: make(map[int]Cluster),
 		listDenseUnits: make(map[Range]*Unit),
 		tmpUnitToCluster: make(map[Range]*Unit),
 		ClusterContainer: ClusterContainer{ListOfClusters: make(map[int]Cluster)},
@@ -43,10 +41,6 @@ func (us *Grid) GetMinClusterPoints() int{
 func (us *Grid) GetNextClusterID() int{
 	us.cluster_id_counter += 1
 	return us.cluster_id_counter
-}
-
-func (us *Grid) GetClusterMap() map[int]Cluster{
-	return us.Cluster_map
 }
 
 func (us *Grid) RemovePoint(point PointContainer, rg Range){
@@ -136,15 +130,6 @@ func (us *Grid) ProcessOldDenseUnits(listOldDenseUnits map[Range]*Unit) map[Rang
 	}
 	return listUnitToRep
 }
-
-//func (us *Grid) RemoveCluster(cluster_id int) map[Range]*Unit{
-//	tmp := make(map[Range]*Unit)
-//	for rg, unit := range us.Cluster_map[cluster_id].ListOfUnits{
-//		tmp[rg] = unit
-//	}
-//	delete(us.Cluster_map, cluster_id)
-//	return tmp
-//}
 
 func (us *Grid) Cluster(min_dense_points int, min_cluster_points int){
 	listNewDenseUnits, listOldDenseUnits := us.RecomputeDenseUnits(min_dense_points)

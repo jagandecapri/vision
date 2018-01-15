@@ -111,22 +111,6 @@ func TestCluster2by2GridMergeClusters1(t *testing.T) {
 
 	grid.SetupGrid(interval_l)
 
-	grid.Cluster_map = map[int]Cluster{
-		1: {
-			Cluster_id: 1,
-			ListOfUnits: map[Range]*Unit{
-				r1: &u1,
-				r2: &u2,
-			},
-		},
-		2: {
-			Cluster_id: 2,
-			ListOfUnits: map[Range]*Unit{
-				r3: &u3,
-			},
-		},
-	}
-
 	c1 := Cluster{
 		Cluster_id: 1,
 		ListOfUnits: map[Range]*Unit{
@@ -186,22 +170,6 @@ func TestCluster2by2GridMergeClusters2(t *testing.T) {
 	grid.AddUnit(&u4, r4)
 
 	grid.SetupGrid(interval_l)
-
-	grid.Cluster_map = map[int]Cluster{
-		1: {
-			Cluster_id: 1,
-			ListOfUnits: map[Range]*Unit{
-				r1: &u1,
-				r2: &u2,
-			},
-		},
-		2: {
-			Cluster_id: 2,
-			ListOfUnits: map[Range]*Unit{
-				r3: &u3,
-			},
-		},
-	}
 
 	c1 := Cluster{
 		Cluster_id: 1,
