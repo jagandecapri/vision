@@ -1,7 +1,12 @@
 package tree
 
 type ClusterContainer struct{
+	BiggestCluster Cluster
 	ListOfClusters map[int]Cluster
+}
+
+func (cc *ClusterContainer) GetBiggestCluster() Cluster{
+	return cc.BiggestCluster
 }
 
 func (cc *ClusterContainer) GetOutliers() map[int]Cluster{
@@ -30,6 +35,9 @@ func (cc *ClusterContainer) GetCluster(cluster_id int) (Cluster, bool){
 }
 
 func (cc *ClusterContainer) AddUpdateCluster(cluster Cluster){
+	if cluster.Num_of_points >= cc.BiggestCluster.Num_of_points{
+		cc.BiggestCluster = cluster
+	}
 	cc.ListOfClusters[cluster.Cluster_id] = cluster
 }
 
