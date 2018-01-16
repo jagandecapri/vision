@@ -17,18 +17,18 @@ func TestSubspace_ComputeSubspace(t *testing.T) {
 	units := UnitsBuilder(ranges, dim)
 
 	int_tree := NewIntervalTree(uint64(dim))
-	Unit := NewGrid()
+	grid := NewGrid()
 
 	for _, interval := range intervals{
 		int_tree.Add(interval)
 	}
 
 	for _, unit := range units{
-		Unit.AddUnit(&unit)
+		grid.AddUnit(&unit)
 	}
 
 	subspace := Subspace{interval_tree: &int_tree,
-		Grid: &Unit,
+		Grid: &grid,
 		Subspace_key: subspace_key,
 		Scale_factor: scale_factor,
 	}
