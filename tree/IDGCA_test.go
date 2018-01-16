@@ -130,17 +130,19 @@ func TestCluster2by2GridMergeClusters1(t *testing.T) {
 	grid.AddUpdateCluster(c2)
 
 	var cluster_ids []int
+	var num_of_points int
 	var res int
 	var merged_cluster_id []int
 	var ok bool
 
 	cluster_ids = []int{1,2}
-	res, merged_cluster_id = MergeClusters(grid,cluster_ids)
+	res, num_of_points, merged_cluster_id = MergeClusters(grid,cluster_ids)
 	assert.Equal(t, res, SUCCESS)
 	assert.Equal(t, 1, u1.Cluster_id)
 	assert.Equal(t, 1, u2.Cluster_id)
 	assert.Equal(t, 1, u3.Cluster_id)
 	assert.Equal(t, UNCLASSIFIED, u4.Cluster_id)
+	assert.Equal(t, 2, num_of_points)
 	assert.Contains(t, merged_cluster_id, 1)
 	_, ok = grid.GetCluster(2)
 	assert.False(t, ok)
@@ -190,17 +192,19 @@ func TestCluster2by2GridMergeClusters2(t *testing.T) {
 	grid.AddUpdateCluster(c2)
 
 	var cluster_ids []int
+	var num_of_points int
 	var res int
 	var merged_cluster_id []int
 	var ok bool
 
 	cluster_ids = []int{2,1}
-	res, merged_cluster_id = MergeClusters(grid,cluster_ids)
+	res, num_of_points, merged_cluster_id = MergeClusters(grid,cluster_ids)
 	assert.Equal(t, res, SUCCESS)
 	assert.Equal(t, 2, u1.Cluster_id)
 	assert.Equal(t, 2, u2.Cluster_id)
 	assert.Equal(t, 2, u3.Cluster_id, "%v", u3.Cluster_id)
 	assert.Equal(t, UNCLASSIFIED, u4.Cluster_id)
+	assert.Equal(t, 7, num_of_points)
 	assert.Contains(t, merged_cluster_id, 2)
 	_, ok = grid.GetCluster(1)
 	assert.False(t, ok)

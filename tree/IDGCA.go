@@ -25,7 +25,7 @@ func IGDCA(grid Grid, min_dense_points int, min_cluster_points int) (map[Range]*
 				ret, neighbour_cluster_ids = AbsorbIntoCluster(grid, unit, rg, min_dense_points)
 				if ret == SUCCESS{
 					if len(neighbour_cluster_ids) > 1{
-						_, neighbour_cluster_ids = MergeClusters(grid, neighbour_cluster_ids)
+						_, _, neighbour_cluster_ids = MergeClusters(grid, neighbour_cluster_ids)
 					}
 					num_points_cluster := 0
 					for _, cluster_id := range neighbour_cluster_ids{
@@ -84,14 +84,15 @@ func AbsorbIntoCluster(grid Grid, unit *Unit, rg Range, min_dense_points int) (i
 		unit.Cluster_id = tmp
 
 		cluster, _ := grid.GetCluster(tmp) //ok value here need to tbe taken into account if want to avoid nil panic
-		cluster.ListOfUnits[rg] = unit
+		cluster.ListOfUnits[unit.Range] = unit
 		grid.AddUpdateCluster(cluster)
 		ret_value = SUCCESS
 	}
 	return ret_value, cluster_ids
 }
 
-func MergeClusters(grid Grid, cluster_ids []int) (int, []int){
+func MergeClusters(grid Grid, cluster_ids []int) (int, int, []int){
+	num_of_points := 0
 	ret_value := FAILURE
 	cluster_id_merged, cluster_id_to_be_merged := cluster_ids[0], cluster_ids[1:]
 	tmp := []int{cluster_id_merged}
@@ -100,12 +101,13 @@ func MergeClusters(grid Grid, cluster_ids []int) (int, []int){
 		if ok{
 			for _, unit := range cluster.ListOfUnits{
 				unit.Cluster_id = cluster_id_merged
+				num_of_points += unit.GetNumberOfPoints()
 			}
 			ret_value = SUCCESS
 			grid.RemoveCluster(cluster_id)
 		}
 	}
-	return ret_value, tmp
+	return ret_value, num_of_points, tmp
 }
 
 type Seed struct{
