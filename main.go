@@ -48,13 +48,14 @@ func main(){
 		intervals := tree.IntervalBuilder(ranges, scale_factor)
 		units := tree.UnitsBuilder(ranges, dim)
 
-		subspace := tree.Subspace{Interval_tree: &Int_tree, Grid: &grid, Subspace_key: tmp, Scale_factor: scale_factor}
+		subspace := tree.Subspace{Grid: &grid, Subspace_key: tmp, Scale_factor: scale_factor}
+		subspace.SetIntervalTree(&Int_tree)
 		for _, interval := range intervals{
 			Int_tree.Add(interval)
 		}
 
-		for rg, unit := range units{
-			grid.AddUnit(&unit, rg)
+		for _, unit := range units{
+			grid.AddUnit(&unit)
 		}
 		grid.SetupGrid(interval_length)
 		subspaces[tmp] = subspace

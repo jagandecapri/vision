@@ -9,24 +9,24 @@ func TestCluster2by2Grid(t *testing.T) {
 	grid := NewGrid()
 	interval_l := 1.0
 
-	u1 := Unit{Id: 1, Center: PointContainer{Vec: []float64{0.5,0.5}},
-		Points: map[int]PointContainer{1: {},2: {},3: {},4: {},5: {}}}
 	r1 := Range{Low: [2]float64{0, 0}, High: [2]float64{1, 1}}
-	grid.AddUnit(&u1, r1)
+	u1 := Unit{Id: 1, Center: PointContainer{Vec: []float64{0.5,0.5}},
+		Points: map[int]PointContainer{1: {},2: {},3: {},4: {},5: {}}, Range: r1}
+	grid.AddUnit(&u1)
 
-	u2 := Unit{Id: 2, Center: PointContainer{Vec: []float64{0.5,1.5}},
-		Points: map[int]PointContainer{1: {},2: {}}}
 	r2 := Range{Low: [2]float64{0, 1}, High: [2]float64{1, 2}}
-	grid.AddUnit(&u2, r2)
+	u2 := Unit{Id: 2, Center: PointContainer{Vec: []float64{0.5,1.5}},
+		Points: map[int]PointContainer{1: {},2: {}}, Range: r2}
+	grid.AddUnit(&u2)
 
-	u3 := Unit{Id: 3, Center: PointContainer{Vec: []float64{1.5,0.5}},
-		Points: map[int]PointContainer{1: {},2: {}}}
 	r3 := Range{Low: [2]float64{1, 0}, High: [2]float64{2, 1}}
-	grid.AddUnit(&u3, r3)
+	u3 := Unit{Id: 3, Center: PointContainer{Vec: []float64{1.5,0.5}},
+		Points: map[int]PointContainer{1: {},2: {}}, Range: r3}
+	grid.AddUnit(&u3)
 
-	u4 := Unit{Id: 4, Center: PointContainer{Vec: []float64{1.5,1.5}}}
 	r4 := Range{Low: [2]float64{1, 1}, High: [2]float64{2, 2}}
-	grid.AddUnit(&u4, r4)
+	u4 := Unit{Id: 4, Center: PointContainer{Vec: []float64{1.5,1.5}}, Range: r4}
+	grid.AddUnit(&u4)
 
 	grid.SetupGrid(interval_l)
 
@@ -44,24 +44,24 @@ func TestCluster2by2GridAbsorbCluster(t *testing.T) {
 	grid := NewGrid()
 	interval_l := 1.0
 
-	u1 := Unit{Id: 1, Center: PointContainer{Vec: []float64{0.5,0.5}},
-		Points: map[int]PointContainer{1: {},2: {},3: {},4: {},5: {}}}
 	r1 := Range{Low: [2]float64{0, 0}, High: [2]float64{1, 1}}
-	grid.AddUnit(&u1, r1)
+	u1 := Unit{Id: 1, Center: PointContainer{Vec: []float64{0.5,0.5}},
+		Points: map[int]PointContainer{1: {},2: {},3: {},4: {},5: {}}, Range: r1}
+	grid.AddUnit(&u1)
 
-	u2 := Unit{Id: 2, Cluster_id: 1, Center: PointContainer{Vec: []float64{0.5,1.5}},
-		Points: map[int]PointContainer{1: {},2: {}}}
 	r2 := Range{Low: [2]float64{0, 1}, High: [2]float64{1, 2}}
-	grid.AddUnit(&u2, r2)
+	u2 := Unit{Id: 2, Cluster_id: 1, Center: PointContainer{Vec: []float64{0.5,1.5}},
+		Points: map[int]PointContainer{1: {},2: {}}, Range: r2}
+	grid.AddUnit(&u2)
 
-	u3 := Unit{Id: 3, Cluster_id: 1, Center: PointContainer{Vec: []float64{1.5,0.5}},
-		Points: map[int]PointContainer{1: {},2: {}}}
 	r3 := Range{Low: [2]float64{1, 0}, High: [2]float64{2, 1}}
-	grid.AddUnit(&u3, r3)
+	u3 := Unit{Id: 3, Cluster_id: 1, Center: PointContainer{Vec: []float64{1.5,0.5}},
+		Points: map[int]PointContainer{1: {},2: {}}, Range: r3}
+	grid.AddUnit(&u3)
 
-	u4 := Unit{Id: 4, Center: PointContainer{Vec: []float64{1.5,1.5}}}
 	r4 := Range{Low: [2]float64{1, 1}, High: [2]float64{2, 2}}
-	grid.AddUnit(&u4, r4)
+	u4 := Unit{Id: 4, Center: PointContainer{Vec: []float64{1.5,1.5}}, Range: r4}
+	grid.AddUnit(&u4)
 
 	grid.SetupGrid(interval_l)
 
@@ -90,24 +90,24 @@ func TestCluster2by2GridMergeClusters1(t *testing.T) {
 	grid := NewGrid()
 	interval_l := 1.0
 
-	u1 := Unit{Id: 1, Cluster_id: 1, Center: PointContainer{Vec: []float64{0.5,0.5}},
-		Points: map[int]PointContainer{1: {},2: {},3: {},4: {},5: {}}}
 	r1 := Range{Low: [2]float64{0, 0}, High: [2]float64{1, 1}}
-	grid.AddUnit(&u1, r1)
+	u1 := Unit{Id: 1, Cluster_id: 1, Center: PointContainer{Vec: []float64{0.5,0.5}},
+		Points: map[int]PointContainer{1: {},2: {},3: {},4: {},5: {}}, Range: r1}
+	grid.AddUnit(&u1)
 
-	u2 := Unit{Id: 2, Cluster_id: 1, Center: PointContainer{Vec: []float64{0.5,1.5}},
-		Points: map[int]PointContainer{1: {},2: {}}}
 	r2 := Range{Low: [2]float64{0, 1}, High: [2]float64{1, 2}}
-	grid.AddUnit(&u2, r2)
+	u2 := Unit{Id: 2, Cluster_id: 1, Center: PointContainer{Vec: []float64{0.5,1.5}},
+		Points: map[int]PointContainer{1: {},2: {}}, Range: r2}
+	grid.AddUnit(&u2)
 
-	u3 := Unit{Id: 3, Cluster_id: 2, Center: PointContainer{Vec: []float64{1.5,0.5}},
-		Points: map[int]PointContainer{1: {},2: {}}}
 	r3 := Range{Low: [2]float64{1, 0}, High: [2]float64{2, 1}}
-	grid.AddUnit(&u3, r3)
+	u3 := Unit{Id: 3, Cluster_id: 2, Center: PointContainer{Vec: []float64{1.5,0.5}},
+		Points: map[int]PointContainer{1: {},2: {}}, Range: r3}
+	grid.AddUnit(&u3)
 
-	u4 := Unit{Id: 4, Center: PointContainer{Vec: []float64{1.5,1.5}}}
 	r4 := Range{Low: [2]float64{1, 1}, High: [2]float64{2, 2}}
-	grid.AddUnit(&u4, r4)
+	u4 := Unit{Id: 4, Center: PointContainer{Vec: []float64{1.5,1.5}}, Range: r4}
+	grid.AddUnit(&u4)
 
 	grid.SetupGrid(interval_l)
 
@@ -150,24 +150,24 @@ func TestCluster2by2GridMergeClusters2(t *testing.T) {
 	grid := NewGrid()
 	interval_l := 1.0
 
-	u1 := Unit{Id: 1, Cluster_id: 1, Center: PointContainer{Vec: []float64{0.5,0.5}},
-		Points: map[int]PointContainer{1: {},2: {},3: {},4: {},5: {}}}
 	r1 := Range{Low: [2]float64{0, 0}, High: [2]float64{1, 1}}
-	grid.AddUnit(&u1, r1)
+	u1 := Unit{Id: 1, Cluster_id: 1, Center: PointContainer{Vec: []float64{0.5,0.5}},
+		Points: map[int]PointContainer{1: {},2: {},3: {},4: {},5: {}}, Range: r1}
+	grid.AddUnit(&u1)
 
-	u2 := Unit{Id: 2, Cluster_id: 1, Center: PointContainer{Vec: []float64{0.5,1.5}},
-		Points: map[int]PointContainer{1: {},2: {}}}
 	r2 := Range{Low: [2]float64{0, 1}, High: [2]float64{1, 2}}
-	grid.AddUnit(&u2, r2)
+	u2 := Unit{Id: 2, Cluster_id: 1, Center: PointContainer{Vec: []float64{0.5,1.5}},
+		Points: map[int]PointContainer{1: {},2: {}}, Range: r2}
+	grid.AddUnit(&u2)
 
-	u3 := Unit{Id: 3, Cluster_id: 2, Center: PointContainer{Vec: []float64{1.5,0.5}},
-		Points: map[int]PointContainer{1: {},2: {}}}
 	r3 := Range{Low: [2]float64{1, 0}, High: [2]float64{2, 1}}
-	grid.AddUnit(&u3, r3)
+	u3 := Unit{Id: 3, Cluster_id: 2, Center: PointContainer{Vec: []float64{1.5,0.5}},
+		Points: map[int]PointContainer{1: {},2: {}}, Range: r3}
+	grid.AddUnit(&u3)
 
-	u4 := Unit{Id: 4, Center: PointContainer{Vec: []float64{1.5,1.5}}}
 	r4 := Range{Low: [2]float64{1, 1}, High: [2]float64{2, 2}}
-	grid.AddUnit(&u4, r4)
+	u4 := Unit{Id: 4, Center: PointContainer{Vec: []float64{1.5,1.5}}, Range: r4}
+	grid.AddUnit(&u4)
 
 	grid.SetupGrid(interval_l)
 
@@ -210,47 +210,47 @@ func TestCluster3by3Grid(t *testing.T) {
 	grid := NewGrid()
 	interval_l := 1.0
 
-	u1 := Unit{Id: 1, Center: PointContainer{Vec: []float64{0.5,0.5}},
-		Points: map[int]PointContainer{1: {},2: {},3: {},4: {},5: {}}}
 	r1 := Range{Low: [2]float64{0, 0}, High: [2]float64{1, 1}}
-	grid.AddUnit(&u1, r1)
+	u1 := Unit{Id: 1, Center: PointContainer{Vec: []float64{0.5,0.5}},
+		Points: map[int]PointContainer{1: {},2: {},3: {},4: {},5: {}}, Range: r1}
+	grid.AddUnit(&u1)
 
-	u2 := Unit{Id: 2, Center: PointContainer{Vec: []float64{0.5,0.5}},
-		Points: map[int]PointContainer{1: {},2: {}}}
 	r2 := Range{Low: [2]float64{0, 1}, High: [2]float64{1, 2}}
-	grid.AddUnit(&u2, r2)
+	u2 := Unit{Id: 2, Center: PointContainer{Vec: []float64{0.5,0.5}},
+		Points: map[int]PointContainer{1: {},2: {}}, Range: r2}
+	grid.AddUnit(&u2)
 
-	u3 := Unit{Id: 3, Center: PointContainer{Vec: []float64{0.5,2.5}},
-		Points: map[int]PointContainer{1: {},2: {},3: {}}}
 	r3 := Range{Low: [2]float64{0, 2}, High: [2]float64{1, 3}}
-	grid.AddUnit(&u3, r3)
+	u3 := Unit{Id: 3, Center: PointContainer{Vec: []float64{0.5,2.5}},
+		Points: map[int]PointContainer{1: {},2: {},3: {}}, Range: r3}
+	grid.AddUnit(&u3)
 
-	u4 := Unit{Id: 4, Center: PointContainer{Vec: []float64{1.5,0.5}},
-		Points: map[int]PointContainer{1: {}}}
 	r4 := Range{Low: [2]float64{1, 0}, High: [2]float64{2, 1}}
-	grid.AddUnit(&u4, r4)
+	u4 := Unit{Id: 4, Center: PointContainer{Vec: []float64{1.5,0.5}},
+		Points: map[int]PointContainer{1: {}}, Range: r4}
+	grid.AddUnit(&u4)
 
-	u5 := Unit{Id: 5, Center: PointContainer{Vec: []float64{1.5,1.5}}}
 	r5 := Range{Low: [2]float64{1, 1}, High: [2]float64{2, 2}}
-	grid.AddUnit(&u5, r5)
+	u5 := Unit{Id: 5, Center: PointContainer{Vec: []float64{1.5,1.5}}, Range: r5}
+	grid.AddUnit(&u5)
 
-	u6 := Unit{Id: 6, Center: PointContainer{Vec: []float64{1.5,2.5}}}
 	r6 := Range{Low: [2]float64{1, 2}, High: [2]float64{2, 3}}
-	grid.AddUnit(&u6, r6)
+	u6 := Unit{Id: 6, Center: PointContainer{Vec: []float64{1.5,2.5}}, Range: r6}
+	grid.AddUnit(&u6)
 
-	u7 := Unit{Id: 7, Center: PointContainer{Vec: []float64{2.5,0.5}}}
 	r7 := Range{Low: [2]float64{2, 0}, High: [2]float64{3, 1}}
-	grid.AddUnit(&u7, r7)
+	u7 := Unit{Id: 7, Center: PointContainer{Vec: []float64{2.5,0.5}}, Range: r7}
+	grid.AddUnit(&u7)
 
-	u8 := Unit{Id: 8, Center: PointContainer{Vec: []float64{2.5,1.5}},
-		Points: map[int]PointContainer{1: {},2: {}, 3: {},4: {}}}
 	r8 := Range{Low: [2]float64{2, 1}, High: [2]float64{3, 2}}
-	grid.AddUnit(&u8, r8)
+	u8 := Unit{Id: 8, Center: PointContainer{Vec: []float64{2.5,1.5}},
+		Points: map[int]PointContainer{1: {},2: {}, 3: {},4: {}}, Range: r8}
+	grid.AddUnit(&u8)
 
-	u9 := Unit{Id: 9, Center: PointContainer{Vec: []float64{0.5,0.5}},
-		Points: map[int]PointContainer{1: {}}}
 	r9 := Range{Low: [2]float64{2, 2}, High: [2]float64{3, 3}}
-	grid.AddUnit(&u9, r9)
+	u9 := Unit{Id: 9, Center: PointContainer{Vec: []float64{0.5,0.5}},
+		Points: map[int]PointContainer{1: {}}, Range: r9}
+	grid.AddUnit(&u9)
 
 	grid.SetupGrid(interval_l)
 
@@ -281,10 +281,10 @@ func TestGDA(t *testing.T){
 
 	for i:= 0; i < 5; i++{
 		i_float := float64(i)
-		u := Unit{Id: i, Cluster_id: UNCLASSIFIED, Center: PointContainer{Vec: []float64{(( i_float + (i_float + 1.0))/2.0),0.5}},
-			Points: map[int]PointContainer{1: {},2: {},3: {},4: {},5: {}}}
 		r := Range{Low: [2]float64{i_float, 0}, High: [2]float64{i_float + 1.0, 1.0}}
-		grid.AddUnit(&u, r)
+		u := Unit{Id: i, Cluster_id: UNCLASSIFIED, Center: PointContainer{Vec: []float64{(( i_float + (i_float + 1.0))/2.0),0.5}},
+			Points: map[int]PointContainer{1: {},2: {},3: {},4: {},5: {}}, Range: r}
+		grid.AddUnit(&u)
 	}
 	grid.SetupGrid(interval_l)
 	min_dense_points := 2
@@ -302,10 +302,10 @@ func BenchmarkGDA(t *testing.B) {
 
 		for i:= 0; i < 5; i++{
 			i_float := float64(i)
-			u := Unit{Id: i, Center: PointContainer{Vec: []float64{(( i_float + (i_float + 1.0))/2.0),0.5}},
-				Points: map[int]PointContainer{1: {},2: {},3: {},4: {},5: {}}}
 			r := Range{Low: [2]float64{i_float, 0}, High: [2]float64{i_float + 1.0, 1.0}}
-			grid.AddUnit(&u, r)
+			u := Unit{Id: i, Center: PointContainer{Vec: []float64{(( i_float + (i_float + 1.0))/2.0),0.5}},
+				Points: map[int]PointContainer{1: {},2: {},3: {},4: {},5: {}}, Range: r}
+			grid.AddUnit(&u)
 		}
 		grid.SetupGrid(interval_l)
 		min_dense_points := 2

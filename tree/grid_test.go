@@ -7,9 +7,9 @@ import (
 
 func TestGrid_AddUnit(t *testing.T) {
 	tmp := Range{Low: [2]float64{0.0, 0.0}, High: [2]float64{1.0, 1.0}}
-	unit := &Unit{}
+	unit := &Unit{Range: tmp}
 	grid := NewGrid()
-	grid.AddUnit(unit, tmp)
+	grid.AddUnit(unit)
 }
 
 func TestGrid_GetNeighbouringUnits(t *testing.T) {

@@ -72,9 +72,13 @@ func (us *Grid) GetPointRange(id int) Range{
 	return us.point_unit_map[id]
 }
 
-func (us *Grid) AddUnit(unit *Unit, rg Range){
-	us.Store[rg] = unit
+func (us *Grid) AddUnit(unit *Unit){
+	us.Store[unit.Range] = unit
 }
+
+//func (us *Grid) AddUnit(unit *Unit, rg Range){
+//	us.Store[rg] = unit
+//}
 
 func (us *Grid) SetupGrid(interval_l float64){
 	for rg, unit := range us.Store{

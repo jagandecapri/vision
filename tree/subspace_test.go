@@ -23,8 +23,8 @@ func TestSubspace_ComputeSubspace(t *testing.T) {
 		int_tree.Add(interval)
 	}
 
-	for rg, unit := range units{
-		Unit.AddUnit(&unit, rg)
+	for _, unit := range units{
+		Unit.AddUnit(&unit)
 	}
 
 	subspace := Subspace{interval_tree: &int_tree,
