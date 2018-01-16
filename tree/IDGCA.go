@@ -30,7 +30,7 @@ func IGDCA(grid Grid, min_dense_points int, min_cluster_points int) (map[Range]*
 					num_points_cluster := 0
 					for _, cluster_id := range neighbour_cluster_ids{
 						cluster, _ := grid.GetCluster(cluster_id)
-						num_points_cluster = ComputeNumberOfPointsInCluster(cluster)
+						num_points_cluster = ComputeNumberOfPointsInCluster(cluster) //TODO: Optimization to cumulate num_points_cluster in for-loop
 						tmp := ComputeClusterType(min_cluster_points, num_points_cluster, cluster)
 						grid.AddUpdateCluster(tmp)
 					}
@@ -71,7 +71,7 @@ func NewCluster(unit *Unit, rg Range, cluster_id int, min_dense_points int) (int
 func AbsorbIntoCluster(grid Grid, unit *Unit, rg Range, min_dense_points int) (int, []int){
 	ret_value := FAILURE
 	cluster_ids := []int{}
-	for _, neighbour_unit := range unit.Neighbour_units{
+	for _, neighbour_unit := range unit.GetNeighbouringUnits() {
 		if isDenseUnit(neighbour_unit, min_dense_points) && neighbour_unit.Cluster_id != UNCLASSIFIED &&
 			neighbour_unit.Cluster_id != NOISE{
 			unit.Cluster_id = neighbour_unit.Cluster_id
@@ -117,7 +117,7 @@ func expand(unit *Unit, rg Range, cluster_id int, min_dense_points int, cluster 
 	point_count_acc := 0
 
 	seeds := []Seed{}
-	for rg, neighbour_unit := range unit.Neighbour_units{
+	for rg, neighbour_unit := range unit.GetNeighbouringUnits() {
 		if isDenseUnit(neighbour_unit, min_dense_points){
 			if neighbour_unit.Cluster_id == UNCLASSIFIED {
 				seed := Seed{unit: neighbour_unit, rg: rg}
@@ -147,7 +147,7 @@ func spread(point_count_acc int, seeds []Seed, cluster_id int, min_dense_points 
 		point_count_acc += unit.GetNumberOfPoints()
 		cluster.ListOfUnits[seed.rg] = unit
 
-		for rg, neighbour_unit := range unit.Neighbour_units{
+		for rg, neighbour_unit := range unit.GetNeighbouringUnits() {
 			if isDenseUnit(neighbour_unit, min_dense_points){
 				if neighbour_unit.Cluster_id == UNCLASSIFIED {
 					seed := Seed{unit: neighbour_unit, rg: rg}

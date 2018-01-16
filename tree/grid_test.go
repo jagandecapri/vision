@@ -36,10 +36,6 @@ func TestGrid_GetNeighbouringUnits(t *testing.T) {
 
 }
 
-func TestGrid_ImplementsClusterInterface(t *testing.T){
-	assert.Implements(t, (*GridInterface)(nil), new(Grid))
-}
-
 func TestGrid_AddPoint(t *testing.T) {
 	p := PointContainer{Point: Point{Id: 1}}
 	rg := Range{Low: [2]float64{0, 0}, High: [2]float64{0.5, 0.5}}
@@ -47,7 +43,7 @@ func TestGrid_AddPoint(t *testing.T) {
 	unit := NewUnit(1, 2, rg)
 	grid.Store[rg] = &unit
 	grid.AddPoint(p, rg)
-	assert.Equal(t, grid.Point_unit_map[1], rg)
+	assert.Equal(t, grid.point_unit_map[1], rg)
 	assert.Equal(t, grid.Store[rg].Points[1].Id, 1)
 	assert.False(t, grid.Store[rg].Center_calculated)
 
@@ -65,7 +61,7 @@ func TestGrid_RemovePoint(t *testing.T) {
 	grid.AddPoint(p, rg)
 	grid.RemovePoint(p, rg)
 	var ok bool
-	_, ok = grid.Point_unit_map[1]
+	_, ok = grid.point_unit_map[1]
 	assert.False(t, ok)
 	_, ok = grid.Store[rg].Points[1]
 	assert.False(t, ok)
@@ -88,7 +84,7 @@ func TestGrid_UpdatePoint(t *testing.T) {
 	grid.Store[new_rg] = &unit1
 	grid.UpdatePoint(p, new_rg)
 	var ok bool
-	_, ok = grid.Point_unit_map[1]
+	_, ok = grid.point_unit_map[1]
 	assert.True(t, ok)
 	_, ok = grid.Store[cur_rg].Points[1]
 	assert.False(t, ok)
@@ -168,7 +164,7 @@ func TestGrid_ProcessOldDenseUnits(t *testing.T) {
 	unit := NewUnit(1,2,rg)
 	unit.Id = 9
 	unit.Cluster_id = 0
-	unit.Neighbour_units = map[Range]*Unit{{Low: [2]float64{0, 0}, High: [2]float64{1, 1}}: {Id: 1, Cluster_id: 1},
+	unit.neighbour_units = map[Range]*Unit{{Low: [2]float64{0, 0}, High: [2]float64{1, 1}}: {Id: 1, Cluster_id: 1},
 		{Low: [2]float64{0, 1}, High: [2]float64{1, 2}}: {Id: 2, Cluster_id: 1},
 		{Low: [2]float64{0, 2}, High: [2]float64{1, 3}}: {Id: 3},
 		{Low: [2]float64{1, 0}, High: [2]float64{2, 1}}: {Id: 4},
@@ -201,7 +197,7 @@ func TestGrid_ProcessOldDenseUnits(t *testing.T) {
 func TestGrid_GetPointRange(t *testing.T) {
 	grid := NewGrid()
 	rg := Range{Low: [2]float64{1, 1}, High: [2]float64{2, 2}}
-	grid.Point_unit_map[1] = rg
+	grid.point_unit_map[1] = rg
 
 	assert.Equal(t, grid.GetPointRange(1), rg)
 	assert.Equal(t, grid.GetPointRange(2), Range{})

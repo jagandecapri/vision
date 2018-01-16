@@ -1,20 +1,20 @@
 package tree
 
 type Grid struct{
-	Store map[Range]*Unit
-	Point_unit_map map[int]Range
-	MinDensePoints int
-	MinClusterPoints int
-	cluster_id_counter int
-	listDenseUnits map[Range]*Unit
-	tmpUnitToCluster map[Range]*Unit
+	Store              map[Range]*Unit
 	ClusterContainer
+	point_unit_map     map[int]Range
+	minDensePoints     int
+	minClusterPoints   int
+	cluster_id_counter int
+	listDenseUnits     map[Range]*Unit
+	tmpUnitToCluster   map[Range]*Unit
 }
 
 func NewGrid() Grid {
 	units := Grid{
 		Store: make(map[Range]*Unit),
-		Point_unit_map: make(map[int]Range),
+		point_unit_map: make(map[int]Range),
 		listDenseUnits: make(map[Range]*Unit),
 		tmpUnitToCluster: make(map[Range]*Unit),
 		ClusterContainer: ClusterContainer{ListOfClusters: make(map[int]Cluster)},
@@ -31,11 +31,11 @@ func (us *Grid) GetUnits() map[Range]*Unit{
 }
 
 func (us *Grid) GetMinDensePoints() int{
-	return us.MinDensePoints
+	return us.minDensePoints
 }
 
 func (us *Grid) GetMinClusterPoints() int{
-	return us.MinClusterPoints
+	return us.minClusterPoints
 }
 
 func (us *Grid) GetNextClusterID() int{
@@ -47,7 +47,7 @@ func (us *Grid) RemovePoint(point PointContainer, rg Range){
 	unit, ok := us.Store[rg]
 	if ok{
 		unit.RemovePoint(point)
-		delete(us.Point_unit_map, point.GetID())
+		delete(us.point_unit_map, point.GetID())
 	}
 }
 
@@ -55,13 +55,13 @@ func (us *Grid) AddPoint(point PointContainer, rg Range){
 	unit, ok := us.Store[rg]
 	if ok{
 		unit.AddPoint(point)
-		us.Point_unit_map[point.GetID()] = rg
+		us.point_unit_map[point.GetID()] = rg
 	}
 }
 
 func (us *Grid) UpdatePoint(point PointContainer, new_range Range){
 	point_id := point.GetID()
-	cur_range := us.Point_unit_map[point_id]
+	cur_range := us.point_unit_map[point_id]
 	if cur_range != new_range{
 		us.RemovePoint(point, cur_range)
 		us.AddPoint(point, new_range)
@@ -69,7 +69,7 @@ func (us *Grid) UpdatePoint(point PointContainer, new_range Range){
 }
 
 func (us *Grid) GetPointRange(id int) Range{
-	return us.Point_unit_map[id]
+	return us.point_unit_map[id]
 }
 
 func (us *Grid) AddUnit(unit *Unit, rg Range){
@@ -78,7 +78,8 @@ func (us *Grid) AddUnit(unit *Unit, rg Range){
 
 func (us *Grid) SetupGrid(interval_l float64){
 	for rg, unit := range us.Store{
-		unit.Neighbour_units = us.GetNeighbouringUnits(rg, interval_l)
+		neighbour_units := us.GetNeighbouringUnits(rg, interval_l)
+		unit.SetNeighbouringUnits(neighbour_units)
 		us.Store[rg] = unit
 	}
 }
@@ -112,7 +113,7 @@ func (us *Grid) ProcessOldDenseUnits(listOldDenseUnits map[Range]*Unit) map[Rang
 		unit.Cluster_id = UNCLASSIFIED
 		count_neighbour_same_cluster := 0
 
-		for _, neighbour_unit := range unit.Neighbour_units{
+		for _, neighbour_unit := range unit.GetNeighbouringUnits() {
 			if neighbour_unit.Cluster_id == cluster_id{
 				count_neighbour_same_cluster++
 			}

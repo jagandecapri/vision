@@ -27,11 +27,12 @@ func TestSubspace_ComputeSubspace(t *testing.T) {
 		Unit.AddUnit(&unit, rg)
 	}
 
-	subspace := Subspace{Interval_tree: &int_tree,
+	subspace := Subspace{interval_tree: &int_tree,
 		Grid: &Unit,
 		Subspace_key: subspace_key,
 		Scale_factor: scale_factor,
 	}
+	subspace.SetIntervalTree(&int_tree)
 
 	//To test new points
 	p1 := Point{Id: 1, Vec_map: map[string]float64{
@@ -48,8 +49,8 @@ func TestSubspace_ComputeSubspace(t *testing.T) {
 	points := []Point{p1, p2}
 	subspace.ComputeSubspace([]Point{}, points)
 
-	assert.Equal(t, Range{Low: [2]float64{0, 0}, High: [2]float64{0.1, 0.1}}, subspace.Grid.Point_unit_map[1])
-	assert.Equal(t, Range{Low: [2]float64{0.1, 0.1}, High: [2]float64{0.2, 0.2}}, subspace.Grid.Point_unit_map[2])
+	assert.Equal(t, Range{Low: [2]float64{0, 0}, High: [2]float64{0.1, 0.1}}, subspace.Grid.point_unit_map[1])
+	assert.Equal(t, Range{Low: [2]float64{0.1, 0.1}, High: [2]float64{0.2, 0.2}}, subspace.Grid.point_unit_map[2])
 
 	//To test updating points
 	p1 = Point{Id: 1, Vec_map: map[string]float64{
@@ -66,8 +67,8 @@ func TestSubspace_ComputeSubspace(t *testing.T) {
 	points = []Point{p1, p2}
 	subspace.ComputeSubspace([]Point{}, points)
 
-	assert.Equal(t, Range{Low: [2]float64{0.1, 0.1}, High: [2]float64{0.2, 0.2}}, subspace.Grid.Point_unit_map[1])
-	assert.Equal(t, Range{Low: [2]float64{0, 0}, High: [2]float64{0.1, 0.1}}, subspace.Grid.Point_unit_map[2])
+	assert.Equal(t, Range{Low: [2]float64{0.1, 0.1}, High: [2]float64{0.2, 0.2}}, subspace.Grid.point_unit_map[1])
+	assert.Equal(t, Range{Low: [2]float64{0, 0}, High: [2]float64{0.1, 0.1}}, subspace.Grid.point_unit_map[2])
 
 	//To test removing points
 	p1 = Point{Id: 1, Vec_map: map[string]float64{
@@ -84,6 +85,6 @@ func TestSubspace_ComputeSubspace(t *testing.T) {
 	points = []Point{p1, p2}
 	subspace.ComputeSubspace(points, []Point{})
 
-	assert.Equal(t, Range{}, subspace.Grid.Point_unit_map[1])
-	assert.Equal(t, Range{}, subspace.Grid.Point_unit_map[2])
+	assert.Equal(t, Range{}, subspace.Grid.point_unit_map[1])
+	assert.Equal(t, Range{}, subspace.Grid.point_unit_map[2])
 }

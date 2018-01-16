@@ -5,10 +5,18 @@ import (
 )
 
 type Subspace struct{
-	Interval_tree *augmentedtree.Tree
-	Grid *Grid
-	Subspace_key [2]string
-	Scale_factor int
+	interval_tree *augmentedtree.Tree
+	Grid          *Grid
+	Subspace_key  [2]string
+	Scale_factor  int
+}
+
+func (s *Subspace) GetIntervalTree()*augmentedtree.Tree{
+	return s.interval_tree
+}
+
+func (s *Subspace) SetIntervalTree(interval_tree *augmentedtree.Tree){
+	s.interval_tree = interval_tree
 }
 
 func (s *Subspace) ComputeSubspace(mat_old []Point, mat_new_update []Point) {
@@ -26,7 +34,7 @@ func (s *Subspace) ComputeSubspace(mat_old []Point, mat_new_update []Point) {
 		tmp := [2]float64{p.Vec_map[subspace_key[0]], p.Vec_map[subspace_key[1]]}
 		tmp1 := [2]float64{p.Vec_map[subspace_key[0]], p.Vec_map[subspace_key[1]]}
 		int_container := IntervalContainer{Id: 1, Range: Range{Low: tmp, High: tmp1}, Scale_factor: s.Scale_factor}
-		interval := (*s.Interval_tree).Query(int_container)
+		interval := (*s.interval_tree).Query(int_container)
 		if len(interval) > 0{
 			interval_ext := interval[0].(IntervalContainer)
 			Vec := []float64{p.Vec_map[subspace_key[0]], p.Vec_map[subspace_key[1]]}

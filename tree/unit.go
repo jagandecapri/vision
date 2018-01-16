@@ -9,10 +9,18 @@ type Unit struct {
 	Cluster_id        int
 	Dimension         int
 	Center            PointContainer
-	Neighbour_units   map[Range]*Unit
 	Points            map[int]PointContainer
 	Center_calculated bool
 	Range
+	neighbour_units   map[Range]*Unit
+}
+
+func (u *Unit) GetNeighbouringUnits() map[Range]*Unit{
+	return u.neighbour_units
+}
+
+func (u *Unit) SetNeighbouringUnits(neighbour_units map[Range]*Unit){
+	u.neighbour_units = neighbour_units
 }
 
 func (u *Unit) AddPoint(p PointContainer) {
@@ -84,7 +92,7 @@ func NewUnit(id int, dimension int, rg Range) Unit{
 	unit := Unit{
 		Id: id,
 		Dimension: dimension,
-		Neighbour_units: make(map[Range]*Unit),
+		neighbour_units: make(map[Range]*Unit),
 		Points: make(map[int]PointContainer),
 		Range: rg,
 	}
