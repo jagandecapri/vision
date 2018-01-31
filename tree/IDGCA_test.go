@@ -76,7 +76,7 @@ func TestCluster2by2GridAbsorbCluster(t *testing.T) {
 	}
 	grid.AddUpdateCluster(cluster)
 
-	res, cluster_ids := AbsorbIntoCluster(grid, &u1, r1, min_dense_points)
+	res, cluster_ids := AbsorbIntoCluster(grid, &u1, min_dense_points)
 	assert.Equal(t, res, SUCCESS)
 	assert.Equal(t, 1, len(cluster_ids), "%v", cluster_ids)
 	assert.Contains(t, cluster_ids, 1)

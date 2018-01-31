@@ -22,7 +22,7 @@ func IGDCA(grid Grid, min_dense_points int, min_cluster_points int) (map[Range]*
 			if isDenseUnit(unit, min_dense_points){ //TODO: Could be redundant is only dense units are sent
 				var ret int
 				var neighbour_cluster_ids []int
-				ret, neighbour_cluster_ids = AbsorbIntoCluster(grid, unit, rg, min_dense_points)
+				ret, neighbour_cluster_ids = AbsorbIntoCluster(grid, unit, min_dense_points)
 				if ret == SUCCESS{
 					if len(neighbour_cluster_ids) > 1{
 						_, _, neighbour_cluster_ids = MergeClusters(grid, neighbour_cluster_ids)
@@ -68,7 +68,7 @@ func NewCluster(unit *Unit, rg Range, cluster_id int, min_dense_points int) (int
 	return num_points_cluster, cluster
 }
 
-func AbsorbIntoCluster(grid Grid, unit *Unit, rg Range, min_dense_points int) (int, []int){
+func AbsorbIntoCluster(grid Grid, unit *Unit, min_dense_points int) (int, []int){
 	ret_value := FAILURE
 	cluster_ids := []int{}
 	for _, neighbour_unit := range unit.GetNeighbouringUnits() {
