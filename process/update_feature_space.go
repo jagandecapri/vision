@@ -61,7 +61,7 @@ func UpdateFeatureSpace(acc chan preprocess.PacketAcc, data chan server.HttpData
 				//http_data := server.HttpData{}
 				//for subspace_key, subspace := range m{
 				//	subspace_key_join := strings.Join(subspace_key[:], "-")
-				//	point_cluster := ProcessVisualizationDataSubspace(subspace)
+				//	point_cluster := GetVisualizationData(subspace)
 				//	http_data.Point_cluster[subspace_key_join] = point_cluster
 				//}
 				//http_data.Points = m[0].Grid.
