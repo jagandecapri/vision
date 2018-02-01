@@ -6,7 +6,7 @@ import (
 
 type Subspace struct{
 	interval_tree *augmentedtree.Tree
-	Grid          *Grid
+	*Grid
 	Subspace_key  [2]string
 	Scale_factor  int
 }
