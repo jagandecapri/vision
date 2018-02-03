@@ -32,5 +32,6 @@ func TestCluster_GetCenter(t *testing.T) {
 
 	pc := cluster.GetCenter()
 
-	assert.Equal(t, center, pc)
+	assert.InDelta(t, center.Vec[0], pc.Vec[0], 0.000001)
+	assert.InDelta(t, center.Vec[1], pc.Vec[1], 0.000001)
 }
