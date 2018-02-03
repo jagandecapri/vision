@@ -37,7 +37,7 @@ func TestGrid_GetNeighbouringUnits(t *testing.T) {
 }
 
 func TestGrid_AddPoint(t *testing.T) {
-	p := PointContainer{Point: Point{Id: 1}}
+	p := Point{Id: 1}
 	rg := Range{Low: [2]float64{0, 0}, High: [2]float64{0.5, 0.5}}
 	grid := NewGrid()
 	unit := NewUnit(1, 2, rg)
@@ -47,13 +47,13 @@ func TestGrid_AddPoint(t *testing.T) {
 	assert.Equal(t, grid.Store[rg].Points[1].Id, 1)
 	assert.False(t, grid.Store[rg].Center_calculated)
 
-	p1 := PointContainer{Point: Point{Id: 2}}
+	p1 := Point{Id: 2}
 	rg1 := Range{Low: [2]float64{0.5, 0.5}, High: [2]float64{1.0, 1.0}}
 	assert.NotPanics(t, func(){grid.AddPoint(p1, rg1)})
 }
 
 func TestGrid_RemovePoint(t *testing.T) {
-	p := PointContainer{Point: Point{Id: 1}}
+	p := Point{Id: 1}
 	rg := Range{Low: [2]float64{0, 0}, High: [2]float64{0.5, 0.5}}
 	grid := NewGrid()
 	unit := NewUnit(1, 2, rg)
@@ -67,13 +67,13 @@ func TestGrid_RemovePoint(t *testing.T) {
 	assert.False(t, ok)
 	assert.False(t, grid.Store[rg].Center_calculated)
 
-	p1 := PointContainer{Point: Point{Id: 2}}
+	p1 := Point{Id: 2}
 	rg1 := Range{Low: [2]float64{0.5, 0.5}, High: [2]float64{1.0, 1.0}}
 	assert.NotPanics(t, func(){grid.RemovePoint(p1, rg1)})
 }
 
 func TestGrid_UpdatePoint(t *testing.T) {
-	p := PointContainer{Point: Point{Id: 1}}
+	p := Point{Id: 1}
 	cur_rg := Range{Low: [2]float64{0, 0}, High: [2]float64{0.5, 0.5}}
 	grid := NewGrid()
 	unit := NewUnit(1, 2, cur_rg)
@@ -93,7 +93,7 @@ func TestGrid_UpdatePoint(t *testing.T) {
 }
 
 func TestGrid_RecomputeDenseUnits(t *testing.T) {
-	p := PointContainer{Point : Point{Id: 1}}
+	p := Point{Id: 1}
 
 	rg := Range{Low: [2]float64{0, 0}, High: [2]float64{0.5, 0.5}}
 	unit := NewUnit(1,2,rg)
@@ -142,7 +142,7 @@ func TestGrid_RecomputeDenseUnits(t *testing.T) {
 			us.listOldDenseUnits[rg] = unit
 		}
 	 */
-	unit.Points = make(map[int]PointContainer)
+	unit.Points = make(map[int]Point)
 	_, listOldDenseUnits = grid.RecomputeDenseUnits(1)
 	_, ok =  grid.listDenseUnits[rg]
 	assert.False(t, ok)

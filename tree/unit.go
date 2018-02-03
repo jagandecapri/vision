@@ -8,8 +8,8 @@ type Unit struct {
 	Id                int
 	Cluster_id        int
 	Dimension         int
-	Center            PointContainer
-	Points            map[int]PointContainer
+	Center            Point
+	Points            map[int]Point
 	Center_calculated bool
 	Range
 	neighbour_units   map[Range]*Unit
@@ -23,21 +23,26 @@ func (u *Unit) SetNeighbouringUnits(neighbour_units map[Range]*Unit){
 	u.neighbour_units = neighbour_units
 }
 
-func (u *Unit) AddPoint(p PointContainer) {
+func (u *Unit) AddPoint(p Point) {
 	u.Center_calculated = false
 	u.Points[p.GetID()] = p
 }
 
-func (u *Unit) RemovePoint(p PointContainer) {
+func (u *Unit) RemovePoint(p Point) {
 	u.Center_calculated = false
 	delete(u.Points, p.GetID())
+}
+
+//Calling GetPoints will update the Cluster_id in each point
+func (u *Unit) GetPoints(){
+
 }
 
 func (u *Unit) CalculateCenter() {
 	u.GetCenter()
 }
 
-func (u *Unit) GetCenter() PointContainer {
+func (u *Unit) GetCenter() Point {
 	if len(u.Center.Vec) > 0{
 		return u.Center
 	}
@@ -50,7 +55,7 @@ func (u *Unit) GetCenter() PointContainer {
 	for i, _ := range Center_vec {
 		Center_vec[i] = Center_vec[i] / float64(len(u.Points))
 	}
-	u.Center = PointContainer{Unit_id: u.Id, Vec: Center_vec}
+	u.Center = Point{Unit_id: u.Id, Vec: Center_vec}
 	return u.Center
 }
 
@@ -76,7 +81,7 @@ func (u *Unit) Distance(p1 PointInterface) float64 {
 		u.CalculateCenter()
 	}
 	sum := 0.0
-	t := p1.(*PointContainer)
+	t := p1.(*Point)
 	for i := 0; i < len(u.Center.Vec); i++ {
 		sum += math.Pow(u.Center.Vec[i]-t.Vec[i], 2)
 	}
@@ -93,7 +98,7 @@ func NewUnit(id int, dimension int, rg Range) Unit{
 		Id: id,
 		Dimension: dimension,
 		neighbour_units: make(map[Range]*Unit),
-		Points: make(map[int]PointContainer),
+		Points: make(map[int]Point),
 		Range: rg,
 	}
 	return unit

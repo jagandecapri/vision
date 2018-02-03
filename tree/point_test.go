@@ -8,20 +8,20 @@ import (
 
 func TestPointContainer_Distance(t *testing.T) {
 	tests := []struct{
-		point1 *PointContainer
-		point2 *PointContainer
+		point1 *Point
+		point2 *Point
 		expected float64
 	}{
-		{point1: &PointContainer{1,
-			[]float64{1.0,2.0},
-			Point{1,
-				map[string]float64{"a": 1.0, "b": 2.0},
-			}},
-		point2: &PointContainer{2,
-			[]float64{3.0,4.0},
-			Point{2,
-				map[string]float64{"a": 3.0, "b": 4.0},
-		}},
+		{point1: &Point{Id: 1,
+			Unit_id: 1,
+			Vec: []float64{1.0,2.0},
+			Vec_map: map[string]float64{"a": 1.0, "b": 2.0},
+			},
+		point2: &Point{Id: 2,
+			Unit_id: 2,
+			Vec: []float64{3.0,4.0},
+			Vec_map: map[string]float64{"a": 3.0, "b": 4.0},
+		},
 			expected: math.Sqrt(8),
 		},
 	}

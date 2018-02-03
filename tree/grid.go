@@ -43,7 +43,7 @@ func (us *Grid) GetNextClusterID() int{
 	return us.cluster_id_counter
 }
 
-func (us *Grid) RemovePoint(point PointContainer, rg Range){
+func (us *Grid) RemovePoint(point Point, rg Range){
 	unit, ok := us.Store[rg]
 	if ok{
 		unit.RemovePoint(point)
@@ -51,7 +51,7 @@ func (us *Grid) RemovePoint(point PointContainer, rg Range){
 	}
 }
 
-func (us *Grid) AddPoint(point PointContainer, rg Range){
+func (us *Grid) AddPoint(point Point, rg Range){
 	unit, ok := us.Store[rg]
 	if ok{
 		unit.AddPoint(point)
@@ -59,7 +59,7 @@ func (us *Grid) AddPoint(point PointContainer, rg Range){
 	}
 }
 
-func (us *Grid) UpdatePoint(point PointContainer, new_range Range){
+func (us *Grid) UpdatePoint(point Point, new_range Range){
 	point_id := point.GetID()
 	cur_range := us.point_unit_map[point_id]
 	if cur_range != new_range{

@@ -24,11 +24,21 @@ func (s *Subspace) ComputeSubspace(mat_old []Point, mat_new_update []Point) {
 
 	for _, p := range mat_old{
 		//fmt.Println("Remove point called")
-		rg := s.Grid.GetPointRange(p.Id)
-		pnt_container_rem := PointContainer{
-			Point: p,
+		point := Point{
+			Unit_id:  p.Id,
+			Vec: []float64{},
+			Id: p.Id,
+			Vec_map:  map[string]float64{},
 		}
-		s.Grid.RemovePoint(pnt_container_rem, rg)
+
+		point.Vec = append([]float64(nil), p.Vec...)
+
+		for k, v := range p.Vec_map{
+			point.Vec_map[k] = v
+		}
+
+		rg := s.Grid.GetPointRange(point.Id)
+		s.Grid.RemovePoint(point, rg)
 	}
 	for _, p := range mat_new_update{
 		tmp := [2]float64{p.Vec_map[subspace_key[0]], p.Vec_map[subspace_key[1]]}
@@ -38,19 +48,25 @@ func (s *Subspace) ComputeSubspace(mat_old []Point, mat_new_update []Point) {
 		if len(interval) > 0{
 			interval_ext := interval[0].(IntervalContainer)
 			Vec := []float64{p.Vec_map[subspace_key[0]], p.Vec_map[subspace_key[1]]}
-			pnt_container := PointContainer{
+			point := Point{
 				Unit_id:  int(interval[0].ID()),
 				Vec: Vec,
-				Point: p,
+				Id: p.Id,
+				Vec_map:  map[string]float64{},
 			}
-			cur_rg := s.Grid.GetPointRange(pnt_container.GetID())
+
+			for k, v := range p.Vec_map{
+				point.Vec_map[k] = v
+			}
+
+			cur_rg := s.Grid.GetPointRange(point.GetID())
 			new_rg := interval_ext.Range
 			if cur_rg == (Range{}){
 				//fmt.Println("Add point called")
-				s.Grid.AddPoint(pnt_container, new_rg)
+				s.Grid.AddPoint(point, new_rg)
 			} else if cur_rg != (Range{}) && cur_rg != new_rg{
 				//fmt.Println("Update point called")
-				s.Grid.UpdatePoint(pnt_container, new_rg)
+				s.Grid.UpdatePoint(point, new_rg)
 			}
 			//fmt.Printf("Interval found %+v %+v \n", int_container, interval)
 		} else {

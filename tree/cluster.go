@@ -7,7 +7,7 @@ type Cluster struct{
 	ListOfUnits map[Range]*Unit
 }
 
-func (c *Cluster) GetCenter() PointContainer{
+func (c *Cluster) GetCenter() Point {
 	var Center_vec []float64
 
 	for _, unit := range c.ListOfUnits{
@@ -25,6 +25,6 @@ func (c *Cluster) GetCenter() PointContainer{
 		Center_vec[i] = Center_vec[i] / float64(c.Num_of_points)
 	}
 
-	pc := PointContainer{Vec: Center_vec}
+	pc := Point{Vec: Center_vec}
 	return pc
 }
