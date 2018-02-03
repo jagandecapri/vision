@@ -24,21 +24,9 @@ func (s *Subspace) ComputeSubspace(mat_old []Point, mat_new_update []Point) {
 
 	for _, p := range mat_old{
 		//fmt.Println("Remove point called")
-		point := Point{
-			Unit_id:  p.Id,
-			Vec: []float64{},
-			Id: p.Id,
-			Vec_map:  map[string]float64{},
-		}
-
-		point.Vec = append([]float64(nil), p.Vec...)
-
-		for k, v := range p.Vec_map{
-			point.Vec_map[k] = v
-		}
-
+		point := Point{Id: p.Id}
 		rg := s.Grid.GetPointRange(point.Id)
-		s.Grid.RemovePoint(point, rg)
+		s.Grid.RemovePoint(point, rg) //Needs only ID for deletion
 	}
 	for _, p := range mat_new_update{
 		tmp := [2]float64{p.Vec_map[subspace_key[0]], p.Vec_map[subspace_key[1]]}
