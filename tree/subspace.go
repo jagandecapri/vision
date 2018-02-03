@@ -29,22 +29,21 @@ func (s *Subspace) ComputeSubspace(mat_old []Point, mat_new_update []Point) {
 		s.Grid.RemovePoint(point, rg) //Needs only ID for deletion
 	}
 	for _, p := range mat_new_update{
-		tmp := [2]float64{p.Vec_map[subspace_key[0]], p.Vec_map[subspace_key[1]]}
-		tmp1 := [2]float64{p.Vec_map[subspace_key[0]], p.Vec_map[subspace_key[1]]}
-		int_container := IntervalContainer{Id: 1, Range: Range{Low: tmp, High: tmp1}, Scale_factor: s.Scale_factor}
+		subspace_key_0 := subspace_key[0]
+		subspace_key_1 := subspace_key[1]
+		subspace_val_0 := p.Vec_map[subspace_key_0]
+		subspace_val_1 := p.Vec_map[subspace_key_1]
+		Vec := [2]float64{subspace_val_0, subspace_val_1}
+		int_container := IntervalContainer{Id: 1, Range: Range{Low: Vec, High: Vec}, Scale_factor: s.Scale_factor}
 		interval := (*s.interval_tree).Query(int_container)
 		if len(interval) > 0{
 			interval_ext := interval[0].(IntervalContainer)
-			Vec := []float64{p.Vec_map[subspace_key[0]], p.Vec_map[subspace_key[1]]}
+			Vec_map := map[string]float64{subspace_key_0: subspace_val_0, subspace_key_1: subspace_val_1}
 			point := Point{
-				Unit_id:  int(interval[0].ID()),
-				Vec: Vec,
 				Id: p.Id,
-				Vec_map:  map[string]float64{},
-			}
-
-			for k, v := range p.Vec_map{
-				point.Vec_map[k] = v
+				Unit_id:  int(interval[0].ID()),
+				Vec: Vec[:],
+				Vec_map:  Vec_map,
 			}
 
 			cur_rg := s.Grid.GetPointRange(point.GetID())
