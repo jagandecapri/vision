@@ -34,6 +34,10 @@ func (cc *ClusterContainer) GetCluster(cluster_id int) (Cluster, bool){
 	return cluster, ok
 }
 
+func (cc *ClusterContainer) GetClusters() map[int]Cluster{
+	return cc.ListOfClusters
+}
+
 func (cc *ClusterContainer) AddUpdateCluster(cluster Cluster){
 	if cluster.Num_of_points >= cc.BiggestCluster.Num_of_points{
 		cc.BiggestCluster = cluster

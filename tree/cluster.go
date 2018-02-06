@@ -28,3 +28,7 @@ func (c *Cluster) GetCenter() Point {
 	pc := Point{Vec: Center_vec}
 	return pc
 }
+
+func (c *Cluster) GetUnits()map[Range]*Unit{
+	return c.ListOfUnits
+}

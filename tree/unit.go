@@ -29,9 +29,8 @@ func (u *Unit) RemovePoint(p Point) {
 	delete(u.Points, p.GetID())
 }
 
-//Calling GetPoints will update the Cluster_id in each point
-func (u *Unit) GetPoints(){
-
+func (u *Unit) GetPoints() map[int]Point{
+	return u.Points
 }
 
 func (u *Unit) CalculateCenter() {
