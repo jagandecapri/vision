@@ -6,7 +6,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/jagandecapri/vision/server"
 	"encoding/json"
-	"fmt"
 )
 
 func TestMarshalData(t *testing.T){
@@ -65,7 +64,7 @@ func TestProcessDataForVisualization(t *testing.T) {
 
 
 	r2 := tree.Range{Low: [2]float64{1, 0}, High: [2]float64{2, 1}}
-	u2 := tree.Unit{Id: 3, Center: tree.Point{Vec: []float64{1.5,0.5}},
+	u2 := tree.Unit{Id: 3, Center: tree.Point{Vec: []float64{1.5,1.5}},
 		Points: map[int]tree.Point{1: {Vec: []float64{1.5, 1.5}}}, Range: r2}
 
 	c1 := tree.Cluster{Cluster_id: 1,
@@ -94,7 +93,7 @@ func TestProcessDataForVisualization(t *testing.T) {
 		Subspace_key: subspace_key,
 	}
 
-	subspace_key1 := [2]string{"third", "four"}
+	subspace_key1 := [2]string{"third", "fourth"}
 
 	subspace1 := tree.Subspace{
 		Grid: &grid,
@@ -103,51 +102,38 @@ func TestProcessDataForVisualization(t *testing.T) {
 
 	subspaces := []tree.Subspace{subspace, subspace1}
 
-	expected_json := `[
-  {"metadata":{
-    "id": "first-second"
-  },
-    "points": [
-      {"data": {
-        "x": "0.5",
-        "y": "0.5"
-      },
-        "metadata": {
-          "color": "#ABC"
-        }},
-      {"data": {
-        "x": "1.5",
-        "y": "1.5"
-      },
-        "metadata": {
-          "color": "#ABC"
-        }}
-    ]},
-    {"metadata":{
-      "id": "third-four"
-    },
-      "points": [
-        {"data": {
-          "x": "0.5",
-          "y": "0.5"
-        },
-          "metadata": {
-            "color": "#ABC"
-          }},
-        {"data": {
-          "x": "1.5",
-          "y": "1.5"
-        },
-          "metadata": {
-            "color": "#DEF"
-          }}
-      ]}
-]`
+	expected_struct := server.HttpData1{
+		server.Graph{
+			Graph_metadata: server.Graph_metadata{ID: "first-second"},
+			Points: []server.Point{
+				server.Point{
+					Point_data: server.Point_data{X: 0.5,Y: 0.5},
+					Point_metadata: server.Point_metadata{Color: "#ABC"},
+				},
+				server.Point{
+					Point_data: server.Point_data{X: 1.5,Y: 1.5},
+					Point_metadata: server.Point_metadata{Color: "#ABC"},
+				},
+			},
+		},
+		server.Graph{
+			Graph_metadata: server.Graph_metadata{ID: "third-fourth"},
+			Points: []server.Point{
+				server.Point{
+					Point_data: server.Point_data{X: 0.5,Y: 0.5},
+					Point_metadata: server.Point_metadata{Color: "#ABC"},
+				},
+				server.Point{
+					Point_data: server.Point_data{X: 1.5,Y: 1.5},
+					Point_metadata: server.Point_metadata{Color: "#ABC"},
+				},
+			},
+		},
+	}
 
-	http_data := ProcessDataForVisualization(subspaces)
-	json_byte, _ := json.Marshal(http_data)
-	assert.JSONEq(t, expected_json, string(json_byte))
+	res := ProcessDataForVisualization(subspaces)
+	json1, _ := json.Marshal(expected_struct)
+	json2, _ := json.Marshal(res)
 
-	fmt.Println(string([]byte(expected_json)))
-	fmt.Println(expected_json, string(json_byte))
+	assert.JSONEq(t, string(json1), string(json2))
 }
