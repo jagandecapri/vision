@@ -13,7 +13,10 @@ func ProcessDataForVisualization(subspaces []tree.Subspace) server.HttpData{
 		id := strings.Join(subspace.Subspace_key[:], "-")
 
 		graph := server.Graph{
-			Graph_metadata: server.Graph_metadata{ID: id},
+			Graph_metadata: server.Graph_metadata{ID: id,
+			Column_x: subspace.Subspace_key[0],
+			Column_y: subspace.Subspace_key[1],
+			},
 		}
 
 		 clusters := subspace.GetClusters()

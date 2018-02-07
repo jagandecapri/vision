@@ -16,6 +16,8 @@ type Point struct{
 
 type Graph_metadata struct{
 	ID string `json:"id"`
+	Column_x string `json:"column_x"`
+	Column_y string `json:"column_y"`
 }
 
 type Graph struct{

@@ -58,7 +58,9 @@ func TestProcessDataForVisualization(t *testing.T) {
 	Expected JSON
 	[
 	{"metadata":{
-	  "id": "first-second"
+		"id": "first-second",
+		"column_x": "first",
+		"column_y": "second"
 	},
 	  "points": [
 		{"data": {
@@ -78,6 +80,8 @@ func TestProcessDataForVisualization(t *testing.T) {
 	  ]},
 	  {"metadata":{
 		"id": "third-four"
+		"column_x": "third",
+		"column_y": "fourth"
 	  },
 		"points": [
 		  {"data": {
@@ -94,11 +98,14 @@ func TestProcessDataForVisualization(t *testing.T) {
 			"metadata": {
 			  "color": "#DEF"
 			}}
-		]}**/
+		]}
+	]**/
 
 	expected_struct := server.HttpData{
 		server.Graph{
-			Graph_metadata: server.Graph_metadata{ID: "first-second"},
+			Graph_metadata: server.Graph_metadata{ID: "first-second",
+			Column_x: "first",
+			Column_y: "second"},
 			Points: []server.Point{
 				server.Point{
 					Point_data: server.Point_data{X: 0.5,Y: 0.5},
@@ -111,7 +118,9 @@ func TestProcessDataForVisualization(t *testing.T) {
 			},
 		},
 		server.Graph{
-			Graph_metadata: server.Graph_metadata{ID: "third-fourth"},
+			Graph_metadata: server.Graph_metadata{ID: "third-fourth",
+			Column_x: "third",
+			Column_y: "fourth"},
 			Points: []server.Point{
 				server.Point{
 					Point_data: server.Point_data{X: 0.5,Y: 0.5},
