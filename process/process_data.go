@@ -6,8 +6,8 @@ import (
 	"github.com/jagandecapri/vision/server"
 )
 
-func ProcessDataForVisualization(subspaces []tree.Subspace) server.HttpData1{
-	graphs := server.HttpData1{}
+func ProcessDataForVisualization(subspaces []tree.Subspace) server.HttpData{
+	graphs := server.HttpData{}
 
 	for _, subspace := range subspaces{
 		id := strings.Join(subspace.Subspace_key[:], "-")

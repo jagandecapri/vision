@@ -96,7 +96,7 @@ func TestProcessDataForVisualization(t *testing.T) {
 			}}
 		]}**/
 
-	expected_struct := server.HttpData1{
+	expected_struct := server.HttpData{
 		server.Graph{
 			Graph_metadata: server.Graph_metadata{ID: "first-second"},
 			Points: []server.Point{
