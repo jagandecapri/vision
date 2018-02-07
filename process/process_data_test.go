@@ -54,6 +54,48 @@ func TestProcessDataForVisualization(t *testing.T) {
 
 	subspaces := []tree.Subspace{subspace, subspace1}
 
+	/**
+	Expected JSON
+	[
+	{"metadata":{
+	  "id": "first-second"
+	},
+	  "points": [
+		{"data": {
+		  "x": "0.5",
+		  "y": "0.5"
+		},
+		  "metadata": {
+			"color": "#ABC"
+		  }},
+		{"data": {
+		  "x": "1.5",
+		  "y": "1.5"
+		},
+		  "metadata": {
+			"color": "#ABC"
+		  }}
+	  ]},
+	  {"metadata":{
+		"id": "third-four"
+	  },
+		"points": [
+		  {"data": {
+			"x": "0.5",
+			"y": "0.5"
+		  },
+			"metadata": {
+			  "color": "#ABC"
+			}},
+		  {"data": {
+			"x": "1.5",
+			"y": "1.5"
+		  },
+			"metadata": {
+			  "color": "#DEF"
+			}}
+		]}**/
+
 	expected_struct := server.HttpData1{
 		server.Graph{
 			Graph_metadata: server.Graph_metadata{ID: "first-second"},
