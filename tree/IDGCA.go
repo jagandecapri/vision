@@ -14,7 +14,7 @@ const SUCCESS = -10
 const FAILURE = -11
 
 func IGDCA(grid Grid, min_dense_points int, min_cluster_points int) (map[Range]*Unit){
-	units := grid.GetUnits()
+	units := grid.GetUnitsToCluster()
 	cluster_id := grid.GetNextClusterID()
 
 	for rg, unit := range units{

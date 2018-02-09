@@ -23,6 +23,10 @@ func NewGrid() Grid {
 }
 
 func (us *Grid) GetUnits() map[Range]*Unit{
+	return us.Store
+}
+
+func (us *Grid) GetUnitsToCluster() map[Range]*Unit{
 	if len(us.tmpUnitToCluster) == 0{
 		return us.Store
 	} else {
