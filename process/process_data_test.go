@@ -104,30 +104,36 @@ func TestProcessDataForVisualization(t *testing.T) {
 	expected_struct := server.HttpData{
 		server.Graph{
 			Graph_metadata: server.Graph_metadata{ID: "first-second",
-			Column_x: "first",
-			Column_y: "second"},
-			Points: []server.Point{
-				server.Point{
-					Point_data: server.Point_data{X: 0.5,Y: 0.5},
-					Point_metadata: server.Point_metadata{Color: "#ABC"},
-				},
-				server.Point{
-					Point_data: server.Point_data{X: 1.5,Y: 1.5},
+				Column_x: "first",
+				Column_y: "second"},
+			Points: []server.Points{{
+				Point_list: []server.Point{{
+					Point_data: server.Point_data{X: 0.5, Y: 0.5},
+				}},
+				Point_metadata: server.Point_metadata{Color: "#ABC"},
+			},
+				{
+					Point_list: []server.Point{{
+						Point_data: server.Point_data{X: 1.5, Y: 1.5},
+					}},
 					Point_metadata: server.Point_metadata{Color: "#ABC"},
 				},
 			},
 		},
 		server.Graph{
 			Graph_metadata: server.Graph_metadata{ID: "third-fourth",
-			Column_x: "third",
-			Column_y: "fourth"},
-			Points: []server.Point{
-				server.Point{
-					Point_data: server.Point_data{X: 0.5,Y: 0.5},
-					Point_metadata: server.Point_metadata{Color: "#ABC"},
-				},
-				server.Point{
-					Point_data: server.Point_data{X: 1.5,Y: 1.5},
+				Column_x: "third",
+				Column_y: "fourth"},
+			Points: []server.Points{{
+				Point_list: []server.Point{{
+					Point_data: server.Point_data{X: 0.5, Y: 0.5},
+				}},
+				Point_metadata: server.Point_metadata{Color: "#ABC"},
+			},
+				{
+					Point_list: []server.Point{{
+						Point_data: server.Point_data{X: 1.5, Y: 1.5},
+					}},
 					Point_metadata: server.Point_metadata{Color: "#ABC"},
 				},
 			},

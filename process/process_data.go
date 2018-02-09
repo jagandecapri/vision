@@ -21,13 +21,16 @@ func ProcessDataForVisualization(subspaces []tree.Subspace) server.HttpData{
 
 		 clusters := subspace.GetClusters()
 
-		 points_data := []server.Point{}
+		points_data := []server.Points{}
 
 		 for _, cluster := range clusters{
 		 	units := cluster.GetUnits()
 
+		 	tmp := server.Points{}
 		 	for _, unit := range units{
 		 		points := unit.GetPoints()
+
+				tmp1 := []server.Point{}
 
 		 		for _, point := range points{
 		 			X := point.GetValue(0)
@@ -38,14 +41,18 @@ func ProcessDataForVisualization(subspaces []tree.Subspace) server.HttpData{
 							X: X,
 							Y: Y,
 						},
-						Point_metadata: server.Point_metadata{
-							Color: "#ABC",
-						},
 					}
 
-					points_data = append(points_data, point_data)
+					tmp1 = append(tmp1, point_data)
+				}
+
+				tmp.Point_list = tmp1
+				tmp.Point_metadata = server.Point_metadata{
+					Color: "#ABC",
 				}
 			}
+
+			points_data = append(points_data, tmp)
 		 }
 
 		 graph.Points = points_data
