@@ -6,34 +6,23 @@ import (
 	"github.com/jagandecapri/vision/server"
 )
 
-func GetClusteredUnitPoints(cluster tree.Cluster) server.Points{
+func ProcessUnits(unit *tree.Unit) []server.Point{
+	points := unit.GetPoints()
 
-	units := cluster.GetUnits()
-	tmp := server.Points{}
+	tmp := []server.Point{}
 
-	for _, unit := range units{
-		points := unit.GetPoints()
+	for _, point := range points{
+		X := point.GetValue(0)
+		Y := point.GetValue(1)
 
-		tmp1 := []server.Point{}
-
-		for _, point := range points{
-			X := point.GetValue(0)
-			Y := point.GetValue(1)
-
-			point_data := server.Point{
-				Point_data: server.Point_data{
-					X: X,
-					Y: Y,
-				},
-			}
-
-			tmp1 = append(tmp1, point_data)
+		point_data := server.Point{
+			Point_data: server.Point_data{
+				X: X,
+				Y: Y,
+			},
 		}
 
-		tmp.Point_list = tmp1
-		tmp.Point_metadata = server.Point_metadata{
-			Color: "#ABC",
-		}
+		tmp = append(tmp, point_data)
 	}
 
 	return tmp
@@ -55,10 +44,41 @@ func ProcessDataForVisualization(subspaces []tree.Subspace) server.HttpData{
 		points_data := []server.Points{}
 
 		clusters := subspace.GetClusters()
+		clustered_units_acc := make(map[tree.Range]*tree.Unit)
+
+		//Clustered Unit data
 		for _, cluster := range clusters{
-			tmp := GetClusteredUnitPoints(cluster)
+			units := cluster.GetUnits()
+			tmp := server.Points{}
+
+			for rg, unit := range units{
+				clustered_units_acc[rg] = unit
+				tmp1 := ProcessUnits(unit)
+				tmp.Point_list = tmp1
+				tmp.Point_metadata = server.Point_metadata{
+					Color: "#ABC",
+				}
+			}
+
 			points_data = append(points_data, tmp)
 		}
+
+		all_units := subspace.GetUnits()
+
+		//Unclustered unit data
+		tmp2 := server.Points{}
+		tmp2.Point_metadata = server.Point_metadata{
+			Color: "#DEF",
+		}
+
+		for rg, unit := range all_units{
+			if _, ok := clustered_units_acc[rg]; !ok{
+				tmp := ProcessUnits(unit)
+				tmp2.Point_list = append(tmp2.Point_list, tmp...)
+			}
+		}
+
+		points_data = append(points_data, tmp2)
 
 		graph.Points = points_data
 		graphs = append(graphs, graph)

@@ -14,10 +14,13 @@ func TestProcessDataForVisualization(t *testing.T) {
 	u1 := tree.Unit{Id: 1, Center: tree.Point{Vec: []float64{0.5,0.5}},
 		Points: map[int]tree.Point{1: {Vec: []float64{0.5, 0.5}}}, Range: r1}
 
-
-	r2 := tree.Range{Low: [2]float64{1, 0}, High: [2]float64{2, 1}}
+	r2 := tree.Range{Low: [2]float64{1, 1}, High: [2]float64{2, 2}}
 	u2 := tree.Unit{Id: 3, Center: tree.Point{Vec: []float64{1.5,1.5}},
 		Points: map[int]tree.Point{1: {Vec: []float64{1.5, 1.5}}}, Range: r2}
+
+	r3 := tree.Range{Low: [2]float64{2, 2}, High: [2]float64{3, 3}}
+	u3 := tree.Unit{Id: 1, Center: tree.Point{Vec: []float64{2.5,2.5}},
+		Points: map[int]tree.Point{1: {Vec: []float64{2.5, 2.5}}}, Range: r3}
 
 	c1 := tree.Cluster{Cluster_id: 1,
 		Cluster_type: tree.OUTLIER_CLUSTER,
@@ -37,6 +40,7 @@ func TestProcessDataForVisualization(t *testing.T) {
 	grid.ClusterContainer = cc
 	grid.AddUnit(&u1)
 	grid.AddUnit(&u2)
+	grid.AddUnit(&u3)
 
 	subspace_key := [2]string{"first", "second"}
 
@@ -118,6 +122,12 @@ func TestProcessDataForVisualization(t *testing.T) {
 					}},
 					Point_metadata: server.Point_metadata{Color: "#ABC"},
 				},
+				{
+					Point_list: []server.Point{{
+						Point_data: server.Point_data{X: 2.5, Y: 2.5},
+					}},
+					Point_metadata: server.Point_metadata{Color: "#DEF"},
+				},
 			},
 		},
 		server.Graph{
@@ -135,6 +145,12 @@ func TestProcessDataForVisualization(t *testing.T) {
 						Point_data: server.Point_data{X: 1.5, Y: 1.5},
 					}},
 					Point_metadata: server.Point_metadata{Color: "#ABC"},
+				},
+				{
+					Point_list: []server.Point{{
+						Point_data: server.Point_data{X: 2.5, Y: 2.5},
+					}},
+					Point_metadata: server.Point_metadata{Color: "#DEF"},
 				},
 			},
 		},
