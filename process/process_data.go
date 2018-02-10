@@ -4,9 +4,10 @@ import (
 	"github.com/jagandecapri/vision/tree"
 	"strings"
 	"github.com/jagandecapri/vision/server"
+	"github.com/jagandecapri/vision/utils/color"
 )
 
-func ProcessUnits(unit *tree.Unit) []server.Point{
+func processUnit(unit *tree.Unit) []server.Point{
 	points := unit.GetPoints()
 
 	tmp := []server.Point{}
@@ -28,7 +29,7 @@ func ProcessUnits(unit *tree.Unit) []server.Point{
 	return tmp
 }
 
-func ProcessDataForVisualization(subspaces []tree.Subspace) server.HttpData{
+func processDataForVisualization(subspaces []tree.Subspace, color_helper color.ColorHelperInterface) server.HttpData{
 	graphs := server.HttpData{}
 
 	for _, subspace := range subspaces{
@@ -46,18 +47,23 @@ func ProcessDataForVisualization(subspaces []tree.Subspace) server.HttpData{
 		clusters := subspace.GetClusters()
 		clustered_units_acc := make(map[tree.Range]*tree.Unit)
 
+		colors := color_helper.GetRandomColors(len(clusters) + 1) // 1 is for unclustered unit
+
 		//Clustered Unit data
-		for _, cluster := range clusters{
+		i := 0
+		for _, cluster := range clusters {
+			color := colors[i]
+			i++
 			units := cluster.GetUnits()
 			tmp := server.Points{}
+			tmp.Point_metadata = server.Point_metadata{
+				Color: color,
+			}
 
 			for rg, unit := range units{
 				clustered_units_acc[rg] = unit
-				tmp1 := ProcessUnits(unit)
+				tmp1 := processUnit(unit)
 				tmp.Point_list = tmp1
-				tmp.Point_metadata = server.Point_metadata{
-					Color: "#ABC",
-				}
 			}
 
 			points_data = append(points_data, tmp)
@@ -66,14 +72,15 @@ func ProcessDataForVisualization(subspaces []tree.Subspace) server.HttpData{
 		all_units := subspace.GetUnits()
 
 		//Unclustered unit data
+		color := colors[len(colors) - 1]
 		tmp2 := server.Points{}
 		tmp2.Point_metadata = server.Point_metadata{
-			Color: "#DEF",
+			Color: color,
 		}
 
 		for rg, unit := range all_units{
 			if _, ok := clustered_units_acc[rg]; !ok{
-				tmp := ProcessUnits(unit)
+				tmp := processUnit(unit)
 				tmp2.Point_list = append(tmp2.Point_list, tmp...)
 			}
 		}
@@ -85,4 +92,13 @@ func ProcessDataForVisualization(subspaces []tree.Subspace) server.HttpData{
 	}
 
 	return graphs
+}
+
+var color_helper color.ColorHelperInterface
+
+func ProcessDataForVisualization(subspaces []tree.Subspace) server.HttpData{
+	if color_helper == nil{
+		color_helper = &color.ColorHelper{}
+	}
+	return processDataForVisualization(subspaces, color_helper)
 }

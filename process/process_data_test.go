@@ -5,7 +5,8 @@ import (
 	"github.com/jagandecapri/vision/tree"
 	"github.com/stretchr/testify/assert"
 	"github.com/jagandecapri/vision/server"
-	"encoding/json"
+	"github.com/stretchr/testify/mock"
+	"github.com/jagandecapri/vision/utils/color/mocks"
 )
 
 func TestProcessDataForVisualization(t *testing.T) {
@@ -60,49 +61,63 @@ func TestProcessDataForVisualization(t *testing.T) {
 
 	/**
 	Expected JSON
-	[
-	{"metadata":{
-		"id": "first-second",
-		"column_x": "first",
-		"column_y": "second"
-	},
-	  "points": [
-		{"data": {
-		  "x": "0.5",
-		  "y": "0.5"
-		},
-		  "metadata": {
-			"color": "#ABC"
-		  }},
-		{"data": {
-		  "x": "1.5",
-		  "y": "1.5"
-		},
-		  "metadata": {
-			"color": "#ABC"
-		  }}
-	  ]},
-	  {"metadata":{
-		"id": "third-four"
-		"column_x": "third",
-		"column_y": "fourth"
-	  },
-		"points": [
-		  {"data": {
-			"x": "0.5",
-			"y": "0.5"
-		  },
-			"metadata": {
-			  "color": "#ABC"
-			}},
-		  {"data": {
-			"x": "1.5",
-			"y": "1.5"
-		  },
-			"metadata": {
-			  "color": "#DEF"
-			}}
-		]}
+[
+  {"metadata":{
+    "id": "first-second",
+    "column_x": "first",
+    "column_y": "second"
+  },
+    "points": [
+      {"data": [{
+        "x": "0.5",
+        "y": "0.5"
+      }],
+        "metadata": {
+          "color": "#ABC"
+        }},
+      {"data": [{
+        "x": "1.5",
+        "y": "1.5"
+      }],
+        "metadata": {
+          "color": "#DEF"
+        }},
+      {"data": [{
+        "x": "2.5",
+        "y": "2.5"
+      }],
+        "metadata": {
+          "color": "#GHI"
+        }}
+    ]},
+  {"metadata":{
+    "id": "third-four"
+    "column_x": "third",
+    "column_y": "fourth"
+  },
+    "points": [
+      {"data": [{
+        "x": "0.5",
+        "y": "0.5"
+      }],
+        "metadata": {
+          "color": "#ABC"
+        }},
+      {"data": [{
+        "x": "1.5",
+        "y": "1.5"
+      }],
+        "metadata": {
+          "color": "#DEF"
+        }},
+      {"data": [{
+        "x": "2.5",
+        "y": "2.5"
+      }],
+        "metadata": {
+          "color": "#GHI"
+        }}
+    ]}
 	]**/
 
 	expected_struct := server.HttpData{
@@ -120,13 +135,13 @@ func TestProcessDataForVisualization(t *testing.T) {
 					Point_list: []server.Point{{
 						Point_data: server.Point_data{X: 1.5, Y: 1.5},
 					}},
-					Point_metadata: server.Point_metadata{Color: "#ABC"},
+					Point_metadata: server.Point_metadata{Color: "#DEF"},
 				},
 				{
 					Point_list: []server.Point{{
 						Point_data: server.Point_data{X: 2.5, Y: 2.5},
 					}},
-					Point_metadata: server.Point_metadata{Color: "#DEF"},
+					Point_metadata: server.Point_metadata{Color: "#GHI"},
 				},
 			},
 		},
@@ -144,21 +159,27 @@ func TestProcessDataForVisualization(t *testing.T) {
 					Point_list: []server.Point{{
 						Point_data: server.Point_data{X: 1.5, Y: 1.5},
 					}},
-					Point_metadata: server.Point_metadata{Color: "#ABC"},
+					Point_metadata: server.Point_metadata{Color: "#DEF"},
 				},
 				{
 					Point_list: []server.Point{{
 						Point_data: server.Point_data{X: 2.5, Y: 2.5},
 					}},
-					Point_metadata: server.Point_metadata{Color: "#DEF"},
+					Point_metadata: server.Point_metadata{Color: "#GHI"},
 				},
 			},
 		},
 	}
 
-	res := ProcessDataForVisualization(subspaces)
-	json1, _ := json.Marshal(expected_struct)
-	json2, _ := json.Marshal(res)
-
-	assert.JSONEq(t, string(json1), string(json2))
+	mock_color_helper := &mocks.ColorHelperInterface{}
+	mock_color_helper.On("GetRandomColors", mock.Anything).Return([]string{"#ABC", "#DEF", "#GHI"})
+	res := processDataForVisualization(subspaces, mock_color_helper)
+	for i := 0; i < len(res); i++{
+		tmp := res[i]
+		graph := expected_struct[i]
+		assert.Equal(t, graph.Graph_metadata, tmp.Graph_metadata)
+		for _, points := range graph.Points{
+			assert.Contains(t, tmp.Points, points)
+		}
+	}
 }
