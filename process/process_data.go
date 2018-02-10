@@ -29,7 +29,7 @@ func processUnit(unit *tree.Unit) []server.Point{
 	return tmp
 }
 
-func processDataForVisualization(subspaces []tree.Subspace, color_helper color.ColorHelperInterface) server.HttpData{
+func processDataForVisualization(subspaces map[[2]string]tree.Subspace, color_helper color.ColorHelperInterface) server.HttpData{
 	graphs := server.HttpData{}
 
 	for _, subspace := range subspaces{
@@ -96,7 +96,7 @@ func processDataForVisualization(subspaces []tree.Subspace, color_helper color.C
 
 var color_helper color.ColorHelperInterface
 
-func ProcessDataForVisualization(subspaces []tree.Subspace) server.HttpData{
+func ProcessDataForVisualization(subspaces map[[2]string]tree.Subspace) server.HttpData{
 	if color_helper == nil{
 		color_helper = &color.ColorHelper{}
 	}

@@ -43,11 +43,11 @@ func TestProcessDataForVisualization(t *testing.T) {
 	grid.AddUnit(&u2)
 	grid.AddUnit(&u3)
 
-	subspace_key := [2]string{"first", "second"}
+	subspace_key0 := [2]string{"first", "second"}
 
 	subspace := tree.Subspace{
 		Grid: &grid,
-		Subspace_key: subspace_key,
+		Subspace_key: subspace_key0,
 	}
 
 	subspace_key1 := [2]string{"third", "fourth"}
@@ -57,7 +57,7 @@ func TestProcessDataForVisualization(t *testing.T) {
 		Subspace_key: subspace_key1,
 	}
 
-	subspaces := []tree.Subspace{subspace, subspace1}
+	subspaces := map[[2]string]tree.Subspace{subspace_key0: subspace, subspace_key1: subspace1}
 
 	/**
 	Expected JSON
@@ -175,9 +175,17 @@ func TestProcessDataForVisualization(t *testing.T) {
 	mock_color_helper.On("GetRandomColors", mock.Anything).Return([]string{"#ABC", "#DEF", "#GHI"})
 	res := processDataForVisualization(subspaces, mock_color_helper)
 
+	expected_graph_metadata, actual_graph_metadata := []server.Graph_metadata{{ID: "first-second",
+		Column_x: "first",
+		Column_y: "second"},
+		{ID: "third-fourth",
+			Column_x: "third",
+			Column_y: "fourth"}}, []server.Graph_metadata{}
+
 	for i := 0; i < len(res); i++{
 		expected_point_list, actual_point_list := []server.Point{}, []server.Point{}
 		expected_color_list, actual_color_list := []string{"#ABC", "#DEF", "#GHI"}, []string{}
+
 		tmp := res[i]
 		graph := expected_struct[i]
 		assert.Equal(t, graph.Graph_metadata, tmp.Graph_metadata)
@@ -190,9 +198,9 @@ func TestProcessDataForVisualization(t *testing.T) {
 		for _, points := range tmp.PointsContainer{
 			actual_color_list = append(actual_color_list, points.Point_metadata.Color)
 		}
-
+		actual_graph_metadata = append(actual_graph_metadata, tmp.Graph_metadata)
 		assert.ElementsMatch(t, expected_point_list, actual_point_list)
 		assert.ElementsMatch(t, expected_color_list, actual_color_list)
 	}
-
+	assert.ElementsMatch(t, expected_graph_metadata, actual_graph_metadata)
 }
