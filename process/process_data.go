@@ -42,7 +42,7 @@ func processDataForVisualization(subspaces []tree.Subspace, color_helper color.C
 			},
 		}
 
-		points_data := []server.Points{}
+		points_data := []server.PointsContainer{}
 
 		clusters := subspace.GetClusters()
 		clustered_units_acc := make(map[tree.Range]*tree.Unit)
@@ -55,7 +55,7 @@ func processDataForVisualization(subspaces []tree.Subspace, color_helper color.C
 			color := colors[i]
 			i++
 			units := cluster.GetUnits()
-			tmp := server.Points{}
+			tmp := server.PointsContainer{}
 			tmp.Point_metadata = server.Point_metadata{
 				Color: color,
 			}
@@ -73,7 +73,7 @@ func processDataForVisualization(subspaces []tree.Subspace, color_helper color.C
 
 		//Unclustered unit data
 		color := colors[len(colors) - 1]
-		tmp2 := server.Points{}
+		tmp2 := server.PointsContainer{}
 		tmp2.Point_metadata = server.Point_metadata{
 			Color: color,
 		}
@@ -87,7 +87,7 @@ func processDataForVisualization(subspaces []tree.Subspace, color_helper color.C
 
 		points_data = append(points_data, tmp2)
 
-		graph.Points = points_data
+		graph.PointsContainer = points_data
 		graphs = append(graphs, graph)
 	}
 

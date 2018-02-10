@@ -11,6 +11,10 @@ type Point_metadata struct{
 
 type Point struct{
 	Point_data Point_data `json:"data"`
+}
+
+type PointsContainer struct{
+	Point_list []Point `json:"points"`
 	Point_metadata Point_metadata `json:"metadata"`
 }
 
@@ -22,7 +26,7 @@ type Graph_metadata struct{
 
 type Graph struct{
 	Graph_metadata Graph_metadata `json:"metadata"`
-	Points []Point `json:"points"`
+	PointsContainer []PointsContainer `json:"points_container"`
 }
 
 type HttpData []Graph

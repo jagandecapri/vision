@@ -67,7 +67,7 @@ func TestProcessDataForVisualization(t *testing.T) {
     "column_x": "first",
     "column_y": "second"
   },
-    "points": [
+    "points_container": [
       {"data": [{
         "x": "0.5",
         "y": "0.5"
@@ -95,7 +95,7 @@ func TestProcessDataForVisualization(t *testing.T) {
     "column_x": "third",
     "column_y": "fourth"
   },
-    "points": [
+    "points_container": [
       {"data": [{
         "x": "0.5",
         "y": "0.5"
@@ -125,7 +125,7 @@ func TestProcessDataForVisualization(t *testing.T) {
 			Graph_metadata: server.Graph_metadata{ID: "first-second",
 				Column_x: "first",
 				Column_y: "second"},
-			Points: []server.Points{{
+			PointsContainer: []server.PointsContainer{{
 				Point_list: []server.Point{{
 					Point_data: server.Point_data{X: 0.5, Y: 0.5},
 				}},
@@ -149,7 +149,7 @@ func TestProcessDataForVisualization(t *testing.T) {
 			Graph_metadata: server.Graph_metadata{ID: "third-fourth",
 				Column_x: "third",
 				Column_y: "fourth"},
-			Points: []server.Points{{
+			PointsContainer: []server.PointsContainer{{
 				Point_list: []server.Point{{
 					Point_data: server.Point_data{X: 0.5, Y: 0.5},
 				}},
@@ -174,12 +174,25 @@ func TestProcessDataForVisualization(t *testing.T) {
 	mock_color_helper := &mocks.ColorHelperInterface{}
 	mock_color_helper.On("GetRandomColors", mock.Anything).Return([]string{"#ABC", "#DEF", "#GHI"})
 	res := processDataForVisualization(subspaces, mock_color_helper)
+
 	for i := 0; i < len(res); i++{
+		expected_point_list, actual_point_list := []server.Point{}, []server.Point{}
+		expected_color_list, actual_color_list := []string{"#ABC", "#DEF", "#GHI"}, []string{}
 		tmp := res[i]
 		graph := expected_struct[i]
 		assert.Equal(t, graph.Graph_metadata, tmp.Graph_metadata)
-		for _, points := range graph.Points{
-			assert.Contains(t, tmp.Points, points)
+		for _, points := range graph.PointsContainer{
+			expected_point_list = append(expected_point_list, points.Point_list...)
 		}
+		for _, points := range tmp.PointsContainer{
+			actual_point_list = append(actual_point_list, points.Point_list...)
+		}
+		for _, points := range tmp.PointsContainer{
+			actual_color_list = append(actual_color_list, points.Point_metadata.Color)
+		}
+
+		assert.ElementsMatch(t, expected_point_list, actual_point_list)
+		assert.ElementsMatch(t, expected_color_list, actual_color_list)
 	}
+
 }
