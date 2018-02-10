@@ -11,11 +11,16 @@ $(document).ready(function() {
         print("CLOSE");
         ws = null;
     }
+    var throttled = _.throttle(createOrUpdatePlot, 200);
     ws.onmessage = function(evt) {
-        //print("RESPONSE: " + evt.data);
         print("RESPONSE: ");
         var data = evt.data;
-        createOrUpdatePlot(data)
+        if (evt.data == 'ping'){
+            //TODO: How to handle ping messages from server or is it already handled by the browser?
+            console.log("Received 'ping' from server")
+        } else {
+            throttled(data)
+        };
     }
     ws.onerror = function(evt) {
         print("ERROR: " + evt.data);
@@ -28,7 +33,7 @@ $(document).ready(function() {
         if (!ws) {
             return false;
         }
-        ws.send("ping");
+        ws.send("pong");
         return false;
     };
 
@@ -40,8 +45,18 @@ $(document).ready(function() {
         return false;
     };
 
+    var graph_ctr = 0;
+    var d3 = Plotly.d3;
+
+    var WIDTH_IN_PERCENT_OF_PARENT = 60,
+        HEIGHT_IN_PERCENT_OF_PARENT = 80;
+
+    function createRowDivString(key){
+        return '<div class="row"><div class="col-md-4"><div id="' + key + '"></div></div></div>';
+    };
+
     function createDivString(key){
-        return '<div class="row">'+'<div id="' + key + '"></div></div>';
+        return '<div class="col-md-4"><div id="' + key + '"></div></div>';
     };
 
     function isGraphDivExist(key){
@@ -52,59 +67,81 @@ $(document).ready(function() {
         }
     };
 
-    function appendDivToContainer(container_div_key, append_div){
-        $('#'+container_div_key).append(append_div);
+    function appendDivToContainer(key){
+        if (graph_ctr%3 == 0){
+            var str = createRowDivString(key);
+            $("#container").append(str);
+        } else {
+            var str = createDivString(key);
+            $("#container").children().last().append(str);
+        }
+        graph_ctr++;
     };
 
-    function getColumnX(data){
-        var columns = _.first(data).Sorter;
-        var col_x = columns[0];
-        return col_x
-    }
-
-    function getColumnY(data){
-        var columns = _.first(data).Sorter;
-        var col_y = columns[1];
-        return col_y;
-    }
-
-    function getKey(data){
-        var columns = _.first(data).Sorter;
-        var key = columns.join('-');
+    function getKey(graph){
+        var key = graph.metadata.id;
         return key;
     }
 
-    function processData(data, col_x, col_y){
-        var x = [];
-        var y = [];
-        _.forEach(data, function(val, key){
-            x.push(val["Norm_vec"][col_x])
-            y.push(val["Norm_vec"][col_y])
+    function getColumnX(graph){
+        var column_x = graph.metadata.column_x;
+        return column_x;
+    }
+
+    function getColumnY(graph){
+        var column_y = graph.metadata.column_y;
+        return column_y;
+    }
+
+    function processData(graph){
+        var points_container = graph.points_container
+        var traces = [];
+        _.forEach(points_container, function(points){
+            var trace = {};
+            _.forEach(points, function(points_list){
+                var x = [];
+                var y = [];
+                _.forEach(points_list.data, function(data){
+                    x.push(data.x)
+                    y.push(data.y)
+                })
+                trace.x = x
+                trace.y = y
+                trace.color = points.metadata.color
+            });
+            traces.push(trace)
         });
-        return [x,y]
+        return traces
     }
 
     function processJsonData(raw_data){
         return JSON.parse(raw_data);
     }
 
-    function createNewPlotly(key, data, layout){
-        Plotly.newPlot(key, data, layout);
+    function createNewPlotly(node, data, layout){
+        Plotly.newPlot(node, data, layout);
     }
 
     function updatePlotly(key, data){
         Plotly.restyle(key, data)
     }
 
-    function newPlot(key, data){
-        var x_col = getColumnX(data);
-        var y_col = getColumnY(data);
-        var tmp = processData(data,x_col,y_col)
-        var x = tmp[0];
-        var y = tmp[1];
+    function newPlot(key, graph){
+        var x_col = getColumnX(graph);
+        var y_col = getColumnY(graph);
+        var traces = processData(graph)
 
-        var div = createDivString(key);
-        appendDivToContainer("container", div);
+        appendDivToContainer(key);
+
+        var gd3 = d3.select('#'+key)
+            .style({
+                width: WIDTH_IN_PERCENT_OF_PARENT + '%',
+                height: HEIGHT_IN_PERCENT_OF_PARENT + '%',
+                'margin-top': 0,
+                'margin-left': 0,
+                'margin-bottom': 0,
+                'margin-right': 0
+            });
 
         var trace1 = {
             x: x,
@@ -117,45 +154,38 @@ $(document).ready(function() {
             title: key,
             xaxis: {
                 title: x_col,
-                range: [0, 1],
+                range: [-0.05, 1.05],
                 tick0: 0,
                 dtick: 0.05
             },
             yaxis: {
                 title: y_col,
-                range: [0, 1],
+                range: [-0.05, 1.05],
                 tick0: 0,
                 dtick: 0.05
             }
         };
 
-        var data = [trace1];
-        createNewPlotly(key, data, layout);
+        var node = gd3.node()
+        createNewPlotly(node, traces, layout);
     }
 
-    function updatePlot(key, data){
-        var x_col = getColumnX(data);
-        var y_col = getColumnY(data);
-        var tmp = processData(data,x_col,y_col)
-        var x = tmp[0];
-        var y = tmp[1];
-
-        var update_data = {
-            x: [x],
-            y: [y]
-        };
-
-        updatePlotly(key, update_data);
+    function updatePlot(key, graph){
+        var traces = processData(graph)
+        updatePlotly(key, traces);
     }
 
     function createOrUpdatePlot(data){
         var tmp = processJsonData(data);
-        var data = tmp.Data;
-        var key = getKey(data)
-        if (!isGraphDivExist(key)){
-            newPlot(key, data)
-        } else {
-            updatePlot(key, data)
-        }
+        var graphs = tmp.Data;
+        _.forEach(graphs, function(graph){
+            var key = getKey(graph)
+            if (!isGraphDivExist(key)){
+                newPlot(key, data)
+            } else {
+                updatePlot(key, data)
+            }
+        })
+
     }
 });
