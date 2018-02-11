@@ -129,19 +129,19 @@ func TestProcessDataForVisualization(t *testing.T) {
 				Point_list: []server.Point{{
 					Point_data: server.Point_data{X: 0.5, Y: 0.5},
 				}},
-				Point_metadata: server.Point_metadata{Color: "#ABC"},
+				Points_metadata: server.Points_metadata{Color: "#ABC"},
 			},
 				{
 					Point_list: []server.Point{{
 						Point_data: server.Point_data{X: 1.5, Y: 1.5},
 					}},
-					Point_metadata: server.Point_metadata{Color: "#DEF"},
+					Points_metadata: server.Points_metadata{Color: "#DEF"},
 				},
 				{
 					Point_list: []server.Point{{
 						Point_data: server.Point_data{X: 2.5, Y: 2.5},
 					}},
-					Point_metadata: server.Point_metadata{Color: "#GHI"},
+					Points_metadata: server.Points_metadata{Color: "#GHI"},
 				},
 			},
 		},
@@ -153,19 +153,19 @@ func TestProcessDataForVisualization(t *testing.T) {
 				Point_list: []server.Point{{
 					Point_data: server.Point_data{X: 0.5, Y: 0.5},
 				}},
-				Point_metadata: server.Point_metadata{Color: "#ABC"},
+				Points_metadata: server.Points_metadata{Color: "#ABC"},
 			},
 				{
 					Point_list: []server.Point{{
 						Point_data: server.Point_data{X: 1.5, Y: 1.5},
 					}},
-					Point_metadata: server.Point_metadata{Color: "#DEF"},
+					Points_metadata: server.Points_metadata{Color: "#DEF"},
 				},
 				{
 					Point_list: []server.Point{{
 						Point_data: server.Point_data{X: 2.5, Y: 2.5},
 					}},
-					Point_metadata: server.Point_metadata{Color: "#GHI"},
+					Points_metadata: server.Points_metadata{Color: "#GHI"},
 				},
 			},
 		},
@@ -196,7 +196,7 @@ func TestProcessDataForVisualization(t *testing.T) {
 			actual_point_list = append(actual_point_list, points.Point_list...)
 		}
 		for _, points := range tmp.PointsContainer{
-			actual_color_list = append(actual_color_list, points.Point_metadata.Color)
+			actual_color_list = append(actual_color_list, points.Points_metadata.Color)
 		}
 		actual_graph_metadata = append(actual_graph_metadata, tmp.Graph_metadata)
 		assert.ElementsMatch(t, expected_point_list, actual_point_list)

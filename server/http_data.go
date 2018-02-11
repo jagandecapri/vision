@@ -5,7 +5,7 @@ type Point_data struct{
 	Y float64 `json:"y"`
 }
 
-type Point_metadata struct{
+type Points_metadata struct{
 	Color string `json:"color"`
 }
 
@@ -14,8 +14,8 @@ type Point struct{
 }
 
 type PointsContainer struct{
-	Point_list []Point `json:"points"`
-	Point_metadata Point_metadata `json:"metadata"`
+	Point_list      []Point         `json:"point_list"`
+	Points_metadata Points_metadata `json:"metadata"`
 }
 
 type Graph_metadata struct{

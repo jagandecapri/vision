@@ -56,7 +56,7 @@ func processDataForVisualization(subspaces map[[2]string]tree.Subspace, color_he
 			i++
 			units := cluster.GetUnits()
 			tmp := server.PointsContainer{}
-			tmp.Point_metadata = server.Point_metadata{
+			tmp.Points_metadata = server.Points_metadata{
 				Color: color,
 			}
 
@@ -74,7 +74,7 @@ func processDataForVisualization(subspaces map[[2]string]tree.Subspace, color_he
 		//Unclustered unit data
 		color := colors[len(colors) - 1]
 		tmp2 := server.PointsContainer{}
-		tmp2.Point_metadata = server.Point_metadata{
+		tmp2.Points_metadata = server.Points_metadata{
 			Color: color,
 		}
 
