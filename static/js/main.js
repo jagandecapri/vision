@@ -12,14 +12,33 @@ $(document).ready(function() {
         ws = null;
     }
     var throttled = _.throttle(createOrUpdatePlot, 200);
+    var graphs_cache = []
     ws.onmessage = function(evt) {
         print("RESPONSE: ");
         var data = evt.data;
-        if (evt.data == 'ping'){
+        if (data == 'ping'){
             //TODO: How to handle ping messages from server or is it already handled by the browser?
             console.log("Received 'ping' from server")
         } else {
-            throttled(data)
+            try{
+                var graphs = processJsonData(data)
+                graphs_cache.push(graphs)
+            }
+            catch(error){
+                console.log(error, evt.data)
+            }
+
+            (function interval(graphs_cache){
+                if (graphs_cache.length > 0){
+                    _.forEach(graphs_cache, function(graphs){
+                        createOrUpdatePlot(graphs)
+                    })
+                    graphs_cache = []
+                }
+                _.delay(interval, 300, graphs_cache)
+            })(graphs_cache)
+
+            //throttled(data)
         };
     }
     ws.onerror = function(evt) {
@@ -98,17 +117,16 @@ $(document).ready(function() {
         var traces = [];
         _.forEach(points_container, function(points){
             var trace = {};
-            _.forEach(points, function(points_list){
-                var x = [];
-                var y = [];
-                _.forEach(points_list.data, function(data){
-                    x.push(data.x)
-                    y.push(data.y)
-                })
-                trace.x = x
-                trace.y = y
-                trace.color = points.metadata.color
+            var x = [];
+            var y = [];
+            var point_list = points.point_list
+            _.forEach(point_list, function(point){
+                x.push(point.data.x)
+                y.push(point.data.y)
             });
+            trace.x = x
+            trace.y = y
+            trace.color = points.metadata.color
             traces.push(trace)
         });
         return traces
@@ -122,14 +140,11 @@ $(document).ready(function() {
         Plotly.newPlot(node, data, layout);
     }
 
-    function updatePlotly(key, data){
-        Plotly.restyle(key, data)
+    function updatePlotly(key, traces){
+        Plotly.update(key, traces)
     }
 
-    function newPlot(key, graph){
-        var x_col = getColumnX(graph);
-        var y_col = getColumnY(graph);
-        var traces = processData(graph)
+    function newPlot(key, x_col, y_col, traces){
 
         appendDivToContainer(key);
 
@@ -142,13 +157,6 @@ $(document).ready(function() {
                 'margin-bottom': 0,
                 'margin-right': 0
             });
-
-        var trace1 = {
-            x: x,
-            y: y,
-            mode: 'markers',
-            type: 'scatter'
-        };
 
         var layout = {
             title: key,
@@ -175,15 +183,17 @@ $(document).ready(function() {
         updatePlotly(key, traces);
     }
 
-    function createOrUpdatePlot(data){
-        var tmp = processJsonData(data);
-        var graphs = tmp.Data;
+    function createOrUpdatePlot(graphs){
         _.forEach(graphs, function(graph){
             var key = getKey(graph)
             if (!isGraphDivExist(key)){
-                newPlot(key, data)
+                var x_col = getColumnX(graph);
+                var y_col = getColumnY(graph);
+                var traces = processData(graph);
+                newPlot(key, x_col, y_col, traces)
             } else {
-                updatePlot(key, data)
+                var traces = processData(graph);
+                updatePlot(key, traces)
             }
         })
 
