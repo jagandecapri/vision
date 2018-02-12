@@ -2,17 +2,29 @@ $(document).ready(function() {
         /* Current Plotly.js version */
     console.log(Plotly.BUILD);
 
+    var graphs_cache = []
     ws = new WebSocket(ws_uri);
     ws.onopen = function(evt) {
         print("OPEN");
+        (function interval(graphs_cache){
+            if (graphs_cache.length > 0){
+                _.forEach(graphs_cache, function(graphs){
+                    createOrUpdatePlot(graphs)
+                })
+                graphs_cache = []
+            }
+            _.delay(interval, 1000, graphs_cache)
+        })(graphs_cache)
         send()
     }
     ws.onclose = function(evt) {
         print("CLOSE");
         ws = null;
     }
+
     var throttled = _.throttle(createOrUpdatePlot, 200);
     var graphs_cache = []
+
     ws.onmessage = function(evt) {
         print("RESPONSE: ");
         var data = evt.data;
@@ -27,20 +39,9 @@ $(document).ready(function() {
             catch(error){
                 console.log(error, evt.data)
             }
-
-            (function interval(graphs_cache){
-                if (graphs_cache.length > 0){
-                    _.forEach(graphs_cache, function(graphs){
-                        createOrUpdatePlot(graphs)
-                    })
-                    graphs_cache = []
-                }
-                _.delay(interval, 300, graphs_cache)
-            })(graphs_cache)
-
-            //throttled(data)
         };
     }
+
     ws.onerror = function(evt) {
         print("ERROR: " + evt.data);
     }
