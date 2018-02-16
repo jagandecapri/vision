@@ -22,28 +22,6 @@ func TestClusterContainer_GetCluster(t *testing.T) {
 	assert.Equal(t, c3, c3_tmp)
 }
 
-//func TestClusterContainer_GetOutliers(t *testing.T) {
-//	c1 := Cluster{Cluster_id: 1}
-//	c2 := Cluster{Cluster_id: 2}
-//	c3 := Cluster{Cluster_id: 3}
-//
-//
-//	cc := ClusterContainer{ListOfClusters: map[int]Cluster{1: c1, 2: c2, 3: c3}}
-//
-//	assert.Equal(t, map[int]Cluster{1: c1, 2: c2}, cc.GetOutliers())
-//}
-//
-//func TestClusterContainer_GetNonOutliers(t *testing.T) {
-//	c1 := Cluster{Cluster_id: 1, Cluster_type: OUTLIER_CLUSTER}
-//	c2 := Cluster{Cluster_id: 2, Cluster_type: OUTLIER_CLUSTER}
-//	c3 := Cluster{Cluster_id: 3, Cluster_type: NON_OUTLIER_CLUSTER}
-//
-//
-//	cc := ClusterContainer{ListOfClusters: map[int]Cluster{1: c1, 2: c2, 3: c3}}
-//
-//	assert.Equal(t, map[int]Cluster{3: c3}, cc.GetNonOutliers())
-//}
-
 func TestClusterContainer_AddUpdateCluster(t *testing.T) {
 	c1 := Cluster{Cluster_id: 1, Num_of_points: 10}
 	c2 := Cluster{Cluster_id: 2, Num_of_points: 10}

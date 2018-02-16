@@ -9,26 +9,6 @@ func (cc *ClusterContainer) GetBiggestCluster() Cluster{
 	return cc.BiggestCluster
 }
 
-//func (cc *ClusterContainer) GetOutliers() map[int]Cluster{
-//	outliers := map[int]Cluster{}
-//	for cluster_id, cluster := range cc.ListOfClusters{
-//		if cluster.Cluster_type == OUTLIER_CLUSTER{
-//			outliers[cluster_id] = cluster
-//		}
-//	}
-//	return outliers
-//}
-//
-//func (cc *ClusterContainer) GetNonOutliers() map[int]Cluster{
-//	non_outliers := map[int]Cluster{}
-//	for cluster_id, cluster := range cc.ListOfClusters{
-//		if cluster.Cluster_type == NON_OUTLIER_CLUSTER{
-//			non_outliers[cluster_id] = cluster
-//		}
-//	}
-//	return non_outliers
-//}
-
 func (cc *ClusterContainer) GetCluster(cluster_id int) (Cluster, bool){
 	cluster, ok := cc.ListOfClusters[cluster_id]
 	return cluster, ok

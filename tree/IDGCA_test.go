@@ -36,8 +36,6 @@ func TestCluster2by2Grid(t *testing.T) {
 	res := IGDCA(grid, min_dense_points, min_cluster_points)
 	assert.True(t, res[r1].Cluster_id == res[r2].Cluster_id && res[r2].Cluster_id == res[r3].Cluster_id,
 		"%v %v %v", res[r1].Cluster_id, res[r2].Cluster_id, res[r3].Cluster_id)
-	//assert.Equal(t, 0, len(grid.GetOutliers()))
-	//assert.Equal(t, 1, len(grid.GetNonOutliers()))
 	assert.Equal(t, 1, len(grid.GetClusters()))
 }
 
@@ -94,11 +92,13 @@ func TestCluster2by2GridAbsorbCluster(t *testing.T) {
 	assert.Equal(t, 1, len(cluster_ids_to_merge), "%v", cluster_ids_to_merge)
 	if cluster.Cluster_id == 1{
 		assert.Contains(t, cluster_ids_to_merge, 2)
+		assert.Equal(t, 1, u1.Cluster_id)
+		assert.Equal(t, 9, cluster.Num_of_points)
 	} else {
 		assert.Contains(t, cluster_ids_to_merge, 1)
+		assert.Equal(t, 2, u1.Cluster_id)
+		assert.Equal(t, 7, cluster.Num_of_points)
 	}
-	assert.Equal(t, 1, u1.Cluster_id)
-	assert.Equal(t, 9, cluster.Num_of_points)
 }
 
 func TestCluster2by2GridMergeClusters1(t *testing.T) {
@@ -284,8 +284,6 @@ func TestCluster3by3Grid(t *testing.T) {
 		}
 	}
 
-	//assert.Equal(t, 1, len(grid.GetOutliers()))
-	//assert.Equal(t, 1, len(grid.GetNonOutliers()))
 	assert.Equal(t, 2, len(grid.GetClusters()))
 
 }
@@ -306,8 +304,6 @@ func TestGDA(t *testing.T){
 	min_cluster_points := 5
 
 	IGDCA(grid, min_dense_points, min_cluster_points)
-	//assert.Equal(t, 0, len(grid.GetOutliers()))
-	//assert.Equal(t, 1, len(grid.GetNonOutliers()))
 	assert.Equal(t, 1, len(grid.GetClusters()))
 
 }
@@ -328,8 +324,6 @@ func BenchmarkGDA(t *testing.B) {
 		min_dense_points := 2
 		min_cluster_points := 5
 		IGDCA(grid, min_dense_points, min_cluster_points)
-		//assert.Equal(t, 0, len(grid.GetOutliers()))
-		//assert.Equal(t, 1, len(grid.GetNonOutliers()))
 		assert.Equal(t, 1, len(grid.GetClusters()))
 
 	}

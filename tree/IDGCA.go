@@ -34,7 +34,6 @@ func IGDCA(grid Grid, min_dense_points int, min_cluster_points int) (map[Range]*
 					}
 				}else if ret == FAILURE{
 					cluster := NewCluster(unit, rg, cluster_id, min_dense_points)
-					//cluster = ComputeClusterType(min_cluster_points, cluster)
 					grid.AddUpdateCluster(cluster)
 					cluster_id = grid.GetNextClusterID()
 				}
@@ -47,13 +46,6 @@ func IGDCA(grid Grid, min_dense_points int, min_cluster_points int) (map[Range]*
 func isClusterTooSmall(min_cluster_points int, cluster Cluster) bool{
 	return cluster.Num_of_points < min_cluster_points
 }
-
-//func ComputeClusterType(min_cluster_points int, cluster Cluster) Cluster{
-//	if cluster.Num_of_points >= min_cluster_points{
-//		cluster.Cluster_type = NON_OUTLIER_CLUSTER
-//	}
-//	return cluster
-//}
 
 func NewCluster(unit *Unit, rg Range, cluster_id int, min_dense_points int) (Cluster){
 	cluster := Cluster{Cluster_id: cluster_id, ListOfUnits: make(map[Range]*Unit)}

@@ -24,13 +24,11 @@ func TestProcessDataForVisualization(t *testing.T) {
 		Points: map[int]tree.Point{1: {Vec: []float64{2.5, 2.5}}}, Range: r3}
 
 	c1 := tree.Cluster{Cluster_id: 1,
-		Cluster_type: tree.OUTLIER_CLUSTER,
 		Num_of_points: 10,
 		ListOfUnits: map[tree.Range]*tree.Unit{r1: &u1},
 	}
 
 	c2 := tree.Cluster{Cluster_id: 3,
-		Cluster_type: tree.NON_OUTLIER_CLUSTER,
 		Num_of_points: 10,
 		ListOfUnits: map[tree.Range]*tree.Unit{r2: &u2},
 	}
