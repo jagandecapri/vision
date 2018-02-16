@@ -21,16 +21,17 @@ func IGDCA(grid Grid, min_dense_points int, min_cluster_points int) (map[Range]*
 		if unit.Cluster_id == UNCLASSIFIED{
 			if isDenseUnit(unit, min_dense_points){ //TODO: Could be redundant is only dense units are sent
 
-				ret, cluster_id_merged, cluster_ids_to_be_merged := AbsorbIntoCluster(grid, unit, min_dense_points)
+				ret, cluster, cluster_ids_to_be_merged := AbsorbIntoCluster(grid, unit, min_dense_points)
 				if ret == SUCCESS{
 					if len(cluster_ids_to_be_merged) > 1{
-						_ = MergeClusters(grid, cluster_id_merged, cluster_ids_to_be_merged)
-						//COMPUTE CLUSTER TYPE
+						_, cluster = MergeClusters(grid, cluster, cluster_ids_to_be_merged)
+						cluster = ComputeClusterType(min_cluster_points, cluster)
+						grid.AddUpdateCluster(cluster)
 					}
 
 				}else if ret == FAILURE{
-					num_points_cluster, cluster := NewCluster(unit, rg, cluster_id, min_dense_points)
-					cluster = ComputeClusterType(min_cluster_points, num_points_cluster, cluster)
+					cluster := NewCluster(unit, rg, cluster_id, min_dense_points)
+					cluster = ComputeClusterType(min_cluster_points, cluster)
 					grid.AddUpdateCluster(cluster)
 					cluster_id = grid.GetNextClusterID()
 				}
@@ -40,24 +41,24 @@ func IGDCA(grid Grid, min_dense_points int, min_cluster_points int) (map[Range]*
 	return units
 }
 
-func ComputeClusterType(min_cluster_points int, num_points_cluster int, cluster Cluster) Cluster{
-	if num_points_cluster >= min_cluster_points{
+func ComputeClusterType(min_cluster_points int, cluster Cluster) Cluster{
+	if cluster.Num_of_points >= min_cluster_points{
 		cluster.Cluster_type = NON_OUTLIER_CLUSTER
-	} else {
-		cluster.Cluster_type = OUTLIER_CLUSTER
 	}
 	return cluster
 }
 
-func NewCluster(unit *Unit, rg Range, cluster_id int, min_dense_points int) (int, Cluster){
+func NewCluster(unit *Unit, rg Range, cluster_id int, min_dense_points int) (Cluster){
 	cluster := Cluster{Cluster_id: cluster_id, ListOfUnits: make(map[Range]*Unit)}
 	num_points_cluster := expand(unit, rg, cluster_id, min_dense_points, cluster)
-	return num_points_cluster, cluster
+	cluster.Num_of_points = num_points_cluster
+	return cluster
 }
 
-func AbsorbIntoCluster(grid Grid, unit *Unit, min_dense_points int) (int, int, []int){
+func AbsorbIntoCluster(grid Grid, unit *Unit, min_dense_points int) (int, Cluster, []int){
 	ret_value := FAILURE
 	cluster_ids := []int{}
+	cluster := Cluster{}
 
 	for _, neighbour_unit := range unit.GetNeighbouringUnits() {
 		if isDenseUnit(neighbour_unit, min_dense_points) && neighbour_unit.Cluster_id != UNCLASSIFIED &&
@@ -76,36 +77,30 @@ func AbsorbIntoCluster(grid Grid, unit *Unit, min_dense_points int) (int, int, [
 		ret_value = SUCCESS
 
 		unit.Cluster_id = unit_cluster_id
-		cluster, _ := grid.GetCluster(unit_cluster_id) //ok value here need to tbe taken into account if want to avoid nil panic
+		cluster, _ = grid.GetCluster(unit_cluster_id) //ok value here need to tbe taken into account if want to avoid nil panic
 		cluster.ListOfUnits[unit.Range] = unit
 		cluster.Num_of_points += unit.GetNumberOfPoints()
-		grid.AddUpdateCluster(cluster)
 	}
-	return ret_value, unit_cluster_id, cluster_id_to_be_merged
+	return ret_value, cluster, cluster_id_to_be_merged
 }
 
-func MergeClusters(grid Grid, cluster_id_merged int, cluster_ids_to_be_merged []int) (int){
-	num_of_points := 0
+func MergeClusters(grid Grid, cluster Cluster, cluster_ids_to_be_merged []int) (int, Cluster){
 	ret_value := FAILURE
+
 	for _, cluster_id := range cluster_ids_to_be_merged{
-		cluster, ok := grid.GetCluster(cluster_id)
+		cluster_to_merge, ok := grid.GetCluster(cluster_id)
 		if ok{
-			for _, unit := range cluster.ListOfUnits{
-				unit.Cluster_id = cluster_id_merged
-				num_of_points += unit.GetNumberOfPoints()
+			for rg, unit := range cluster_to_merge.ListOfUnits{
+				unit.Cluster_id = cluster.Cluster_id
+				cluster.ListOfUnits[rg] = unit
+				cluster.Num_of_points += unit.GetNumberOfPoints()
 			}
 			ret_value = SUCCESS
 			grid.RemoveCluster(cluster_id)
 		}
 	}
 
-	if num_of_points > 0{
-		c, _ := grid.GetCluster(cluster_id_merged)
-		c.Num_of_points += num_of_points
-		grid.AddUpdateCluster(c)
-	}
-
-	return ret_value
+	return ret_value, cluster
 }
 
 type Seed struct{

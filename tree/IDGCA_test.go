@@ -88,20 +88,16 @@ func TestCluster2by2GridAbsorbCluster(t *testing.T) {
 	grid.AddUpdateCluster(cluster1)
 	grid.AddUpdateCluster(cluster2)
 
-	res, unit_cluster_id, cluster_ids_to_merge := AbsorbIntoCluster(grid, &u1, min_dense_points)
+	res, cluster, cluster_ids_to_merge := AbsorbIntoCluster(grid, &u1, min_dense_points)
 	assert.Equal(t, res, SUCCESS)
 	assert.Equal(t, 1, len(cluster_ids_to_merge), "%v", cluster_ids_to_merge)
-	if unit_cluster_id == 1{
+	if cluster.Cluster_id == 1{
 		assert.Contains(t, cluster_ids_to_merge, 2)
 	} else {
 		assert.Contains(t, cluster_ids_to_merge, 1)
 	}
 	assert.Equal(t, 1, u1.Cluster_id)
-	//assert.Equal(t, 9, num_points_cluster)
-	c, _ := grid.GetCluster(1)
-	_, ok := c.ListOfUnits[r1]
-	assert.Equal(t, 9, c.Num_of_points)
-	assert.True(t, ok)
+	assert.Equal(t, 9, cluster.Num_of_points)
 }
 
 func TestCluster2by2GridMergeClusters1(t *testing.T) {
@@ -148,22 +144,17 @@ func TestCluster2by2GridMergeClusters1(t *testing.T) {
 	grid.AddUpdateCluster(c1)
 	grid.AddUpdateCluster(c2)
 
-	var res int
-	var ok bool
-
-	cluster_id_merged := 1
 	cluster_ids_to_be_merged := []int{2}
-	res = MergeClusters(grid, cluster_id_merged, cluster_ids_to_be_merged)
+	res, cluster := MergeClusters(grid, c1, cluster_ids_to_be_merged)
 	assert.Equal(t, res, SUCCESS)
 	assert.Equal(t, 1, u1.Cluster_id)
 	assert.Equal(t, 1, u2.Cluster_id)
 	assert.Equal(t, 1, u3.Cluster_id)
 	assert.Equal(t, UNCLASSIFIED, u4.Cluster_id)
 
-	c, _ := grid.GetCluster(1)
-	assert.Equal(t, 9, c.Num_of_points)
+	assert.Equal(t, 9, cluster.Num_of_points)
 
-	_, ok = grid.GetCluster(2)
+	_, ok := grid.GetCluster(2)
 	assert.False(t, ok)
 }
 
@@ -212,12 +203,8 @@ func TestCluster2by2GridMergeClusters2(t *testing.T) {
 	grid.AddUpdateCluster(c1)
 	grid.AddUpdateCluster(c2)
 
-	var res int
-	var ok bool
-
-	cluster_id_merged := 2
 	cluster_ids_to_be_merged := []int{1}
-	res = MergeClusters(grid, cluster_id_merged, cluster_ids_to_be_merged)
+	res, cluster := MergeClusters(grid, c2, cluster_ids_to_be_merged)
 
 	assert.Equal(t, res, SUCCESS)
 	assert.Equal(t, 2, u1.Cluster_id)
@@ -225,10 +212,9 @@ func TestCluster2by2GridMergeClusters2(t *testing.T) {
 	assert.Equal(t, 2, u3.Cluster_id, "%v", u3.Cluster_id)
 	assert.Equal(t, UNCLASSIFIED, u4.Cluster_id)
 
-	c, _ := grid.GetCluster(2)
-	assert.Equal(t, 9, c.Num_of_points)
+	assert.Equal(t, 9, cluster.Num_of_points)
 
-	_, ok = grid.GetCluster(1)
+	_, ok := grid.GetCluster(1)
 	assert.False(t, ok)
 }
 
