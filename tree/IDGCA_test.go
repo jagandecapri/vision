@@ -36,8 +36,9 @@ func TestCluster2by2Grid(t *testing.T) {
 	res := IGDCA(grid, min_dense_points, min_cluster_points)
 	assert.True(t, res[r1].Cluster_id == res[r2].Cluster_id && res[r2].Cluster_id == res[r3].Cluster_id,
 		"%v %v %v", res[r1].Cluster_id, res[r2].Cluster_id, res[r3].Cluster_id)
-	assert.Equal(t, 0, len(grid.GetOutliers()))
-	assert.Equal(t, 1, len(grid.GetNonOutliers()))
+	//assert.Equal(t, 0, len(grid.GetOutliers()))
+	//assert.Equal(t, 1, len(grid.GetNonOutliers()))
+	assert.Equal(t, 1, len(grid.GetClusters()))
 }
 
 func TestCluster2by2GridAbsorbCluster(t *testing.T) {
@@ -283,8 +284,10 @@ func TestCluster3by3Grid(t *testing.T) {
 		}
 	}
 
-	assert.Equal(t, 1, len(grid.GetOutliers()))
-	assert.Equal(t, 1, len(grid.GetNonOutliers()))
+	//assert.Equal(t, 1, len(grid.GetOutliers()))
+	//assert.Equal(t, 1, len(grid.GetNonOutliers()))
+	assert.Equal(t, 2, len(grid.GetClusters()))
+
 }
 
 func TestGDA(t *testing.T){
@@ -303,8 +306,10 @@ func TestGDA(t *testing.T){
 	min_cluster_points := 5
 
 	IGDCA(grid, min_dense_points, min_cluster_points)
-	assert.Equal(t, 0, len(grid.GetOutliers()))
-	assert.Equal(t, 1, len(grid.GetNonOutliers()))
+	//assert.Equal(t, 0, len(grid.GetOutliers()))
+	//assert.Equal(t, 1, len(grid.GetNonOutliers()))
+	assert.Equal(t, 1, len(grid.GetClusters()))
+
 }
 
 func BenchmarkGDA(t *testing.B) {
@@ -323,7 +328,9 @@ func BenchmarkGDA(t *testing.B) {
 		min_dense_points := 2
 		min_cluster_points := 5
 		IGDCA(grid, min_dense_points, min_cluster_points)
-		assert.Equal(t, 0, len(grid.GetOutliers()))
-		assert.Equal(t, 1, len(grid.GetNonOutliers()))
+		//assert.Equal(t, 0, len(grid.GetOutliers()))
+		//assert.Equal(t, 1, len(grid.GetNonOutliers()))
+		assert.Equal(t, 1, len(grid.GetClusters()))
+
 	}
 }

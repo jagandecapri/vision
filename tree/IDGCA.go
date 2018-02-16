@@ -25,13 +25,16 @@ func IGDCA(grid Grid, min_dense_points int, min_cluster_points int) (map[Range]*
 				if ret == SUCCESS{
 					if len(cluster_ids_to_be_merged) > 1{
 						_, cluster = MergeClusters(grid, cluster, cluster_ids_to_be_merged)
-						cluster = ComputeClusterType(min_cluster_points, cluster)
-						grid.AddUpdateCluster(cluster)
 					}
 
+					if isClusterTooSmall(min_cluster_points, cluster) == true{
+						grid.RemoveCluster(cluster.Cluster_id)
+					} else {
+						grid.AddUpdateCluster(cluster)
+					}
 				}else if ret == FAILURE{
 					cluster := NewCluster(unit, rg, cluster_id, min_dense_points)
-					cluster = ComputeClusterType(min_cluster_points, cluster)
+					//cluster = ComputeClusterType(min_cluster_points, cluster)
 					grid.AddUpdateCluster(cluster)
 					cluster_id = grid.GetNextClusterID()
 				}
@@ -41,12 +44,16 @@ func IGDCA(grid Grid, min_dense_points int, min_cluster_points int) (map[Range]*
 	return units
 }
 
-func ComputeClusterType(min_cluster_points int, cluster Cluster) Cluster{
-	if cluster.Num_of_points >= min_cluster_points{
-		cluster.Cluster_type = NON_OUTLIER_CLUSTER
-	}
-	return cluster
+func isClusterTooSmall(min_cluster_points int, cluster Cluster) bool{
+	return cluster.Num_of_points < min_cluster_points
 }
+
+//func ComputeClusterType(min_cluster_points int, cluster Cluster) Cluster{
+//	if cluster.Num_of_points >= min_cluster_points{
+//		cluster.Cluster_type = NON_OUTLIER_CLUSTER
+//	}
+//	return cluster
+//}
 
 func NewCluster(unit *Unit, rg Range, cluster_id int, min_dense_points int) (Cluster){
 	cluster := Cluster{Cluster_id: cluster_id, ListOfUnits: make(map[Range]*Unit)}
