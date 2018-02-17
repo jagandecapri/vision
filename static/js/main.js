@@ -1,29 +1,27 @@
 $(document).ready(function() {
+
+    var __lock = false
+    var graphs_cache = []
+    var startTime = Date.now();
+
+    // Update timer
+    setInterval(function(){
+        var elapsedTime = (Date.now() - startTime) / 1000;
+        $("#timer").text(elapsedTime.toFixed(3));
+    }, 100);
+
         /* Current Plotly.js version */
     console.log(Plotly.BUILD);
 
-    var graphs_cache = []
     ws = new WebSocket(ws_uri);
     ws.onopen = function(evt) {
         print("OPEN");
-        (function interval(graphs_cache){
-            if (graphs_cache.length > 0){
-                _.forEach(graphs_cache, function(graphs){
-                    createOrUpdatePlot(graphs)
-                })
-                graphs_cache = []
-            }
-            _.delay(interval, 1000, graphs_cache)
-        })(graphs_cache)
         send()
     }
     ws.onclose = function(evt) {
         print("CLOSE");
         ws = null;
     }
-
-    var throttled = _.throttle(createOrUpdatePlot, 200);
-    var graphs_cache = []
 
     ws.onmessage = function(evt) {
         print("RESPONSE: ");
@@ -34,7 +32,30 @@ $(document).ready(function() {
         } else {
             try{
                 var graphs = processJsonData(data)
-                graphs_cache.push(graphs)
+                if (__lock == false){
+                     if (graphs_cache.length > 0){
+                        _.forEach(graphs_cache, function(graphs){
+                            while (__lock == true){
+                                //No-op blocking
+                            }
+                            __lock = true;
+                            createOrUpdatePlot(graphs).then(function () {
+                                __lock = false
+                            })
+                        });
+                        graphs_cache = []
+                    } else {
+                         while (__lock == true){
+                             //No-op blocking
+                         }
+                         __lock = true;
+                         createOrUpdatePlot(graphs).then(function () {
+                             __lock = false
+                         })
+                     }
+                } else {
+                    graphs_cache.push(graphs)
+                }
             }
             catch(error){
                 console.log(error, evt.data)
@@ -117,7 +138,6 @@ $(document).ready(function() {
         var points_container = graph.points_container
         var traces = [];
         _.forEach(points_container, function(points){
-            var trace = {};
             var x = [];
             var y = [];
             var point_list = points.point_list
@@ -125,11 +145,44 @@ $(document).ready(function() {
                 x.push(point.data.x)
                 y.push(point.data.y)
             });
-            trace.x = x
-            trace.y = y
-            trace.color = points.metadata.color
+            trace = {
+                type: "scatter",
+                mode: "markers",
+                x: x,
+                y: y,
+                marker: {
+                    color: points.metadata.color
+                }
+            }
             traces.push(trace)
         });
+        return traces
+    }
+
+    function processUpdateDate(graph){
+        var points_container = graph.points_container
+        var x = [];
+        var y = [];
+        var colors = [];
+        _.forEach(points_container, function(points){
+            var point_list = points.point_list
+            var x_tmp = []
+            var y_tmp = []
+            _.forEach(point_list, function(point){
+                x_tmp.push(point.data.x)
+                y_tmp.push(point.data.y)
+            });
+            x.push(x_tmp)
+            y.push(y_tmp)
+            colors.push([points.metadata.color])
+        });
+        var traces = {
+            type: "scatter",
+            mode: "markers",
+            x: x,
+            y: y,
+            "marker.color": colors
+        }
         return traces
     }
 
@@ -138,15 +191,17 @@ $(document).ready(function() {
     }
 
     function createNewPlotly(node, data, layout){
-        Plotly.newPlot(node, data, layout);
+        return Plotly.newPlot(node, data, layout)
     }
 
-    function updatePlotly(key, traces){
-        Plotly.update(key, traces)
+    function updatePlotly(key, data, layout){
+        return Plotly.update(key, data, layout)
     }
 
-    function newPlot(key, x_col, y_col, traces){
-
+    function newPlot(key, graph){
+        var x_col = getColumnX(graph);
+        var y_col = getColumnY(graph);
+        var traces = processData(graph);
         appendDivToContainer(key);
 
         var gd3 = d3.select('#'+key)
@@ -175,28 +230,49 @@ $(document).ready(function() {
             }
         };
 
-        var node = gd3.node()
-        createNewPlotly(node, traces, layout);
+        var node = gd3.node();
+        var promise = createNewPlotly(node, traces, layout);
+        return promise;
     }
 
     function updatePlot(key, graph){
-        var traces = processData(graph)
-        updatePlotly(key, traces);
+        var x_col = getColumnX(graph);
+        var y_col = getColumnY(graph);
+        var traces = processUpdateDate(graph);
+
+        var layout = {
+            title: key,
+            xaxis: {
+                title: x_col,
+                range: [-0.05, 1.05],
+                tick0: 0,
+                dtick: 0.05
+            },
+            yaxis: {
+                title: y_col,
+                range: [-0.05, 1.05],
+                tick0: 0,
+                dtick: 0.05
+            }
+        };
+
+        var promise = updatePlotly(key, traces, layout);
+        return promise;
     }
 
     function createOrUpdatePlot(graphs){
+        var promises = []
         _.forEach(graphs, function(graph){
             var key = getKey(graph)
+            var promise;
             if (!isGraphDivExist(key)){
-                var x_col = getColumnX(graph);
-                var y_col = getColumnY(graph);
-                var traces = processData(graph);
-                newPlot(key, x_col, y_col, traces)
+                promise = newPlot(key, graph)
             } else {
-                var traces = processData(graph);
-                updatePlot(key, traces)
+                promise = updatePlot(key, graph)
             }
-        })
-
+            promises.push(promise)
+        });
+        var ret_promise = $.when(promises)
+        return ret_promise
     }
 });

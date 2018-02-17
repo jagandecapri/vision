@@ -1,8 +1,15 @@
-{{define "title"}}A templated page{{end}}
+{{define "title"}}Vision{{end}}
 
 {{define "body"}}
-<h1>Hello from a templated page</h1>
-<div id="container" class="container-fluid">
+<h1>Vision</h1>
+<div class="container">
+    <div class="col-md-9">
+        <span>Please check if the timer label gets frozen when plots are being updated (every second)</span>
+    </div>
+    <div class="col-md-3">
+        <span id="timer"></span> s
+    </div>
+<div id="container" class="container">
     <!-- Plotly.js graphs -->
 </div>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
