@@ -64,7 +64,7 @@ func (acc *Accumulator) extractFeatures(aggInterface AggInterface) tree.Point{
 }
 
 func (acc *Accumulator) GetMicroSlot() X_micro_slot{
-	X := X_micro_slot{{}}
+	X := X_micro_slot{}
 
 	for _, val := range acc.AggSrc{
 		x := acc.extractFeatures(&val)
