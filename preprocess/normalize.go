@@ -1,6 +1,8 @@
 package preprocess
 
-import "github.com/jagandecapri/vision/tree"
+import (
+	"github.com/jagandecapri/vision/tree"
+)
 
 type DimMinMax struct{
 	Min, Max float64

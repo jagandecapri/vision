@@ -90,7 +90,7 @@ func (a *AggSrc) AddPacket(p gopacket.Packet) gopacket.ErrorLayer{
 }
 
 func (a *AggSrc) NbPacket() float64 {
-	return 0.0
+	return float64(len(a.dsts))
 }
 
 func (a *AggSrc) NbSrcPort() float64 {
@@ -222,7 +222,7 @@ func (a *AggDst) AddPacket(p gopacket.Packet) gopacket.ErrorLayer{
 }
 
 func (a *AggDst) NbPacket() float64 {
-	return 0.0
+	return float64(len(a.srcs))
 }
 
 func (a *AggDst) NbSrcPort() float64 {

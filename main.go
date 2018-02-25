@@ -19,7 +19,9 @@ var scale_factor = 5
 
 func getSorter() []string{
 	sorter := []string{}
-	sorter = append(sorter, "nbPacket", "nbSrcPort", "nbDstPort", "nbSrcs", "nbDsts", "perSyn", "perAck", "perRST", "perFIN", "perCWR", "perURG", "avgPktSize", "meanTTL")
+	sorter = append(sorter, "nbPacket", "nbSrcPort", "nbDstPort",
+		"nbSrcs", "nbDsts", "perSyn", "perAck", "perRST", "perFIN",
+			"perCWR", "perURG", "avgPktSize", "meanTTL")
 	sort.Strings(sorter)
 	return sorter
 }
@@ -62,12 +64,12 @@ func main(){
 	}
 
 	ch := make(chan preprocess.PacketData)
-	acc := make(chan preprocess.PacketAcc)
-	quit := make(chan int)
+	acc_c := make(chan preprocess.X_micro_slot)
+	//quit := make(chan int)
 
 	config := process.Config{Min_dense_points: 10, Min_cluster_points: 15, Execution_type: process.PARALLEL, Num_cpu: *num_cpu}
-	go preprocess.WindowTimeSlide(ch, acc, quit)
-	go process.UpdateFeatureSpace(acc, data, sorter, subspaces, config)
+	go preprocess.WindowTimeSlide2(ch, acc_c)
+	go process.UpdateFeatureSpace(acc_c, data, sorter, subspaces, config)
 
 	handleRead, err := pcap.OpenOffline("C:\\Users\\Jack\\Downloads\\201705021400.pcap")
 
@@ -78,10 +80,12 @@ func main(){
 	for {
 		data, ci, err := handleRead.ReadPacketData()
 		if err != nil && err != io.EOF {
-			quit <- 0
+			close(ch)
+			//quit <- 0
 			log.Fatal(err)
 		} else if err == io.EOF {
-			quit <- 0
+			close(ch)
+			//quit <- 0
 			break
 		} else {
 			packet := gopacket.NewPacket(data, layers.LayerTypeEthernet, gopacket.Default)

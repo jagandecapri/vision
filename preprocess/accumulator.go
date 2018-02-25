@@ -3,6 +3,8 @@ package preprocess
 import (
 	"github.com/google/gopacket"
 	"github.com/jagandecapri/vision/tree"
+	"errors"
+	"fmt"
 )
 
 type X_micro_slot []tree.Point
@@ -42,7 +44,11 @@ func (acc *Accumulator) AddPacket(p gopacket.Packet){
 	acc.AggSrcDst[srcdst] = aggsrcdst
 }
 
-func (acc *Accumulator) extractFeatures(aggInterface AggInterface) tree.Point{
+func (acc *Accumulator) extractFeatures(aggInterface AggInterface) (tree.Point, error){
+	if aggInterface.NbPacket() == 1{
+		return tree.Point{}, errors.New("NbPacket is 1, normal packet") //Assumption taken here
+	}
+
 	x := map[string]float64{
 		"nbPacket": aggInterface.NbPacket(),
 		"nbSrcPort": aggInterface.NbSrcPort(),
@@ -58,27 +64,35 @@ func (acc *Accumulator) extractFeatures(aggInterface AggInterface) tree.Point{
 		"avgPktSize": aggInterface.AvgPktSize(),
 		"meanTTL": aggInterface.MeanTTL(),
 	}
+
 	point_ctr = point_ctr + 1
 	pnt := tree.Point{Id: point_ctr, Vec_map: x}
-	return pnt
+	return pnt, nil
 }
 
 func (acc *Accumulator) GetMicroSlot() X_micro_slot{
 	X := X_micro_slot{}
 
+	fmt.Println("AggSrc len:", len(acc.AggSrc), "AggDst len:", len(acc.AggDst), "AggSrcDst len:", len(acc.AggSrcDst))
 	for _, val := range acc.AggSrc{
-		x := acc.extractFeatures(&val)
-		X = append(X, x)
+		x, err := acc.extractFeatures(&val)
+		if err == nil{
+			X = append(X, x)
+		}
 	}
 
 	for _, val := range acc.AggDst{
-		x := acc.extractFeatures(&val)
-		X = append(X, x)
+		x, err := acc.extractFeatures(&val)
+		if err == nil{
+			X = append(X, x)
+		}
 	}
 
-	for _, val := range acc.AggDst{
-		x := acc.extractFeatures(&val)
-		X = append(X, x)
+	for _, val := range acc.AggSrcDst{
+		x, err := acc.extractFeatures(&val)
+		if err == nil{
+			X = append(X, x)
+		}
 	}
 
 	return X
