@@ -7,15 +7,13 @@ import (
 	"io"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
-	"math"
 )
 
 func TestWindowTimeSlide2(t *testing.T) {
 	ch := make(chan PacketData)
-	acc := make(chan Accumulator)
-	quit := make(chan int)
+	acc_c := make(chan X_micro_slot)
 
-	go WindowTimeSlide2(ch, acc, quit)
+	go WindowTimeSlide2(ch, acc_c)
 
 	go func(){
 		handleRead, err := pcap.OpenOffline("C:\\Users\\Jack\\Downloads\\201705021400.pcap")
@@ -27,16 +25,17 @@ func TestWindowTimeSlide2(t *testing.T) {
 		count := 0
 
 		for {
-			if count == math.MaxInt64{
-				quit <- 0
+			if count == 10000{
+				log.Println("counter reached")
+				close(ch)
 				break
 			}
 			data, ci, err := handleRead.ReadPacketData()
 			if err != nil && err != io.EOF {
-				quit <- 0
+				close(ch)
 				log.Fatal(err)
 			} else if err == io.EOF {
-				quit <- 0
+				close(ch)
 				break
 			} else {
 				packet := gopacket.NewPacket(data, layers.LayerTypeEthernet, gopacket.Default)
@@ -48,7 +47,7 @@ func TestWindowTimeSlide2(t *testing.T) {
 
 
 	for {
-		tmp_acc, open := <-acc
+		_, open := <-acc_c
 		if open == false{
 			break
 		}
