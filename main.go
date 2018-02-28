@@ -89,7 +89,7 @@ func main(){
 			break
 		} else {
 			packet := gopacket.NewPacket(data, layers.LayerTypeEthernet, gopacket.Default)
-			ch <- preprocess.PacketData{packet, ci}
+			ch <- preprocess.PacketData{Data: packet, Metadata: ci}
 		}
 	}
 
