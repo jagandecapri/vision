@@ -68,7 +68,7 @@ func main(){
 	//quit := make(chan int)
 
 	config := process.Config{Min_dense_points: 10, Min_cluster_points: 15, Execution_type: process.PARALLEL, Num_cpu: *num_cpu}
-	go preprocess.WindowTimeSlide2(ch, acc_c)
+	go preprocess.WindowTimeSlide(ch, acc_c)
 	go process.UpdateFeatureSpace(acc_c, data, sorter, subspaces, config)
 
 	handleRead, err := pcap.OpenOffline("C:\\Users\\Jack\\Downloads\\201705021400.pcap")

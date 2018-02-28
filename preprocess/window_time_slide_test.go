@@ -13,7 +13,7 @@ func TestWindowTimeSlide2(t *testing.T) {
 	ch := make(chan PacketData)
 	acc_c := make(chan X_micro_slot)
 
-	go WindowTimeSlide2(ch, acc_c)
+	go WindowTimeSlide(ch, acc_c)
 
 	go func(){
 		handleRead, err := pcap.OpenOffline("C:\\Users\\Jack\\Downloads\\201705021400.pcap")
@@ -39,7 +39,7 @@ func TestWindowTimeSlide2(t *testing.T) {
 				break
 			} else {
 				packet := gopacket.NewPacket(data, layers.LayerTypeEthernet, gopacket.Default)
-				ch <- PacketData{packet, ci}
+				ch <- PacketData{Data: packet, Metadata: ci}
 			}
 			count++
 		}
