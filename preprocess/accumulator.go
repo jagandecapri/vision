@@ -4,10 +4,13 @@ import (
 	"github.com/google/gopacket"
 	"github.com/jagandecapri/vision/tree"
 	"errors"
-	"fmt"
 )
 
-type X_micro_slot []tree.Point
+type X_micro_slot struct{
+	AggSrc []tree.Point
+	AggDst []tree.Point
+	AggSrcDst []tree.Point
+}
 
 type Accumulator struct{
 	AggSrc map[gopacket.Endpoint]AggSrc
@@ -44,12 +47,12 @@ func (acc *Accumulator) AddPacket(p gopacket.Packet){
 	acc.AggSrcDst[srcdst] = aggsrcdst
 }
 
-func (acc *Accumulator) extractFeatures(aggInterface AggInterface) (tree.Point, error){
+func (acc *Accumulator) extractFeatures(aggInterface AggInterface) (tree.Point, tree.Point, tree.Point, error){
 	if aggInterface.NbPacket() == 1{
-		return tree.Point{}, errors.New("NbPacket is 1, normal packet") //Assumption taken here
+		return tree.Point{}, tree.Point{}, tree.Point{},  errors.New("NbPacket is 1, normal packet") //Assumption taken here
 	}
 
-	x := map[string]float64{
+	x_aggsrc := map[string]float64{
 		"nbPacket": aggInterface.NbPacket(),
 		"nbSrcPort": aggInterface.NbSrcPort(),
 		"nbDstPort": aggInterface.NbDstPort(),
@@ -66,32 +69,76 @@ func (acc *Accumulator) extractFeatures(aggInterface AggInterface) (tree.Point, 
 	}
 
 	point_ctr = point_ctr + 1
-	pnt := tree.Point{Id: point_ctr, Vec_map: x}
-	return pnt, nil
+	pnt_aggsrc := tree.Point{Id: point_ctr, Vec_map: x_aggsrc}
+
+	x_aggdst := map[string]float64{
+		"nbPacket": aggInterface.NbPacket(),
+		"nbSrcPort": aggInterface.NbSrcPort(),
+		"nbDstPort": aggInterface.NbDstPort(),
+		"nbSrcs": aggInterface.NbSrcs(),
+		"nbDsts": aggInterface.NbDsts(),
+		"perSyn": aggInterface.PerSyn(),
+		"perAck": aggInterface.PerAck(),
+		"perRST": aggInterface.PerRST(),
+		"perFIN": aggInterface.PerFIN(),
+		"perCWR": aggInterface.PerCWR(),
+		"perURG": aggInterface.PerURG(),
+		"avgPktSize": aggInterface.AvgPktSize(),
+		"meanTTL": aggInterface.MeanTTL(),
+	}
+
+	point_ctr = point_ctr + 1
+	pnt_aggdst := tree.Point{Id: point_ctr, Vec_map: x_aggdst}
+
+	x_aggsrcdst:= map[string]float64{
+		"nbPacket": aggInterface.NbPacket(),
+		"nbSrcPort": aggInterface.NbSrcPort(),
+		"nbDstPort": aggInterface.NbDstPort(),
+		"nbSrcs": aggInterface.NbSrcs(),
+		"nbDsts": aggInterface.NbDsts(),
+		"perSyn": aggInterface.PerSyn(),
+		"perAck": aggInterface.PerAck(),
+		"perRST": aggInterface.PerRST(),
+		"perFIN": aggInterface.PerFIN(),
+		"perCWR": aggInterface.PerCWR(),
+		"perURG": aggInterface.PerURG(),
+		"avgPktSize": aggInterface.AvgPktSize(),
+		"meanTTL": aggInterface.MeanTTL(),
+	}
+
+	point_ctr = point_ctr + 1
+	pnt_aggsrcdst := tree.Point{Id: point_ctr, Vec_map: x_aggsrcdst}
+
+	return pnt_aggsrc, pnt_aggdst, pnt_aggsrcdst, nil
 }
 
 func (acc *Accumulator) GetMicroSlot() X_micro_slot{
 	X := X_micro_slot{}
 
-	fmt.Println("AggSrc len:", len(acc.AggSrc), "AggDst len:", len(acc.AggDst), "AggSrcDst len:", len(acc.AggSrcDst))
 	for _, val := range acc.AggSrc{
-		x, err := acc.extractFeatures(&val)
+		x_aggsrc, x_aggdst, x_aggsrcdst, err := acc.extractFeatures(&val)
 		if err == nil{
-			X = append(X, x)
+			X.AggSrc = append(X.AggSrc, x_aggsrc)
+			X.AggDst = append(X.AggDst, x_aggdst)
+			X.AggSrcDst = append(X.AggSrcDst, x_aggsrcdst)
 		}
 	}
 
 	for _, val := range acc.AggDst{
-		x, err := acc.extractFeatures(&val)
+		x_aggsrc, x_aggdst, x_aggsrcdst, err := acc.extractFeatures(&val)
 		if err == nil{
-			X = append(X, x)
+			X.AggSrc = append(X.AggSrc, x_aggsrc)
+			X.AggDst = append(X.AggDst, x_aggdst)
+			X.AggSrcDst = append(X.AggSrcDst, x_aggsrcdst)
 		}
 	}
 
 	for _, val := range acc.AggSrcDst{
-		x, err := acc.extractFeatures(&val)
+		x_aggsrc, x_aggdst, x_aggsrcdst, err := acc.extractFeatures(&val)
 		if err == nil{
-			X = append(X, x)
+			X.AggSrc = append(X.AggSrc, x_aggsrc)
+			X.AggDst = append(X.AggDst, x_aggdst)
+			X.AggSrcDst = append(X.AggSrcDst, x_aggsrcdst)
 		}
 	}
 
@@ -103,4 +150,8 @@ func NewAccumulator() Accumulator{
 		AggDst: make(map[gopacket.Endpoint]AggDst),
 		AggSrcDst: make(map[gopacket.Flow]AggSrcDst),
 	}
+	//return Accumulator{AggSrc: make(map[string]AggSrc),
+	//	AggDst: make(map[string]AggDst),
+	//	AggSrcDst: make(map[string]AggSrcDst),
+	//}
 }
