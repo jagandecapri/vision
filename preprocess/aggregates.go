@@ -12,13 +12,14 @@ type FlowKey struct{
 }
 
 type AggInterface interface{
+	GetKey() []FlowKey
 	NbPacket() float64
 	NbSrcPort() float64
 	NbDstPort() float64
 	NbSrcs() float64
 	NbDsts() float64
-	PerSyn() float64
-	PerAck() float64
+	PerSYN() float64
+	PerACK() float64
 	PerRST() float64
 	PerFIN() float64
 	PerCWR() float64
@@ -27,6 +28,7 @@ type AggInterface interface{
 	MeanTTL() float64
 	SimIPDst() float64
 	SimIPSrc() float64
+	PerICMP() float64
 	PerICMPRed() float64
 	PerICMPTime() float64
 	PerICMPUnr() float64
@@ -89,6 +91,10 @@ func (a *AggSrc) AddPacket(p gopacket.Packet) gopacket.ErrorLayer{
 	return err
 }
 
+func (a *AggSrc) GetKey() []FlowKey{
+	return a.FlowKeys
+}
+
 func (a *AggSrc) NbPacket() float64 {
 	return float64(len(a.dsts))
 }
@@ -109,11 +115,11 @@ func (a *AggSrc) NbDsts() float64 {
 	return 0.0
 }
 
-func (a *AggSrc) PerSyn() float64 {
+func (a *AggSrc) PerSYN() float64 {
 	return 0.0
 }
 
-func (AggSrc) PerAck() float64 {
+func (AggSrc) PerACK() float64 {
 	return 0.0
 }
 
@@ -149,6 +155,10 @@ func (AggSrc) SimIPSrc() float64 {
 	return 0.0
 }
 
+func (AggSrc) PerICMP() float64{
+	return 0.0
+}
+
 func (AggSrc) PerICMPRed() float64 {
 	return 0.0
 }
@@ -166,18 +176,23 @@ func (AggSrc) PerICMPOther() float64 {
 }
 
 func NewAggDst() AggDst{
-	aggDst := AggDst{srcs: make(map[gopacket.Endpoint]int),
-		srcs_subnetwork: make(map[gopacket.Endpoint][]int)}
+	aggDst := AggDst{srcs: make(map[gopacket.Endpoint]int)}
 	return aggDst
 }
 
 type AggDst struct{
 	FlowKeys []FlowKey
 	srcs map[gopacket.Endpoint]int
-	srcs_subnetwork map[gopacket.Endpoint][] int
+	srcPort map[layers.TCPPort]int
+	nbPacket float64
+	nbSYN float64
+	nbICMP float64
 }
 
 func (a *AggDst) AddPacket(p gopacket.Packet) gopacket.ErrorLayer{
+
+	a.nbPacket++
+
 	src := 	p.NetworkLayer().NetworkFlow().Src()
 	a.srcs[src] = 1
 
@@ -208,10 +223,25 @@ func (a *AggDst) AddPacket(p gopacket.Packet) gopacket.ErrorLayer{
 		tcp, _ := tcpLayer.(*layers.TCP)
 		srcPort = tcp.SrcPort
 		dstPort = tcp.DstPort
+		if tcp.SYN{
+			a.nbSYN++
+		}
 	}
 
 	flowKey := FlowKey{SrcIP: srcIP, DstIP: dstIP, SrcPort: srcPort, DstPort: dstPort}
 	a.FlowKeys = append(a.FlowKeys, flowKey)
+
+	// Let's see if the packet is icmp4
+	icmp4Layer :=p.Layer(layers.LayerTypeICMPv4)
+	if icmp4Layer != nil {
+		a.nbICMP++
+	}
+
+	// Let's see if the packet is icmp6
+	icmp6Layer := p.Layer(layers.LayerTypeICMPv6)
+	if icmp6Layer != nil {
+		a.nbICMP++
+	}
 
 	// Check for errors
 	var err gopacket.ErrorLayer
@@ -219,6 +249,10 @@ func (a *AggDst) AddPacket(p gopacket.Packet) gopacket.ErrorLayer{
 		return err
 	}
 	return err
+}
+
+func (a *AggDst) GetKey() []FlowKey{
+	return a.FlowKeys
 }
 
 func (a *AggDst) NbPacket() float64 {
@@ -241,59 +275,63 @@ func (a *AggDst) NbDsts() float64 {
 	return 0.0
 }
 
-func (a *AggDst) PerSyn() float64 {
+func (a *AggDst) PerSYN() float64 {
+	return float64((a.nbICMP/a.nbPacket)*100)
+}
+
+func (a *AggDst) PerACK() float64 {
 	return 0.0
 }
 
-func (AggDst) PerAck() float64 {
+func (a *AggDst) PerRST() float64 {
 	return 0.0
 }
 
-func (AggDst) PerRST() float64 {
+func (a *AggDst) PerFIN() float64 {
 	return 0.0
 }
 
-func (AggDst) PerFIN() float64 {
+func (a *AggDst) PerCWR() float64 {
 	return 0.0
 }
 
-func (AggDst) PerCWR() float64 {
+func (a *AggDst) PerURG() float64 {
 	return 0.0
 }
 
-func (AggDst) PerURG() float64 {
+func (a *AggDst) AvgPktSize() float64 {
 	return 0.0
 }
 
-func (AggDst) AvgPktSize() float64 {
+func (a *AggDst) MeanTTL() float64 {
 	return 0.0
 }
 
-func (AggDst) MeanTTL() float64 {
+func (a *AggDst) SimIPDst() float64 {
 	return 0.0
 }
 
-func (AggDst) SimIPDst() float64 {
+func (a *AggDst) SimIPSrc() float64 {
 	return 0.0
 }
 
-func (AggDst) SimIPSrc() float64 {
+func (a *AggDst) PerICMP() float64{
+	return float64((a.nbICMP/a.nbPacket)*100)
+}
+
+func (a *AggDst) PerICMPRed() float64 {
 	return 0.0
 }
 
-func (AggDst) PerICMPRed() float64 {
+func (a *AggDst) PerICMPTime() float64 {
 	return 0.0
 }
 
-func (AggDst) PerICMPTime() float64 {
+func (a *AggDst) PerICMPUnr() float64 {
 	return 0.0
 }
 
-func (AggDst) PerICMPUnr() float64 {
-	return 0.0
-}
-
-func (AggDst) PerICMPOther() float64 {
+func (a *AggDst) PerICMPOther() float64 {
 	return 0.0
 }
 
@@ -316,6 +354,7 @@ type AggSrcDst struct{
 	nbURG float64
 	totalPacketSize float64
 	TTL float64
+	nbICMP float64
 	nbICMPRed float64
 	nbICMPTime float64
 	nbICMPUnr float64
@@ -323,6 +362,9 @@ type AggSrcDst struct{
 }
 
 func (a *AggSrcDst) AddPacket(p gopacket.Packet) gopacket.ErrorLayer{
+
+	a.nbPacket++
+
 	// Let's see if the packet is an ethernet packet
 	ethernetLayer := p.Layer(layers.LayerTypeEthernet)
 	if ethernetLayer != nil {
@@ -384,6 +426,7 @@ func (a *AggSrcDst) AddPacket(p gopacket.Packet) gopacket.ErrorLayer{
 	// Let's see if the packet is icmp4
 	icmp4Layer :=p.Layer(layers.LayerTypeICMPv4)
 	if icmp4Layer != nil {
+		a.nbICMP++
 		//fmt.Println("ICMP4 Layer Detected")
 		icmp4, _ := icmp4Layer.(*layers.ICMPv4)
 		//fmt.Println(icmp4.TypeCode.String())
@@ -402,6 +445,7 @@ func (a *AggSrcDst) AddPacket(p gopacket.Packet) gopacket.ErrorLayer{
 	// Let's see if the packet is icmp6
 	icmp6Layer := p.Layer(layers.LayerTypeICMPv6)
 	if icmp6Layer != nil {
+		a.nbICMP++
 		//fmt.Println("ICMP6 Layer Detected")
 		icmp6, _ := icmp6Layer.(*layers.ICMPv6)
 		//fmt.Println(icmp6.TypeCode.String())
@@ -425,6 +469,10 @@ func (a *AggSrcDst) AddPacket(p gopacket.Packet) gopacket.ErrorLayer{
 	return err
 }
 
+func (a *AggSrcDst) GetKey() []FlowKey{
+	return a.FlowKeys
+}
+
 func (a *AggSrcDst) NbPacket() float64 {
 	return a.nbPacket
 }
@@ -445,11 +493,11 @@ func (a *AggSrcDst) NbDsts() float64 {
 	return 0.0
 }
 
-func (a *AggSrcDst) PerSyn() float64 {
+func (a *AggSrcDst) PerSYN() float64 {
 	return float64((a.nbSYN/a.nbPacket)*100)
 }
 
-func (a *AggSrcDst) PerAck() float64 {
+func (a *AggSrcDst) PerACK() float64 {
 	return float64((a.nbACK/a.nbPacket)*100)
 }
 
@@ -477,12 +525,16 @@ func (a *AggSrcDst) MeanTTL() float64 {
 	return float64(a.TTL/a.nbPacket)
 }
 
-func (AggSrcDst) SimIPDst() float64 {
+func (a *AggSrcDst) SimIPDst() float64 {
 	return 0.0
 }
 
-func (AggSrcDst) SimIPSrc() float64 {
+func (a *AggSrcDst) SimIPSrc() float64 {
 	return 0.0
+}
+
+func (a *AggSrcDst) PerICMP() float64{
+	return float64((a.nbICMP/a.nbPacket)*100)
 }
 
 func (a *AggSrcDst) PerICMPRed() float64 {

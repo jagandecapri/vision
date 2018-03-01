@@ -3,7 +3,6 @@ package preprocess
 import (
 	"github.com/google/gopacket"
 	"github.com/jagandecapri/vision/tree"
-	"errors"
 )
 
 type X_micro_slot struct{
@@ -47,19 +46,19 @@ func (acc *Accumulator) AddPacket(p gopacket.Packet){
 	acc.AggSrcDst[srcdst] = aggsrcdst
 }
 
-func (acc *Accumulator) extractFeatures(aggInterface AggInterface) (tree.Point, tree.Point, tree.Point, error){
-	if aggInterface.NbPacket() == 1{
-		return tree.Point{}, tree.Point{}, tree.Point{},  errors.New("NbPacket is 1, normal packet") //Assumption taken here
-	}
+func (acc *Accumulator) extractFeatures(aggInterface AggInterface) (tree.Point, error){
+	//if aggInterface.NbPacket() == 1{
+	//	return tree.Point{}, errors.New("NbPacket is 1, normal packet") //Assumption taken here
+	//}
 
-	x_aggsrc := map[string]float64{
+	x := map[string]float64{
 		"nbPacket": aggInterface.NbPacket(),
 		"nbSrcPort": aggInterface.NbSrcPort(),
 		"nbDstPort": aggInterface.NbDstPort(),
 		"nbSrcs": aggInterface.NbSrcs(),
 		"nbDsts": aggInterface.NbDsts(),
-		"perSyn": aggInterface.PerSyn(),
-		"perAck": aggInterface.PerAck(),
+		"perSyn": aggInterface.PerSYN(),
+		"perAck": aggInterface.PerACK(),
 		"perRST": aggInterface.PerRST(),
 		"perFIN": aggInterface.PerFIN(),
 		"perCWR": aggInterface.PerCWR(),
@@ -68,76 +67,32 @@ func (acc *Accumulator) extractFeatures(aggInterface AggInterface) (tree.Point, 
 		"meanTTL": aggInterface.MeanTTL(),
 	}
 
-	point_ctr = point_ctr + 1
-	pnt_aggsrc := tree.Point{Id: point_ctr, Vec_map: x_aggsrc}
+	Point_ctr = Point_ctr + 1
+	pnt := tree.Point{Id: Point_ctr, Key: aggInterface.GetKey(), Vec_map: x}
 
-	x_aggdst := map[string]float64{
-		"nbPacket": aggInterface.NbPacket(),
-		"nbSrcPort": aggInterface.NbSrcPort(),
-		"nbDstPort": aggInterface.NbDstPort(),
-		"nbSrcs": aggInterface.NbSrcs(),
-		"nbDsts": aggInterface.NbDsts(),
-		"perSyn": aggInterface.PerSyn(),
-		"perAck": aggInterface.PerAck(),
-		"perRST": aggInterface.PerRST(),
-		"perFIN": aggInterface.PerFIN(),
-		"perCWR": aggInterface.PerCWR(),
-		"perURG": aggInterface.PerURG(),
-		"avgPktSize": aggInterface.AvgPktSize(),
-		"meanTTL": aggInterface.MeanTTL(),
-	}
-
-	point_ctr = point_ctr + 1
-	pnt_aggdst := tree.Point{Id: point_ctr, Vec_map: x_aggdst}
-
-	x_aggsrcdst:= map[string]float64{
-		"nbPacket": aggInterface.NbPacket(),
-		"nbSrcPort": aggInterface.NbSrcPort(),
-		"nbDstPort": aggInterface.NbDstPort(),
-		"nbSrcs": aggInterface.NbSrcs(),
-		"nbDsts": aggInterface.NbDsts(),
-		"perSyn": aggInterface.PerSyn(),
-		"perAck": aggInterface.PerAck(),
-		"perRST": aggInterface.PerRST(),
-		"perFIN": aggInterface.PerFIN(),
-		"perCWR": aggInterface.PerCWR(),
-		"perURG": aggInterface.PerURG(),
-		"avgPktSize": aggInterface.AvgPktSize(),
-		"meanTTL": aggInterface.MeanTTL(),
-	}
-
-	point_ctr = point_ctr + 1
-	pnt_aggsrcdst := tree.Point{Id: point_ctr, Vec_map: x_aggsrcdst}
-
-	return pnt_aggsrc, pnt_aggdst, pnt_aggsrcdst, nil
+	return pnt, nil
 }
 
 func (acc *Accumulator) GetMicroSlot() X_micro_slot{
 	X := X_micro_slot{}
 
 	for _, val := range acc.AggSrc{
-		x_aggsrc, x_aggdst, x_aggsrcdst, err := acc.extractFeatures(&val)
+		x_aggsrc, err := acc.extractFeatures(&val)
 		if err == nil{
 			X.AggSrc = append(X.AggSrc, x_aggsrc)
-			X.AggDst = append(X.AggDst, x_aggdst)
-			X.AggSrcDst = append(X.AggSrcDst, x_aggsrcdst)
 		}
 	}
 
 	for _, val := range acc.AggDst{
-		x_aggsrc, x_aggdst, x_aggsrcdst, err := acc.extractFeatures(&val)
+		x_aggdst, err := acc.extractFeatures(&val)
 		if err == nil{
-			X.AggSrc = append(X.AggSrc, x_aggsrc)
 			X.AggDst = append(X.AggDst, x_aggdst)
-			X.AggSrcDst = append(X.AggSrcDst, x_aggsrcdst)
 		}
 	}
 
 	for _, val := range acc.AggSrcDst{
-		x_aggsrc, x_aggdst, x_aggsrcdst, err := acc.extractFeatures(&val)
+		x_aggsrcdst, err := acc.extractFeatures(&val)
 		if err == nil{
-			X.AggSrc = append(X.AggSrc, x_aggsrc)
-			X.AggDst = append(X.AggDst, x_aggdst)
 			X.AggSrcDst = append(X.AggSrcDst, x_aggsrcdst)
 		}
 	}
@@ -150,8 +105,4 @@ func NewAccumulator() Accumulator{
 		AggDst: make(map[gopacket.Endpoint]AggDst),
 		AggSrcDst: make(map[gopacket.Flow]AggSrcDst),
 	}
-	//return Accumulator{AggSrc: make(map[string]AggSrc),
-	//	AggDst: make(map[string]AggDst),
-	//	AggSrcDst: make(map[string]AggSrcDst),
-	//}
 }
