@@ -150,6 +150,19 @@ func (us *Grid) Cluster(min_dense_points int, min_cluster_points int){
 	_ = IGDCA(*us, min_dense_points, min_cluster_points)
 }
 
+func (us *Grid) GetOutliers() []Point{
+	tmp := []Point{}
+	us.ClusterContainer.GetClusters()
+	for _, unit := range us.Store{
+		if unit.Cluster_id == UNCLASSIFIED{
+			for _, point := range unit.GetPoints(){
+				tmp = append(tmp, point)
+			}
+		}
+	}
+	return tmp
+}
+
 func (us *Grid) isDenseUnit(unit *Unit, min_dense_points int) bool{
 	return unit.GetNumberOfPoints() >= min_dense_points
 }
