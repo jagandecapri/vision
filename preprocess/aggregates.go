@@ -4,15 +4,11 @@ import (
 	"github.com/google/gopacket/layers"
 	"net"
 	"github.com/google/gopacket"
+	"github.com/jagandecapri/vision/tree"
 )
 
-type FlowKey struct{
-	SrcIP, DstIP net.IP
-	SrcPort, DstPort layers.TCPPort
-}
-
 type AggInterface interface{
-	GetKey() []FlowKey
+	GetKey() []tree.PointKey
 	NbPacket() float64
 	NbSrcPort() float64
 	NbDstPort() float64
@@ -42,7 +38,7 @@ func NewAggSrc() AggSrc{
 }
 
 type AggSrc struct{
-	FlowKeys []FlowKey
+	FlowKeys []tree.PointKey
 	dsts map[gopacket.Endpoint]int
 	dsts_subnetwork map[gopacket.Endpoint][] int
 }
@@ -80,7 +76,7 @@ func (a *AggSrc) AddPacket(p gopacket.Packet) gopacket.ErrorLayer{
 		dstPort = tcp.DstPort
 	}
 
-	flowKey := FlowKey{SrcIP: srcIP, DstIP: dstIP, SrcPort: srcPort, DstPort: dstPort}
+	flowKey := tree.PointKey{SrcIP: srcIP, DstIP: dstIP, SrcPort: srcPort, DstPort: dstPort}
 	a.FlowKeys = append(a.FlowKeys, flowKey)
 
 	// Check for errors
@@ -91,7 +87,7 @@ func (a *AggSrc) AddPacket(p gopacket.Packet) gopacket.ErrorLayer{
 	return err
 }
 
-func (a *AggSrc) GetKey() []FlowKey{
+func (a *AggSrc) GetKey() []tree.PointKey {
 	return a.FlowKeys
 }
 
@@ -181,7 +177,7 @@ func NewAggDst() AggDst{
 }
 
 type AggDst struct{
-	FlowKeys []FlowKey
+	FlowKeys []tree.PointKey
 	srcs map[gopacket.Endpoint]int
 	srcPort map[layers.TCPPort]int
 	nbPacket float64
@@ -228,7 +224,7 @@ func (a *AggDst) AddPacket(p gopacket.Packet) gopacket.ErrorLayer{
 		}
 	}
 
-	flowKey := FlowKey{SrcIP: srcIP, DstIP: dstIP, SrcPort: srcPort, DstPort: dstPort}
+	flowKey := tree.PointKey{SrcIP: srcIP, DstIP: dstIP, SrcPort: srcPort, DstPort: dstPort}
 	a.FlowKeys = append(a.FlowKeys, flowKey)
 
 	// Let's see if the packet is icmp4
@@ -251,7 +247,7 @@ func (a *AggDst) AddPacket(p gopacket.Packet) gopacket.ErrorLayer{
 	return err
 }
 
-func (a *AggDst) GetKey() []FlowKey{
+func (a *AggDst) GetKey() []tree.PointKey {
 	return a.FlowKeys
 }
 
@@ -342,7 +338,7 @@ func NewAggSrcDst() AggSrcDst {
 }
 
 type AggSrcDst struct{
-	FlowKeys []FlowKey
+	FlowKeys []tree.PointKey
 	nbPacket float64
 	srcPort map[layers.TCPPort]int
 	dstPort map[layers.TCPPort]int
@@ -420,7 +416,7 @@ func (a *AggSrcDst) AddPacket(p gopacket.Packet) gopacket.ErrorLayer{
 		}
 	}
 
-	flowKey := FlowKey{SrcIP: srcIP, DstIP: dstIP, SrcPort: srcPort, DstPort: dstPort}
+	flowKey := tree.PointKey{SrcIP: srcIP, DstIP: dstIP, SrcPort: srcPort, DstPort: dstPort}
 	a.FlowKeys = append(a.FlowKeys, flowKey)
 
 	// Let's see if the packet is icmp4
@@ -469,7 +465,7 @@ func (a *AggSrcDst) AddPacket(p gopacket.Packet) gopacket.ErrorLayer{
 	return err
 }
 
-func (a *AggSrcDst) GetKey() []FlowKey{
+func (a *AggSrcDst) GetKey() []tree.PointKey {
 	return a.FlowKeys
 }
 
