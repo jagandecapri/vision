@@ -9,7 +9,7 @@ import (
 var delta_t = 300 * time.Millisecond
 var window = 15 * time.Second
 var WINDOW_ARR_LEN = int(window.Seconds()/delta_t.Seconds())
-var point_ctr = 0
+var Point_ctr = 0
 
 func WindowTimeSlide(ch chan PacketData, acc_c chan X_micro_slot){
 
