@@ -41,6 +41,7 @@ func (s *Subspace) ComputeSubspace(mat_old []Point, mat_new_update []Point) {
 			Vec_map := map[string]float64{subspace_key_0: subspace_val_0, subspace_key_1: subspace_val_1}
 			point := Point{
 				Id: p.Id,
+				Key: p.Key,
 				Unit_id:  int(interval[0].ID()),
 				Vec: Vec[:],
 				Vec_map:  Vec_map,
