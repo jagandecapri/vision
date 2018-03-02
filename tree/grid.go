@@ -152,7 +152,6 @@ func (us *Grid) Cluster(min_dense_points int, min_cluster_points int){
 
 func (us *Grid) GetOutliers() []Point{
 	tmp := []Point{}
-	us.ClusterContainer.GetClusters()
 	for _, unit := range us.Store{
 		if unit.Cluster_id == UNCLASSIFIED{
 			for _, point := range unit.GetPoints(){

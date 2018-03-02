@@ -202,3 +202,22 @@ func TestGrid_GetPointRange(t *testing.T) {
 	assert.Equal(t, grid.GetPointRange(1), rg)
 	assert.Equal(t, grid.GetPointRange(2), Range{})
 }
+
+func TestGrid_GetOutliers(t *testing.T) {
+	grid := Grid{Store: map[Range]*Unit{{Low: [2]float64{0, 0}, High: [2]float64{1, 1}}: {Id: 1, Cluster_id: 1, Points: map[int]Point{1: {Id: 1}}},
+		{Low: [2]float64{0, 1}, High: [2]float64{1, 2}}: {Id: 2, Cluster_id: 2, Points: map[int]Point{1: {Id: 2}}},
+		{Low: [2]float64{0, 2}, High: [2]float64{1, 3}}: {Id: 3, Cluster_id: 3, Points: map[int]Point{1: {Id: 3}}},
+		{Low: [2]float64{1, 0}, High: [2]float64{2, 1}}: {Id: 4, Points: map[int]Point{1: {Id: 4}, 2: {Id: 5}}},
+		{Low: [2]float64{1, 2}, High: [2]float64{2, 3}}: {Id: 5, Points: map[int]Point{1: {Id: 6}}},
+		{Low: [2]float64{2, 0}, High: [2]float64{3, 1}}: {Id: 6, Cluster_id: 1, Points: map[int]Point{1: {Id: 7}}},
+		{Low: [2]float64{2, 1}, High: [2]float64{3, 2}}: {Id: 7, Cluster_id: 1, Points: map[int]Point{1: {Id: 8}}},
+		{Low: [2]float64{2, 2}, High: [2]float64{3, 3}}: {Id: 8, Cluster_id: 3, Points: map[int]Point{1: {Id: 9}}},
+		{Low: [2]float64{1, 1}, High: [2]float64{2, 2}}: {Id: 9, Points: map[int]Point{1: {Id: 10}, 2: {Id: 11}}}},
+	}
+
+	expected := []Point{{Id: 4}, {Id: 5}, {Id: 6}, {Id: 10}, {Id: 11}}
+
+	outliers := grid.GetOutliers()
+
+	assert.ElementsMatch(t, expected, outliers)
+}
