@@ -31,3 +31,11 @@ func (c *Cluster) GetCenter() Point {
 func (c *Cluster) GetUnits()map[Range]*Unit{
 	return c.ListOfUnits
 }
+
+func (c *Cluster) GetNumberOfPoints() int{
+	tmp := 0
+	for _, unit := range c.ListOfUnits{
+		tmp += unit.GetNumberOfPoints()
+	}
+	return tmp
+}
