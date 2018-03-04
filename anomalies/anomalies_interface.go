@@ -1,9 +1,11 @@
 package anomalies
 
-import "github.com/jagandecapri/vision/tree"
+import (
+	"github.com/jagandecapri/vision/tree"
+	"github.com/jagandecapri/vision/process"
+)
 
 type AnomaliesInterface interface{
-	New() AnomaliesInterface
-	GetChannel([2]string) chan tree.Subspace
-	WaitOnChannels(chan bool) chan bool
+	GetChannel(subspace_key [2]string) chan process.DissimilarityVector
+	WaitOnChannels() chan bool
 }
