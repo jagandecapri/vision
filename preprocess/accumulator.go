@@ -3,6 +3,7 @@ package preprocess
 import (
 	"github.com/google/gopacket"
 	"github.com/jagandecapri/vision/tree"
+	"github.com/jagandecapri/vision/preprocess/aggregates"
 )
 
 type X_micro_slot struct{
@@ -12,9 +13,9 @@ type X_micro_slot struct{
 }
 
 type Accumulator struct{
-	AggSrc map[gopacket.Endpoint]AggSrc
-	AggDst map[gopacket.Endpoint]AggDst
-	AggSrcDst map[gopacket.Flow]AggSrcDst
+	AggSrc map[gopacket.Endpoint]aggregates.AggSrc
+	AggDst map[gopacket.Endpoint]aggregates.AggDst
+	AggSrcDst map[gopacket.Flow]aggregates.AggSrcDst
 }
 
 func (acc *Accumulator) AddPacket(p gopacket.Packet){
@@ -26,39 +27,36 @@ func (acc *Accumulator) AddPacket(p gopacket.Packet){
 
 	aggsrc, ok := acc.AggSrc[src]
 	if !ok{
-		aggsrc = NewAggSrc()
+		aggsrc = aggregates.NewAggSrc()
 	}
 	aggsrc.AddPacket(p)
 	acc.AggSrc[src] = aggsrc
 
 	aggdst, ok := acc.AggDst[dst]
 	if !ok{
-		aggdst = NewAggDst()
+		aggdst = aggregates.NewAggDst()
 	}
 	aggdst.AddPacket(p)
 	acc.AggDst[dst] = aggdst
 
 	aggsrcdst, ok := acc.AggSrcDst[netFlow]
 	if !ok{
-		aggsrcdst = NewAggSrcDst()
+		aggsrcdst = aggregates.NewAggSrcDst()
 	}
 	aggsrcdst.AddPacket(p)
 	acc.AggSrcDst[srcdst] = aggsrcdst
 }
 
-func (acc *Accumulator) extractFeatures(aggInterface AggInterface) (tree.Point, error){
-	//if aggInterface.NbPacket() == 1{
-	//	return tree.Point{}, errors.New("NbPacket is 1, normal packet") //Assumption taken here
-	//}
-
+func (acc *Accumulator) extractFeatures(aggInterface aggregates.AggInterface) (tree.Point, error){
 	x := map[string]float64{
 		"nbPacket": aggInterface.NbPacket(),
 		"nbSrcPort": aggInterface.NbSrcPort(),
 		"nbDstPort": aggInterface.NbDstPort(),
 		"nbSrcs": aggInterface.NbSrcs(),
 		"nbDsts": aggInterface.NbDsts(),
-		"perSyn": aggInterface.PerSYN(),
-		"perAck": aggInterface.PerACK(),
+		"perSYN": aggInterface.PerSYN(),
+		"perACK": aggInterface.PerACK(),
+		"perICMP": aggInterface.PerICMP(),
 		"perRST": aggInterface.PerRST(),
 		"perFIN": aggInterface.PerFIN(),
 		"perCWR": aggInterface.PerCWR(),
@@ -87,6 +85,7 @@ func (acc *Accumulator) GetMicroSlot() X_micro_slot{
 		x_aggdst, err := acc.extractFeatures(&val)
 		if err == nil{
 			X.AggDst = append(X.AggDst, x_aggdst)
+			//log.Println(x_aggdst)
 		}
 	}
 
@@ -101,8 +100,8 @@ func (acc *Accumulator) GetMicroSlot() X_micro_slot{
 }
 
 func NewAccumulator() Accumulator{
-	return Accumulator{AggSrc: make(map[gopacket.Endpoint]AggSrc),
-		AggDst: make(map[gopacket.Endpoint]AggDst),
-		AggSrcDst: make(map[gopacket.Flow]AggSrcDst),
+	return Accumulator{AggSrc: make(map[gopacket.Endpoint]aggregates.AggSrc),
+		AggDst: make(map[gopacket.Endpoint]aggregates.AggDst),
+		AggSrcDst: make(map[gopacket.Flow]aggregates.AggSrcDst),
 	}
 }
