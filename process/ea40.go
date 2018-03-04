@@ -4,7 +4,9 @@ import (
 	"github.com/jagandecapri/vision/tree"
 )
 
-func ComputeDissmilarityVector(subspace tree.Subspace) map[tree.PointKey]float64{
+type DissimilarityVector map[tree.PointKey]float64
+
+func ComputeDissmilarityVector(subspace tree.Subspace) DissimilarityVector{
 	dissimilarity_map := map[tree.PointKey]float64{}
 
 	outliers := subspace.GetOutliers()
