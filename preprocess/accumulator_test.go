@@ -34,7 +34,7 @@ func TestAccumulator_GetMicroSlot(t *testing.T) {
 		&layers.IPv4{  SrcIP: net.IP{1, 2, 3, 4},
 			DstIP: net.IP{5, 6, 7, 8},
 			Protocol: layers.IPProtocolTCP},
-		&layers.TCP{SrcPort: 1234, DstPort: 5678, ACK: true},
+		&layers.TCP{SrcPort: 443, DstPort: 5678, ACK: true},
 		gopacket.Payload([]byte{1, 2, 3, 4}))
 	packetData2 := buf2.Bytes()
 	packet2 := gopacket.NewPacket(packetData2, layers.LayerTypeEthernet, gopacket.Default)
@@ -58,8 +58,20 @@ func TestAccumulator_GetMicroSlot(t *testing.T) {
 	acc.AddPacket(packet2)
 	acc.AddPacket(packet3)
 
-	output := acc.AggDst[packet1.NetworkLayer().NetworkFlow().Dst()]
+	netflow := packet1.NetworkLayer().NetworkFlow()
+	output := acc.AggDst[netflow.Dst()]
 	assert.Equal(t, 3.0, output.NbPacket())
 	assert.InDelta(t, 0.6666, output.PerACK(), 0.1)
 	assert.InDelta(t, 0.3333, output.PerICMP(), 0.1)
+
+	srcIP :=  []gopacket.Endpoint{netflow.Src()}
+	dstIP := []gopacket.Endpoint{netflow.Dst()}
+	srcPort := []layers.TCPPort{layers.TCPPort(443), layers.TCPPort(1234)}
+	dstPort := []layers.TCPPort{layers.TCPPort(5678)}
+
+	key :=  output.GetKey()
+	assert.ElementsMatch(t, srcIP, key.SrcIP)
+	assert.ElementsMatch(t, srcPort, key.SrcPort)
+	assert.ElementsMatch(t, dstIP, key.DstIP)
+	assert.ElementsMatch(t, dstPort, key.DstPort)
 }

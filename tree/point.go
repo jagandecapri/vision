@@ -2,18 +2,18 @@ package tree
 
 import (
 	"math"
-	"net"
 	"github.com/google/gopacket/layers"
+	"github.com/google/gopacket"
 )
 
 type PointKey struct{
-	SrcIP, DstIP net.IP
-	SrcPort, DstPort layers.TCPPort
+	SrcIP, DstIP []gopacket.Endpoint
+	SrcPort, DstPort []layers.TCPPort
 }
 
 type Point struct{
 	Id       int
-	Key []PointKey
+	Key PointKey
 	Unit_id int
 	Vec []float64
 	Vec_map  map[string]float64

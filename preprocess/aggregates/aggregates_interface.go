@@ -5,7 +5,7 @@ import (
 )
 
 type AggInterface interface{
-	GetKey() []tree.PointKey
+	GetKey() tree.PointKey
 	NbPacket() float64
 	NbSrcPort() float64
 	NbDstPort() float64

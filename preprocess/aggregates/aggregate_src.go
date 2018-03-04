@@ -2,19 +2,23 @@ package aggregates
 
 import (
 	"github.com/google/gopacket"
-	"net"
 	"github.com/google/gopacket/layers"
 	"github.com/jagandecapri/vision/tree"
 )
 
-func NewAggSrc() AggSrc{
-	aggSrc := AggSrc{dsts: make(map[gopacket.Endpoint]int)}
+func NewAggSrc(src gopacket.Endpoint) AggSrc{
+	aggSrc := AggSrc{srcs: map[gopacket.Endpoint]int{src: 1},
+		srcPorts: make(map[layers.TCPPort]int),
+		dsts: make(map[gopacket.Endpoint]int),
+		dstPorts: make(map[layers.TCPPort]int)}
 	return aggSrc
 }
 
 type AggSrc struct{
-	FlowKeys []tree.PointKey
+	srcs map[gopacket.Endpoint]int
+	srcPorts map[layers.TCPPort]int
 	dsts map[gopacket.Endpoint]int
+	dstPorts map[layers.TCPPort]int
 	nbPacket float64
 	nbSYN float64
 	nbACK float64
@@ -39,24 +43,19 @@ func (a *AggSrc) AddPacket(p gopacket.Packet) gopacket.ErrorLayer{
 	dst := 	p.NetworkLayer().NetworkFlow().Dst()
 	a.dsts[dst] = 1
 
-	var srcIP, dstIP net.IP
-	var srcPort, dstPort layers.TCPPort
-
 	// Let's see if the packet is IPv4 (even though the ether type told us)
 	ipv4Layer := p.Layer(layers.LayerTypeIPv4)
 	if ipv4Layer != nil {
 		//fmt.Println("IPv4 layer detected.")
 		ipv4, _ := ipv4Layer.(*layers.IPv4)
-		srcIP = ipv4.SrcIP
-		dstIP = ipv4.DstIP
+		a.TTL += float64(ipv4.TTL)
 	}
 	// Let's see if the packet is IPv6 (even though the ether type told us)
 	ipv6Layer := p.Layer(layers.LayerTypeIPv4)
 	if ipv6Layer != nil {
 		//fmt.Println("IPv4 layer detected.")
 		ipv6, _ := ipv6Layer.(*layers.IPv4)
-		srcIP = ipv6.SrcIP
-		dstIP = ipv6.DstIP
+		a.TTL += float64(ipv6.TTL)
 	}
 
 	// Let's see if the packet is TCP
@@ -64,8 +63,9 @@ func (a *AggSrc) AddPacket(p gopacket.Packet) gopacket.ErrorLayer{
 	if tcpLayer != nil {
 		//fmt.Println("TCP layer detected.")
 		tcp, _ := tcpLayer.(*layers.TCP)
-		srcPort = tcp.SrcPort
-		dstPort = tcp.DstPort
+		a.srcPorts[tcp.SrcPort] = 1
+		a.dstPorts[tcp.DstPort] = 1
+
 		if tcp.SYN{
 			a.nbSYN++
 		}
@@ -85,9 +85,6 @@ func (a *AggSrc) AddPacket(p gopacket.Packet) gopacket.ErrorLayer{
 			a.nbURG++
 		}
 	}
-
-	flowKey := tree.PointKey{SrcIP: srcIP, DstIP: dstIP, SrcPort: srcPort, DstPort: dstPort}
-	a.FlowKeys = append(a.FlowKeys, flowKey)
 
 	// Let's see if the packet is icmp4
 	icmp4Layer :=p.Layer(layers.LayerTypeICMPv4)
@@ -136,8 +133,30 @@ func (a *AggSrc) AddPacket(p gopacket.Packet) gopacket.ErrorLayer{
 	return err
 }
 
-func (a *AggSrc) GetKey() []tree.PointKey {
-	return a.FlowKeys
+func (a *AggSrc) GetKey() tree.PointKey {
+	var SrcIP , DstIP []gopacket.Endpoint
+	var SrcPort, DstPort []layers.TCPPort
+
+	for src_ip, _ := range a.srcs{
+		SrcIP = append(SrcIP, src_ip)
+	}
+
+	for src_port, _ := range a.srcPorts{
+		SrcPort = append(SrcPort, src_port)
+	}
+
+	for dst_ip, _ := range a.dsts{
+		DstIP = append(DstIP, dst_ip)
+	}
+
+	for dst_port, _ := range a.dstPorts{
+		DstPort = append(DstPort, dst_port)
+	}
+
+	point_key := tree.PointKey{	SrcIP: SrcIP, DstIP: DstIP,
+		SrcPort: SrcPort, DstPort: DstPort}
+
+	return point_key
 }
 
 func (a *AggSrc) NbPacket() float64 {

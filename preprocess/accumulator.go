@@ -27,21 +27,21 @@ func (acc *Accumulator) AddPacket(p gopacket.Packet){
 
 	aggsrc, ok := acc.AggSrc[src]
 	if !ok{
-		aggsrc = aggregates.NewAggSrc()
+		aggsrc = aggregates.NewAggSrc(src)
 	}
 	aggsrc.AddPacket(p)
 	acc.AggSrc[src] = aggsrc
 
 	aggdst, ok := acc.AggDst[dst]
 	if !ok{
-		aggdst = aggregates.NewAggDst()
+		aggdst = aggregates.NewAggDst(dst)
 	}
 	aggdst.AddPacket(p)
 	acc.AggDst[dst] = aggdst
 
 	aggsrcdst, ok := acc.AggSrcDst[netFlow]
 	if !ok{
-		aggsrcdst = aggregates.NewAggSrcDst()
+		aggsrcdst = aggregates.NewAggSrcDst(src, dst)
 	}
 	aggsrcdst.AddPacket(p)
 	acc.AggSrcDst[srcdst] = aggsrcdst
