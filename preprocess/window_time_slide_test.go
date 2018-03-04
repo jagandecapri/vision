@@ -7,9 +7,18 @@ import (
 	"io"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
+	"gopkg.in/natefinch/lumberjack.v2"
 )
 
-func TestWindowTimeSlide2(t *testing.T) {
+func TestWindowTimeSlide(t *testing.T) {
+	log.SetOutput(&lumberjack.Logger{
+		Filename:   "C:\\Users\\Jack\\go\\src\\github.com\\jagandecapri\\vision\\logs\\lumber_log.log",
+		MaxSize:    500, // megabytes
+		MaxBackups: 3,
+		MaxAge:     28, //days
+		Compress:   true, // disabled by default
+	})
+
 	ch := make(chan PacketData)
 	acc_c := make(chan X_micro_slot)
 
@@ -25,7 +34,7 @@ func TestWindowTimeSlide2(t *testing.T) {
 		count := 0
 
 		for {
-			if count == 10000{
+			if count == 100000{
 				log.Println("counter reached")
 				close(ch)
 				break
