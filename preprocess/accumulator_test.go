@@ -60,6 +60,6 @@ func TestAccumulator_GetMicroSlot(t *testing.T) {
 
 	output := acc.AggDst[packet1.NetworkLayer().NetworkFlow().Dst()]
 	assert.Equal(t, 3.0, output.NbPacket())
-	assert.InDelta(t, 66.666, output.PerACK(), 66.1)
-	assert.InDelta(t, 33.333, output.PerICMP(), 33.1)
+	assert.InDelta(t, 0.6666, output.PerACK(), 0.1)
+	assert.InDelta(t, 0.3333, output.PerICMP(), 0.1)
 }

@@ -161,27 +161,27 @@ func (a *AggSrc) NbDsts() float64 {
 }
 
 func (a *AggSrc) PerSYN() float64 {
-	return float64((a.nbSYN/a.nbPacket)*100)
+	return float64(a.nbSYN/a.nbPacket)
 }
 
 func (a *AggSrc) PerACK() float64 {
-	return float64((a.nbACK/a.nbPacket)*100)
+	return float64(a.nbACK/a.nbPacket)
 }
 
 func (a *AggSrc) PerRST() float64 {
-	return float64((a.nbRST/a.nbPacket)*100)
+	return float64(a.nbRST/a.nbPacket)
 }
 
 func (a *AggSrc) PerFIN() float64 {
-	return float64((a.nbFIN/a.nbPacket)*100)
+	return float64(a.nbFIN/a.nbPacket)
 }
 
 func (a *AggSrc) PerCWR() float64 {
-	return float64((a.nbCWR/a.nbPacket)*100)
+	return float64(a.nbCWR/a.nbPacket)
 }
 
 func (a *AggSrc) PerURG() float64 {
-	return float64((a.nbURG/a.nbPacket)*100)
+	return float64(a.nbURG/a.nbPacket)
 }
 
 func (a *AggSrc) AvgPktSize() float64 {
@@ -201,21 +201,21 @@ func (a *AggSrc) SimIPSrc() float64 {
 }
 
 func (a *AggSrc) PerICMP() float64{
-	return float64((a.nbICMP/a.nbPacket)*100)
+	return float64(a.nbICMP/a.nbPacket)
 }
 
 func (a *AggSrc) PerICMPRed() float64 {
-	return float64((a.nbICMPRed/a.nbPacket)*100)
+	return float64(a.nbICMPRed/a.nbPacket)
 }
 
 func (a *AggSrc) PerICMPTime() float64 {
-	return float64((a.nbICMPTime/a.nbPacket)*100)
+	return float64(a.nbICMPTime/a.nbPacket)
 }
 
 func (a *AggSrc) PerICMPUnr() float64 {
-	return float64((a.nbICMPUnr/a.nbPacket)*100)
+	return float64(a.nbICMPUnr/a.nbPacket)
 }
 
 func (a *AggSrc) PerICMPOther() float64 {
-	return float64((a.nbICMPOther/a.nbPacket)*100)
+	return float64(a.nbICMPOther/a.nbPacket)
 }
