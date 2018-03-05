@@ -11,7 +11,7 @@ var window = 15 * time.Second
 var WINDOW_ARR_LEN = int(window.Seconds()/delta_t.Seconds())
 var Point_ctr = 0
 
-func WindowTimeSlide(ch chan PacketData, acc_c chan X_micro_slot){
+func WindowTimeSlide(ch chan PacketData, done chan struct{}, acc_c chan X_micro_slot){
 
 	go func(){
 		acc := NewAccumulator()
@@ -21,31 +21,27 @@ func WindowTimeSlide(ch chan PacketData, acc_c chan X_micro_slot){
 		LOOP:
 		for{
 			select{
-				case pd, open := <- ch:
-					if open == true{
-						packet_time := pd.Metadata.Timestamp
+				case pd := <- ch:
+					packet_time := pd.Metadata.Timestamp
 
-						if time_counter.IsZero(){
-							//fmt.Println("Initialize Time")
-							time_counter = packet_time
-							acc = NewAccumulator()
-						}
-
-						if !time_counter.IsZero() && packet_time.After(time_counter.Add(delta_t)){
-							//fmt.Println("packet_time > time_counter")
-							X := acc.GetMicroSlot()
-							acc_c <- X
-							log.Println("Time to read data:", time.Since(time_init))
-							time_init = time.Now()
-							time_counter = time.Time{}
-						}
-
-						acc.AddPacket(pd.Data)
-					} else if open == false{
-						log.Println("Open is false")
-						close(acc_c)
-						break LOOP
+					if time_counter.IsZero(){
+						//fmt.Println("Initialize Time")
+						time_counter = packet_time
+						acc = NewAccumulator()
 					}
+
+					if !time_counter.IsZero() && packet_time.After(time_counter.Add(delta_t)){
+						//fmt.Println("packet_time > time_counter")
+						X := acc.GetMicroSlot()
+						acc_c <- X
+						log.Println("Time to read data:", time.Since(time_init))
+						time_init = time.Now()
+						time_counter = time.Time{}
+					}
+
+					acc.AddPacket(pd.Data)
+				case <-done:
+					break LOOP
 				default:
 			}
 		}

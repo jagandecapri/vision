@@ -21,8 +21,8 @@ func TestWindowTimeSlide(t *testing.T) {
 
 	ch := make(chan PacketData)
 	acc_c := make(chan X_micro_slot)
-
-	go WindowTimeSlide(ch, acc_c)
+	done := make(chan struct{})
+	go WindowTimeSlide(ch, done, acc_c)
 
 	go func(){
 		handleRead, err := pcap.OpenOffline("C:\\Users\\Jack\\Downloads\\201705021400.pcap")
@@ -36,15 +36,15 @@ func TestWindowTimeSlide(t *testing.T) {
 		for {
 			if count == 100000{
 				log.Println("counter reached")
-				close(ch)
+				close(done)
 				break
 			}
 			data, ci, err := handleRead.ReadPacketData()
 			if err != nil && err != io.EOF {
-				close(ch)
+				close(done)
 				log.Fatal(err)
 			} else if err == io.EOF {
-				close(ch)
+				close(done)
 				break
 			} else {
 				packet := gopacket.NewPacket(data, layers.LayerTypeEthernet, gopacket.Default)
@@ -55,10 +55,13 @@ func TestWindowTimeSlide(t *testing.T) {
 	}()
 
 
+	LOOP:
 	for {
-		_, open := <-acc_c
-		if open == false{
-			break
+		select{
+			case <-acc_c:
+			case <-done:
+				break LOOP
+			default:
 		}
 	}
 
