@@ -47,31 +47,28 @@ type ProcessPackage struct{
 	x_new_update []tree.Point
 }
 
-func Cluster(subspace tree.Subspace, config process.Config, outs ...chan process.DissimilarityVector) chan ProcessPackage{
+func Cluster(subspace tree.Subspace, config process.Config, done chan struct{}, outs ...chan process.DissimilarityVector) chan ProcessPackage{
 	in := make(chan ProcessPackage)
+	counter := 1
 	go func() {
 		LOOP:
 			for {
 				select {
-				case processPackage, open := <-in:
-					if open {
-						x_old := processPackage.x_old
-						x_new_update := processPackage.x_new_update
-						subspace.ComputeSubspace(x_old, x_new_update)
-						subspace.Cluster(config.Min_dense_points, config.Min_cluster_points)
-						dissimilarity_map := process.ComputeDissmilarityVector(subspace)
-						if len(subspace.GetOutliers()) > 0 {
-							fmt.Println("key:", subspace.Subspace_key, "outliers:", subspace.GetOutliers(), "clusters:", subspace.GetClusters())
-						}
-						for _, out := range outs {
-							out <- dissimilarity_map
-						}
-					} else if !open {
-						for _, out := range outs {
-							close(out)
-						}
-						break LOOP
+				case processPackage := <-in:
+					x_old := processPackage.x_old
+					x_new_update := processPackage.x_new_update
+					subspace.ComputeSubspace(x_old, x_new_update)
+					subspace.Cluster(config.Min_dense_points, config.Min_cluster_points)
+					dissimilarity_map := process.ComputeDissmilarityVector(subspace)
+					if len(subspace.GetOutliers()) > 0 {
+						fmt.Println("key:", subspace.Subspace_key, "outliers:", subspace.GetOutliers(), "clusters:", subspace.GetClusters())
 					}
+					for _, out := range outs {
+						out <- process.DissimilarityVector{Id: counter, Vector: dissimilarity_map}
+					}
+					counter++
+				case <-done:
+					break LOOP
 				default:
 				}
 			}
@@ -106,23 +103,35 @@ func BuildSubspace(subspace_key [2]string) tree.Subspace{
 	return subspace
 }
 
-func ClusteringBuilder(config process.Config) SubspaceChannels{
+func ClusteringBuilder(config process.Config, done chan struct{}) SubspaceChannels{
 	for subspace_key, channels := range aggsrc_dis_vector{
 		subspace := BuildSubspace(subspace_key)
-		in := Cluster(subspace, config, channels...)
+		in := Cluster(subspace, config, done, channels...)
 		aggsrc_subspaces[subspace_key] = in
 	}
 
 	for subspace_key, channels := range aggdst_dis_vector{
 		subspace := BuildSubspace(subspace_key)
-		in := Cluster(subspace, config, channels...)
+		in := Cluster(subspace, config, done, channels...)
 		aggdst_subspaces[subspace_key] = in
 	}
 
 	for subspace_key, channels := range aggsrcdst_dis_vector{
 		subspace := BuildSubspace(subspace_key)
-		in := Cluster(subspace, config, channels...)
+		in := Cluster(subspace, config, done, channels...)
 		aggsrcdst_subspaces[subspace_key] = in
+	}
+
+	for _, anomaly := range aggsrc_anomalies{
+		anomaly.WaitOnChannels(done)
+	}
+
+	for _, anomaly := range aggdst_anomalies{
+		anomaly.WaitOnChannels(done)
+	}
+
+	for _, anomaly := range aggsrcdst_anomalies{
+		anomaly.WaitOnChannels(done)
 	}
 
 	return subspace_channels
