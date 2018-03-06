@@ -11,7 +11,7 @@ var window = 15 * time.Second
 var WINDOW_ARR_LEN = int(window.Seconds()/delta_t.Seconds())
 var Point_ctr = 0
 
-func WindowTimeSlide(ch chan PacketData, done chan struct{}, acc_c chan X_micro_slot){
+func WindowTimeSlide(ch chan PacketData, acc_c chan X_micro_slot, done chan struct{}){
 
 	go func(){
 		acc := NewAccumulator()

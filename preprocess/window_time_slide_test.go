@@ -22,7 +22,7 @@ func TestWindowTimeSlide(t *testing.T) {
 	ch := make(chan PacketData)
 	acc_c := make(chan X_micro_slot)
 	done := make(chan struct{})
-	go WindowTimeSlide(ch, done, acc_c)
+	go WindowTimeSlide(ch, acc_c, done)
 
 	go func(){
 		handleRead, err := pcap.OpenOffline("C:\\Users\\Jack\\Downloads\\201705021400.pcap")
