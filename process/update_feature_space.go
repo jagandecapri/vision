@@ -12,16 +12,8 @@ import (
 	"github.com/jagandecapri/vision/server"
 )
 
-type AccumulatorChannel chan preprocess.MicroSlot
-
-type AccumulatorChannels struct{
-	AggSrc AccumulatorChannel
-	AggDst AccumulatorChannel
-	AggSrcDst AccumulatorChannel
-}
-
-func UpdateFeatureSpaceBuilder(subspace_channel_container anomalies.SubspaceChannelsContainer, sorter []string, done chan struct{}) AccumulatorChannels{
-	tmp := AccumulatorChannels{
+func UpdateFeatureSpaceBuilder(subspace_channel_container anomalies.SubspaceChannelsContainer, sorter []string, done chan struct{}) preprocess.AccumulatorChannels{
+	tmp := preprocess.AccumulatorChannels{
 		AggSrc: UpdateFeatureSpace2(subspace_channel_container.AggSrc, sorter, done),
 		AggDst: UpdateFeatureSpace2(subspace_channel_container.AggDst, sorter, done),
 		AggSrcDst: UpdateFeatureSpace2(subspace_channel_container.AggSrcDst, sorter, done),
@@ -29,7 +21,7 @@ func UpdateFeatureSpaceBuilder(subspace_channel_container anomalies.SubspaceChan
 	return tmp
 }
 
-func UpdateFeatureSpace2(subspace_channels anomalies.SubspaceChannels, sorter []string, done chan struct{}) AccumulatorChannel{
+func UpdateFeatureSpace2(subspace_channels anomalies.SubspaceChannels, sorter []string, done chan struct{}) preprocess.AccumulatorChannel{
 	Xs := []preprocess.MicroSlot{}
 	acc_c := make(chan preprocess.MicroSlot)
 

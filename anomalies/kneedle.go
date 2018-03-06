@@ -1,4 +1,4 @@
-package process
+package anomalies
 
 import (
 	"math"
@@ -92,13 +92,13 @@ func (k Kneedle) prepare(data []float64) []float64{
 	//}
 
 // This algorithm finds the so-called elbow/knee in the data.
-// It does this by sorting the data, then making a line between the start
+// It does this by making a line between the start
 // and end data points in the sorted data. Each point in the data is the projected
 // onto this line, and the point with the biggest euclidean distance is considered
 // the most likely elbow.
 // See paper: "Finding a Kneedle in a Haystack: Detecting Knee Points in System Behavior"
 // for more details.
-func (k Kneedle) Run(data []float64, s float64, findElbows bool) []float64{
+func (k Kneedle) Run(data []float64, sensitivity float64, findElbows bool) []float64{
  	localMinMaxPts := []float64{};
 	//smooth the data to make local minimum/maximum easier to find (this is Step 1 in the paper)
 	smoothedData := utils.GaussianSmooth(data, 3);
@@ -111,9 +111,9 @@ func (k Kneedle) Run(data []float64, s float64, findElbows bool) []float64{
 	step := 1.0/float64(len(data))
 
 	if findElbows {
-		step = step * s
+		step = step * sensitivity
 	} else {
-		step = step * -s
+		step = step * -sensitivity
 	}
 
 	//check each candidate to see if it is a real elbow/knee

@@ -20,7 +20,12 @@ func TestWindowTimeSlide(t *testing.T) {
 	})
 
 	ch := make(chan PacketData)
-	acc_c := make(chan X_micro_slot)
+	acc_c := AccumulatorChannels{
+		AggSrc: make(AccumulatorChannel),
+		AggDst: make(AccumulatorChannel),
+		AggSrcDst: make(AccumulatorChannel),
+	}
+
 	done := make(chan struct{})
 	go WindowTimeSlide(ch, acc_c, done)
 
@@ -58,7 +63,9 @@ func TestWindowTimeSlide(t *testing.T) {
 	LOOP:
 	for {
 		select{
-			case <-acc_c:
+			case <-acc_c.AggSrc:
+			case <-acc_c.AggDst:
+			case <-acc_c.AggSrcDst:
 			case <-done:
 				break LOOP
 			default:

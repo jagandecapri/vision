@@ -11,7 +11,15 @@ var window = 15 * time.Second
 var WINDOW_ARR_LEN = int(window.Seconds()/delta_t.Seconds())
 var Point_ctr = 0
 
-func WindowTimeSlide(ch chan PacketData, acc_c chan X_micro_slot, done chan struct{}){
+type AccumulatorChannel chan MicroSlot
+
+type AccumulatorChannels struct{
+	AggSrc AccumulatorChannel
+	AggDst AccumulatorChannel
+	AggSrcDst AccumulatorChannel
+}
+
+func WindowTimeSlide(ch chan PacketData, acc_c AccumulatorChannels, done chan struct{}){
 
 	go func(){
 		acc := NewAccumulator()
@@ -33,7 +41,9 @@ func WindowTimeSlide(ch chan PacketData, acc_c chan X_micro_slot, done chan stru
 					if !time_counter.IsZero() && packet_time.After(time_counter.Add(delta_t)){
 						//fmt.Println("packet_time > time_counter")
 						X := acc.GetMicroSlot()
-						acc_c <- X
+						acc_c.AggSrc <- X.AggSrc
+						acc_c.AggDst <- X.AggDst
+						acc_c.AggSrcDst <- X.AggSrcDst
 						log.Println("Time to read data:", time.Since(time_init))
 						time_init = time.Now()
 						time_counter = time.Time{}

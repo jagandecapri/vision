@@ -1,12 +1,15 @@
-package process
+package anomalies
 
 import (
 	"github.com/jagandecapri/vision/tree"
 )
 
-type DissimilarityVector map[tree.PointKey]float64
+type DissimilarityVector struct{
+	Id int
+	Vector map[tree.PointKey]float64
+}
 
-func ComputeDissmilarityVector(subspace tree.Subspace) DissimilarityVector{
+func ComputeDissmilarityVector(subspace tree.Subspace) map[tree.PointKey]float64{
 	dissimilarity_map := map[tree.PointKey]float64{}
 
 	outliers := subspace.GetOutliers()
