@@ -12,9 +12,10 @@ import (
 	"github.com/jagandecapri/vision/server"
 )
 
-func UpdateFeatureSpace2(acc_c chan preprocess.MicroSlot, subspace_channels anomalies.SubspaceChannels, sorter []string){
+func UpdateFeatureSpace2(acc_c chan preprocess.MicroSlot, subspace_channels anomalies.SubspaceChannels, sorter []string, done chan struct{}){
 	Xs := []preprocess.MicroSlot{}
 
+	LOOP:
 	for{
 		select{
 		case X := <- acc_c:
@@ -102,6 +103,9 @@ func UpdateFeatureSpace2(acc_c chan preprocess.MicroSlot, subspace_channels anom
 					channel <- anom
 				}
 			}
+		case <-done:
+			break LOOP
+		default:
 		}
 	}
 }
