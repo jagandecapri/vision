@@ -6,10 +6,12 @@ import (
 	"github.com/jagandecapri/vision/preprocess/aggregates"
 )
 
+type MicroSlot []tree.Point
+
 type X_micro_slot struct{
-	AggSrc []tree.Point
-	AggDst []tree.Point
-	AggSrcDst []tree.Point
+	AggSrc MicroSlot
+	AggDst MicroSlot
+	AggSrcDst MicroSlot
 }
 
 type Accumulator struct{
