@@ -45,8 +45,8 @@ var subspace_channels = SubspaceChannelsContainer{
 }
 
 type ProcessPackage struct{
-	x_old []tree.Point
-	x_new_update []tree.Point
+	X_old        []tree.Point
+	X_new_update []tree.Point
 }
 
 func Cluster(subspace tree.Subspace, config process.Config, done chan struct{}, outs ...chan process.DissimilarityVector) chan ProcessPackage{
@@ -57,8 +57,8 @@ func Cluster(subspace tree.Subspace, config process.Config, done chan struct{}, 
 			for {
 				select {
 				case processPackage := <-in:
-					x_old := processPackage.x_old
-					x_new_update := processPackage.x_new_update
+					x_old := processPackage.X_old
+					x_new_update := processPackage.X_new_update
 					subspace.ComputeSubspace(x_old, x_new_update)
 					subspace.Cluster(config.Min_dense_points, config.Min_cluster_points)
 					dissimilarity_map := process.ComputeDissmilarityVector(subspace)
