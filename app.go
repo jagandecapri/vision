@@ -47,7 +47,10 @@ func BootServer(data chan server.HttpData) {
 		server.ServeWs(hub, w, r)
 	})
 	log.Println("Listening...")
-	http.ListenAndServe(":3001", nil)
+
+	go func() {
+		http.ListenAndServe(":3001", nil)
+	}()
 }
 
 func serveTemplate(w http.ResponseWriter, r *http.Request) {
