@@ -2,45 +2,157 @@ package process
 
 import (
 	"github.com/jagandecapri/vision/preprocess"
-	"github.com/jagandecapri/vision/server"
 	"github.com/jagandecapri/vision/tree"
 	"sync"
 	"fmt"
 	"runtime"
 	"time"
 	"github.com/jagandecapri/vision/utils"
+	"github.com/jagandecapri/vision/anomalies"
+	"github.com/jagandecapri/vision/server"
 )
 
+func UpdateFeatureSpace2(acc_c chan preprocess.MicroSlot, subspace_channels anomalies.SubspaceChannels, sorter []string){
+	Xs := []preprocess.MicroSlot{}
 
-func UpdateFeatureSpace(acc chan preprocess.PacketAcc, data chan server.HttpData, sorter []string, subspaces map[[2]string]tree.Subspace, config Config){
-	base_matrix := []tree.Point{}
-	l := utils.Logger{}
-	logger := l.New()
-	point_ctr := 0
-	count := 0
 	for{
 		select{
-		case packet_acc := <- acc:
+		case X := <- acc_c:
 			fmt.Print(".")
-			x := packet_acc.ExtractDeltaPacketFeature()
-			point_ctr += 1
-			p := tree.Point{Id: point_ctr, Vec_map: x}
-			if len(base_matrix) < preprocess.WINDOW_ARR_LEN - 1{
-				base_matrix = append(base_matrix, p)
+
+			if len(Xs) < preprocess.WINDOW_ARR_LEN - 1{
+				Xs = append(Xs, X)
 			} else {
-				base_matrix = append(base_matrix, p)
-				norm_mat := preprocess.Normalize(base_matrix, sorter)
+				Xs = append(Xs, X)
 				var x_old, x_new_update []tree.Point
 
-				if len(base_matrix) == preprocess.WINDOW_ARR_LEN{
+				if len(Xs) == preprocess.WINDOW_ARR_LEN{
 					//fmt.Println("before flow processing data", preprocess.WINDOW_ARR_LEN, len(base_matrix))
 					//fmt.Println("before flow processing")
-					x_old, x_new_update = []tree.Point{}, norm_mat
-				} else if len(base_matrix) > preprocess.WINDOW_ARR_LEN{
+					x_old = []tree.Point{}
+
+					tmp := preprocess.MicroSlot{}
+					for _, X := range Xs{
+						tmp = append(tmp, X...)
+					}
+					x_new_update = preprocess.Normalize(tmp, sorter)
+				} else if len(Xs) > preprocess.WINDOW_ARR_LEN{
 					//fmt.Println("flow processing data", preprocess.WINDOW_ARR_LEN, len(base_matrix))
 					//fmt.Println("flow processing")
-					x_old, x_new_update = []tree.Point{norm_mat[0]}, norm_mat[1:]
-					base_matrix = base_matrix[1:]
+					x_old = Xs[0]
+					Xs = Xs[1:]
+
+					tmp := preprocess.MicroSlot{}
+					for _, X := range Xs{
+						tmp = append(tmp, X...)
+					}
+					x_new_update = preprocess.Normalize(tmp, sorter)
+				}
+
+				tmp1_x_old := map[[2]string][]tree.Point{}
+				tmp2_x_new_update := map[[2]string][]tree.Point{}
+
+				for _, p := range x_old{
+					for subspace_keys, _ := range subspace_channels{
+						subspace_key_0 := subspace_keys[0]
+						subspace_key_1 := subspace_keys[1]
+						subspace_val_0 := p.Vec_map[subspace_key_0]
+						subspace_val_1 := p.Vec_map[subspace_key_1]
+
+						point := tree.Point{
+							Id: p.Id,
+							Key: p.Key,
+							Vec: []float64{subspace_val_0, subspace_val_1},
+							Vec_map:  map[string]float64{
+								subspace_key_0: subspace_val_0,
+								subspace_key_1: subspace_val_1,
+							},
+						}
+
+						tmp1_x_old[subspace_keys] = append(tmp1_x_old[subspace_keys], point)
+					}
+				}
+
+				for _, p := range x_new_update{
+					for subspace_keys, _ := range subspace_channels{
+						subspace_key_0 := subspace_keys[0]
+						subspace_key_1 := subspace_keys[1]
+						subspace_val_0 := p.Vec_map[subspace_key_0]
+						subspace_val_1 := p.Vec_map[subspace_key_1]
+
+						point := tree.Point{
+							Id: p.Id,
+							Key: p.Key,
+							Vec: []float64{subspace_val_0, subspace_val_1},
+							Vec_map:  map[string]float64{
+								subspace_key_0: subspace_val_0,
+								subspace_key_1: subspace_val_1,
+							},
+						}
+
+						tmp2_x_new_update[subspace_keys] = append(tmp1_x_old[subspace_keys], point)
+					}
+				}
+
+				for subspace_keys, channel := range subspace_channels{
+					anom := anomalies.ProcessPackage{
+						X_old: tmp1_x_old[subspace_keys],
+						X_new_update: tmp2_x_new_update[subspace_keys],
+					}
+					channel <- anom
+				}
+			}
+		}
+	}
+}
+
+func UpdateFeatureSpace(acc_c chan preprocess.X_micro_slot, data chan server.HttpData,sorter []string, subspaces map[[2]string]tree.Subspace, config Config){
+	l := utils.Logger{}
+	logger := l.New()
+	count := 0
+	Xs := []preprocess.X_micro_slot{}
+
+	for{
+		select{
+		case X := <- acc_c:
+			fmt.Print(".")
+
+			if len(Xs) < preprocess.WINDOW_ARR_LEN - 1{
+				Xs = append(Xs, X)
+			} else {
+				Xs = append(Xs, X)
+				var x_old, x_new_update []tree.Point
+
+				if len(Xs) == preprocess.WINDOW_ARR_LEN{
+					//fmt.Println("before flow processing data", preprocess.WINDOW_ARR_LEN, len(base_matrix))
+					//fmt.Println("before flow processing")
+					var aggdst, aggsrc, aggsrcdst []tree.Point
+					for _, X := range Xs{
+						aggdst = append(aggdst, X.AggDst...)
+						aggsrc = append(aggsrc, X.AggSrc...)
+						aggsrcdst = append(aggsrcdst, X.AggSrcDst...)
+					}
+					x_old = []tree.Point{}
+					x_new_update = preprocess.Normalize(aggdst, sorter)
+				} else if len(Xs) > preprocess.WINDOW_ARR_LEN{
+					//fmt.Println("flow processing data", preprocess.WINDOW_ARR_LEN, len(base_matrix))
+					//fmt.Println("flow processing")
+					Xs_old := Xs[0]
+					var aggdst_old, aggsrc_old, aggsrcdst_old []tree.Point
+					aggdst_old = append(aggdst_old, Xs_old.AggDst...)
+					aggsrc_old = append(aggsrc_old, Xs_old.AggSrc...)
+					aggsrcdst_old = append(aggsrcdst_old, X.AggSrcDst...)
+
+					Xs = Xs[1:]
+					var aggdst, aggsrc, aggsrcdst []tree.Point
+					for _, X := range Xs{
+						aggdst = append(aggdst, X.AggDst...)
+						aggsrc = append(aggsrc, X.AggSrc...)
+						aggsrcdst = append(aggsrcdst, X.AggSrcDst...)
+					}
+
+					x_old = aggdst_old
+					x_new_update = preprocess.Normalize(aggdst, sorter)
 				}
 
 				m := map[[2]string]tree.Subspace{}
@@ -52,20 +164,14 @@ func UpdateFeatureSpace(acc chan preprocess.PacketAcc, data chan server.HttpData
 					func (){
 						defer utils.TimeTrack(time.Now(),  "Clustering", num_clusterer, logger)
 						//ParallelClustering(num_clusterer, subspaces, config, x_old, x_new_update)
+						fmt.Println("parallel clustering started", "x_old", len(x_old), "x_new_update", len(x_new_update))
 						m = ParallelClustering(num_clusterer, subspaces, config, x_old, x_new_update)
 						count++
 						return
 					}()
 				}
 
-				//http_data := server.HttpData{}
-				//for subspace_key, subspace := range m{
-				//	subspace_key_join := strings.Join(subspace_key[:], "-")
-				//	point_cluster := GetVisualizationData(subspace)
-				//	http_data.Point_cluster[subspace_key_join] = point_cluster
-				//}
-				//http_data.Points = m[0].Grid.
-				//fmt.Println("Send HTTP data: ", http_data)
+				//http_data := ProcessDataForVisualization(subspaces)
 				//data <- http_data
 			}
 		}
@@ -101,6 +207,11 @@ func Clusterer(done <-chan struct{}, processPackages <-chan processPackage , c c
 		x_new_update := processPackage.x_new_update
 		subspace.ComputeSubspace(x_old, x_new_update)
 		subspace.Cluster(config.Min_dense_points, config.Min_cluster_points)
+		//dissimilarity_map := ComputeDissmilarityVector(subspace)
+		if len(subspace.GetOutliers()) > 0{
+			fmt.Println("key:",subspace.Subspace_key, "outliers:", subspace.GetOutliers(), "clusters:", subspace.GetClusters())
+		}
+		//TODO: COMPUTE ANOMALIES HERE
 		select {
 		case c <- result{processPackage.subspace_key, subspace}:
 		case <- done:
