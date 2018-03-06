@@ -30,13 +30,15 @@ var aggsrcdst_dis_vector = map[[2]string][] chan process.DissimilarityVector{}
 
 var aggsrcdst_subspaces = map[[2]string] chan ProcessPackage{}
 
-type SubspaceChannels struct{
-	AggSrc map[[2]string] chan ProcessPackage
-	AggDst map[[2]string] chan ProcessPackage
-	AggSrcDst map[[2]string] chan ProcessPackage
+type SubspaceChannels map[[2]string] chan ProcessPackage
+
+type SubspaceChannelsContainer struct{
+	AggSrc SubspaceChannels
+	AggDst SubspaceChannels
+	AggSrcDst SubspaceChannels
 }
 
-var subspace_channels = SubspaceChannels{
+var subspace_channels = SubspaceChannelsContainer{
 		AggSrc: aggsrc_subspaces,
 		AggDst: aggdst_subspaces,
 		AggSrcDst: aggsrcdst_subspaces,
@@ -103,7 +105,7 @@ func BuildSubspace(subspace_key [2]string) tree.Subspace{
 	return subspace
 }
 
-func ClusteringBuilder(config process.Config, done chan struct{}) SubspaceChannels{
+func ClusteringBuilder(config process.Config, done chan struct{}) SubspaceChannelsContainer {
 	for subspace_key, channels := range aggsrc_dis_vector{
 		subspace := BuildSubspace(subspace_key)
 		in := Cluster(subspace, config, done, channels...)
