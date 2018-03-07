@@ -122,7 +122,7 @@ func UpdateFeatureSpace2(subspace_channels anomalies.SubspaceChannels, sorter []
 	return acc_c
 }
 
-func UpdateFeatureSpace(acc_c chan preprocess.X_micro_slot, data chan server.HttpData,sorter []string, subspaces map[[2]string]tree.Subspace, config Config){
+func UpdateFeatureSpace(acc_c chan preprocess.X_micro_slot, data chan server.HttpData,sorter []string, subspaces map[[2]string]tree.Subspace, config utils.Config){
 	l := utils.Logger{}
 	logger := l.New()
 	count := 0
@@ -172,10 +172,10 @@ func UpdateFeatureSpace(acc_c chan preprocess.X_micro_slot, data chan server.Htt
 				}
 
 				m := map[[2]string]tree.Subspace{}
-				if (config.Execution_type == SEQUENTIAL){
+				if (config.Execution_type == utils.SEQUENTIAL){
 					m = SequentialClustering(subspaces, config, x_old, x_new_update)
 
-				} else if (config.Execution_type == PARALLEL){
+				} else if (config.Execution_type == utils.PARALLEL){
 					num_clusterer := runtime.GOMAXPROCS(config.Num_cpu) //gets the current number of cores
 					func (){
 						defer utils.TimeTrack(time.Now(),  "Clustering", num_clusterer, logger)
@@ -194,7 +194,7 @@ func UpdateFeatureSpace(acc_c chan preprocess.X_micro_slot, data chan server.Htt
 	}
 }
 
-func SequentialClustering(subspaces map[[2]string]tree.Subspace, config Config, x_old []tree.Point, x_new_update []tree.Point)  map[[2]string]tree.Subspace{
+func SequentialClustering(subspaces map[[2]string]tree.Subspace, config utils.Config, x_old []tree.Point, x_new_update []tree.Point)  map[[2]string]tree.Subspace{
 	for _, subspace := range subspaces{
 		subspace.ComputeSubspace(x_old, x_new_update)
 		subspace.Cluster(config.Min_dense_points, config.Min_cluster_points)
@@ -210,7 +210,7 @@ type result struct{
 type processPackage struct{
 	subspace_key [2]string
 	subspace tree.Subspace
-	config Config
+	config utils.Config
 	x_old []tree.Point
 	x_new_update []tree.Point
 }
@@ -236,7 +236,7 @@ func Clusterer(done <-chan struct{}, processPackages <-chan processPackage , c c
 	}
 }
 
-func SubspaceIterator(done <- chan struct{}, subspaces map[[2]string]tree.Subspace, config Config, x_old []tree.Point, x_new_update []tree.Point) (<-chan processPackage){
+func SubspaceIterator(done <- chan struct{}, subspaces map[[2]string]tree.Subspace, config utils.Config, x_old []tree.Point, x_new_update []tree.Point) (<-chan processPackage){
 	processPackages := make(chan processPackage)
 	go func(){
 		//fmt.Println("Subspace len:", len(subspaces))
@@ -261,7 +261,7 @@ func SubspaceIterator(done <- chan struct{}, subspaces map[[2]string]tree.Subspa
 	return processPackages
 }
 
-func ParallelClustering(num_clusterers int, subspaces map[[2]string]tree.Subspace, config Config, x_old []tree.Point, x_new_update []tree.Point)  map[[2]string]tree.Subspace{
+func ParallelClustering(num_clusterers int, subspaces map[[2]string]tree.Subspace, config utils.Config, x_old []tree.Point, x_new_update []tree.Point)  map[[2]string]tree.Subspace{
 	done := make(chan struct{})
 	defer close(done)
 

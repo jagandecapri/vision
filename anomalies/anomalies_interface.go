@@ -1,11 +1,6 @@
 package anomalies
 
-import (
-
-	"github.com/jagandecapri/vision/process"
-)
-
 type AnomaliesInterface interface{
-	GetChannel([2]string) chan process.DissimilarityVector
+	GetChannel([2]string) chan DissimilarityVector
 	WaitOnChannels(chan struct{})
 }

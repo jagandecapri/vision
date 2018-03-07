@@ -2,7 +2,7 @@ package anomalies
 
 import (
 	"github.com/jagandecapri/vision/tree"
-	"github.com/jagandecapri/vision/process"
+	"github.com/jagandecapri/vision/utils"
 	"fmt"
 )
 
@@ -49,7 +49,7 @@ type ProcessPackage struct{
 	X_new_update []tree.Point
 }
 
-func Cluster(subspace tree.Subspace, config process.Config, done chan struct{}, outs ...chan DissimilarityVector) chan ProcessPackage{
+func Cluster(subspace tree.Subspace, config utils.Config, done chan struct{}, outs ...chan DissimilarityVector) chan ProcessPackage{
 	in := make(chan ProcessPackage)
 	counter := 1
 	go func() {
@@ -58,7 +58,7 @@ func Cluster(subspace tree.Subspace, config process.Config, done chan struct{}, 
 				case processPackage := <-in:
 					x_old := processPackage.X_old
 					x_new_update := processPackage.X_new_update
-					subspace.ComputeSubspace(x_old, x_new_update)
+					subspace.ComputeSubspace2(x_old, x_new_update)
 					subspace.Cluster(config.Min_dense_points, config.Min_cluster_points)
 					dissimilarity_map := ComputeDissmilarityVector(subspace)
 					if len(subspace.GetOutliers()) > 0 {
@@ -104,7 +104,7 @@ func BuildSubspace(subspace_key [2]string) tree.Subspace{
 	return subspace
 }
 
-func ClusteringBuilder(config process.Config, done chan struct{}) SubspaceChannelsContainer {
+func ClusteringBuilder(config utils.Config, done chan struct{}) SubspaceChannelsContainer {
 	for subspace_key, channels := range aggsrc_dis_vector{
 		subspace := BuildSubspace(subspace_key)
 		in := Cluster(subspace, config, done, channels...)

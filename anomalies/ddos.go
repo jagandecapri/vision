@@ -1,19 +1,15 @@
 package anomalies
 
-import (
-	"github.com/jagandecapri/vision/process"
-)
-
 type DDOS struct{
-	Channels map[[2]string] chan process.DissimilarityVector
+	Channels map[[2]string] chan DissimilarityVector
 }
 
-func (d *DDOS) GetChannel(subspace_key [2]string) chan process.DissimilarityVector {
+func (d *DDOS) GetChannel(subspace_key [2]string) chan DissimilarityVector {
 	return d.Channels[subspace_key]
 }
 
 func (d *DDOS) WaitOnChannels(done chan struct{}){
-	out := make(chan process.DissimilarityVector)
+	out := make(chan DissimilarityVector)
 	go func() {
 		LOOP:
 		for{
@@ -32,7 +28,7 @@ func (d *DDOS) WaitOnChannels(done chan struct{}){
 	}()
 
 	go func(){
-		store := map[int][]process.DissimilarityVector{}
+		store := map[int][]DissimilarityVector{}
 		LOOP:
 		for{
 			select{
@@ -71,9 +67,9 @@ func (d *DDOS) WaitOnChannels(done chan struct{}){
 }
 
 func NewDDOS() *DDOS{
-	return &DDOS{Channels: map[[2]string] chan process.DissimilarityVector{
-		[2]string{"nbSrcs", "avgPktSize"}: make(chan process.DissimilarityVector),
-		[2]string{"perICMP", "perSYN"}: make(chan process.DissimilarityVector),
-		[2]string{"nbSrcPort", "perICMP"}: make(chan process.DissimilarityVector),
+	return &DDOS{Channels: map[[2]string] chan DissimilarityVector{
+		[2]string{"nbSrcs", "avgPktSize"}: make(chan DissimilarityVector),
+		[2]string{"perICMP", "perSYN"}: make(chan DissimilarityVector),
+		[2]string{"nbSrcPort", "perICMP"}: make(chan DissimilarityVector),
 	}}
 }
