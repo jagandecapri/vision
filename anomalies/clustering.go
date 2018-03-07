@@ -53,7 +53,6 @@ func Cluster(subspace tree.Subspace, config process.Config, done chan struct{}, 
 	in := make(chan ProcessPackage)
 	counter := 1
 	go func() {
-		LOOP:
 			for {
 				select {
 				case processPackage := <-in:
@@ -70,7 +69,7 @@ func Cluster(subspace tree.Subspace, config process.Config, done chan struct{}, 
 					}
 					counter++
 				case <-done:
-					break LOOP
+					return
 				default:
 				}
 			}

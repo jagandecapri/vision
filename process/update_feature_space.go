@@ -26,7 +26,6 @@ func UpdateFeatureSpace2(subspace_channels anomalies.SubspaceChannels, sorter []
 	acc_c := make(chan preprocess.MicroSlot)
 
 	go func() {
-	LOOP:
 		for {
 			select {
 			case X := <-acc_c:
@@ -115,7 +114,7 @@ func UpdateFeatureSpace2(subspace_channels anomalies.SubspaceChannels, sorter []
 					}
 				}
 			case <-done:
-				break LOOP
+				return
 			default:
 			}
 		}

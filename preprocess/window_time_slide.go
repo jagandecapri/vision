@@ -26,7 +26,6 @@ func WindowTimeSlide(ch chan PacketData, acc_c AccumulatorChannels, done chan st
 		time_init := time.Now()
 		time_counter := time.Time{}
 
-		LOOP:
 		for{
 			select{
 				case pd := <- ch:
@@ -51,7 +50,7 @@ func WindowTimeSlide(ch chan PacketData, acc_c AccumulatorChannels, done chan st
 
 					acc.AddPacket(pd.Data)
 				case <-done:
-					break LOOP
+					return
 				default:
 			}
 		}

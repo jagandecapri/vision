@@ -60,14 +60,13 @@ func TestWindowTimeSlide(t *testing.T) {
 	}()
 
 
-	LOOP:
 	for {
 		select{
 			case <-acc_c.AggSrc:
 			case <-acc_c.AggDst:
 			case <-acc_c.AggSrcDst:
 			case <-done:
-				break LOOP
+				return
 			default:
 		}
 	}
