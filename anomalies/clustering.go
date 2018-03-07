@@ -58,7 +58,7 @@ func Cluster(subspace tree.Subspace, config utils.Config, done chan struct{}, ou
 				case processPackage := <-in:
 					x_old := processPackage.X_old
 					x_new_update := processPackage.X_new_update
-					subspace.ComputeSubspace2(x_old, x_new_update)
+					subspace.ComputeSubspace(x_old, x_new_update)
 					subspace.Cluster(config.Min_dense_points, config.Min_cluster_points)
 					dissimilarity_map := ComputeDissmilarityVector(subspace)
 					if len(subspace.GetOutliers()) > 0 {
