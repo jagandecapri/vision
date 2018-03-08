@@ -8,7 +8,7 @@ import (
 
 var aggsrc_anomalies = map[string]AnomaliesInterface{}
 
-var aggsrc_dis_vector = map[[2]string][] chan DissimilarityVector{}
+var aggsrc_dis_vector = map[[2]string][] chan DissimilarityVectorContainer{}
 
 var aggsrc_subspaces = map[[2]string] chan ProcessPackage{}
 
@@ -16,7 +16,7 @@ var aggdst_anomalies = map[string]AnomaliesInterface{
 	"ddos": NewDDOS(),
 }
 
-var aggdst_dis_vector = map[[2]string][] chan DissimilarityVector{
+var aggdst_dis_vector = map[[2]string][] chan DissimilarityVectorContainer{
 	[2]string{"nbSrcs", "avgPktSize"}: {aggdst_anomalies["ddos"].GetChannel([2]string{"nbSrcs", "avgPktSize"})},
 	[2]string{"perICMP", "perSYN"}: {aggdst_anomalies["ddos"].GetChannel([2]string{"perICMP", "perSYN"})},
 	[2]string{"nbSrcPort", "perICMP"}: {aggdst_anomalies["ddos"].GetChannel([2]string{"nbSrcPort", "perICMP"})},
@@ -26,7 +26,7 @@ var aggdst_subspaces = map[[2]string] chan ProcessPackage{}
 
 var aggsrcdst_anomalies = map[string]AnomaliesInterface{}
 
-var aggsrcdst_dis_vector = map[[2]string][] chan DissimilarityVector{}
+var aggsrcdst_dis_vector = map[[2]string][] chan DissimilarityVectorContainer{}
 
 var aggsrcdst_subspaces = map[[2]string] chan ProcessPackage{}
 
@@ -49,7 +49,7 @@ type ProcessPackage struct{
 	X_new_update []tree.Point
 }
 
-func Cluster(subspace tree.Subspace, config utils.Config, done chan struct{}, outs ...chan DissimilarityVector) chan ProcessPackage{
+func Cluster(subspace tree.Subspace, config utils.Config, done chan struct{}, outs ...chan DissimilarityVectorContainer) chan ProcessPackage{
 	in := make(chan ProcessPackage)
 	counter := 1
 	go func() {
@@ -60,12 +60,12 @@ func Cluster(subspace tree.Subspace, config utils.Config, done chan struct{}, ou
 					x_new_update := processPackage.X_new_update
 					subspace.ComputeSubspace(x_old, x_new_update)
 					subspace.Cluster(config.Min_dense_points, config.Min_cluster_points)
-					dissimilarity_map := ComputeDissmilarityVector(subspace)
+					dissimilarity_vectors := ComputeDissmilarityVector(subspace)
 					if len(subspace.GetOutliers()) > 0 {
 						fmt.Println("key:", subspace.Subspace_key, "outliers:", subspace.GetOutliers(), "clusters:", subspace.GetClusters())
 					}
 					for _, out := range outs {
-						out <- DissimilarityVector{Id: counter, Vector: dissimilarity_map}
+						out <- DissimilarityVectorContainer{Id: counter, DissimilarityVectors: dissimilarity_vectors}
 					}
 					counter++
 				case <-done:

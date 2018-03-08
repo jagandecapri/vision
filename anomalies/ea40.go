@@ -5,12 +5,16 @@ import (
 )
 
 type DissimilarityVector struct{
+	PointKey tree.PointKey
+	Distance float64
+}
+type DissimilarityVectorContainer struct{
 	Id int
-	Vector map[tree.PointKey]float64
+	DissimilarityVectors []DissimilarityVector
 }
 
-func ComputeDissmilarityVector(subspace tree.Subspace) map[tree.PointKey]float64{
-	dissimilarity_map := map[tree.PointKey]float64{}
+func ComputeDissmilarityVector(subspace tree.Subspace) []DissimilarityVector{
+	dissimilarity_vectors := []DissimilarityVector{}
 
 	outliers := subspace.GetOutliers()
 	cluster := subspace.GetBiggestCluster()
@@ -18,8 +22,9 @@ func ComputeDissmilarityVector(subspace tree.Subspace) map[tree.PointKey]float64
 
 	for _, outlier := range outliers{
 		distance := center_biggest_cluster.Distance(&outlier)
-		dissimilarity_map[outlier.Key] = distance
+		dissimilarity_vector := DissimilarityVector{PointKey: outlier.Key, Distance: distance}
+		dissimilarity_vectors = append(dissimilarity_vectors, dissimilarity_vector)
 	}
 
-	return dissimilarity_map
+	return dissimilarity_vectors
 }

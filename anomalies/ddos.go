@@ -1,15 +1,15 @@
 package anomalies
 
 type DDOS struct{
-	Channels map[[2]string] chan DissimilarityVector
+	Channels map[[2]string] chan DissimilarityVectorContainer
 }
 
-func (d *DDOS) GetChannel(subspace_key [2]string) chan DissimilarityVector {
+func (d *DDOS) GetChannel(subspace_key [2]string) chan DissimilarityVectorContainer {
 	return d.Channels[subspace_key]
 }
 
 func (d *DDOS) WaitOnChannels(done chan struct{}){
-	out := make(chan DissimilarityVector)
+	out := make(chan DissimilarityVectorContainer)
 	go func() {
 		LOOP:
 		for{
@@ -28,7 +28,7 @@ func (d *DDOS) WaitOnChannels(done chan struct{}){
 	}()
 
 	go func(){
-		store := map[int][]DissimilarityVector{}
+		store := map[int][]DissimilarityVectorContainer{}
 		LOOP:
 		for{
 			select{
@@ -67,9 +67,9 @@ func (d *DDOS) WaitOnChannels(done chan struct{}){
 }
 
 func NewDDOS() *DDOS{
-	return &DDOS{Channels: map[[2]string] chan DissimilarityVector{
-		[2]string{"nbSrcs", "avgPktSize"}: make(chan DissimilarityVector),
-		[2]string{"perICMP", "perSYN"}: make(chan DissimilarityVector),
-		[2]string{"nbSrcPort", "perICMP"}: make(chan DissimilarityVector),
+	return &DDOS{Channels: map[[2]string] chan DissimilarityVectorContainer{
+		[2]string{"nbSrcs", "avgPktSize"}: make(chan DissimilarityVectorContainer),
+		[2]string{"perICMP", "perSYN"}: make(chan DissimilarityVectorContainer),
+		[2]string{"nbSrcPort", "perICMP"}: make(chan DissimilarityVectorContainer),
 	}}
 }
