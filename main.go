@@ -9,11 +9,11 @@ import (
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"sort"
-	"github.com/jagandecapri/vision/tree"
 	"github.com/jagandecapri/vision/server"
 	"flag"
 	"gopkg.in/natefinch/lumberjack.v2"
 	"github.com/jagandecapri/vision/anomalies"
+	"github.com/jagandecapri/vision/utils"
 )
 
 var scale_factor = 5
@@ -44,7 +44,7 @@ func main(){
 	done := make(chan struct{})
 
 	sorter:= getSorter()
-	config := process.Config{Min_dense_points: 10, Min_cluster_points: 15, Execution_type: process.PARALLEL, Num_cpu: *num_cpu}
+	config := utils.Config{Min_dense_points: 10, Min_cluster_points: 15, Execution_type: utils.PARALLEL, Num_cpu: *num_cpu}
 
 	BootServer(data)
 	subspace_channel_containers := anomalies.ClusteringBuilder(config, done)
