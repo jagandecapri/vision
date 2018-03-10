@@ -1,4 +1,4 @@
-package process
+package utils
 
 const SEQUENTIAL = 1
 const PARALLEL = 2
