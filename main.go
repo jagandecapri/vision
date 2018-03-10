@@ -14,6 +14,7 @@ import (
 	"gopkg.in/natefinch/lumberjack.v2"
 	"github.com/jagandecapri/vision/anomalies"
 	"github.com/jagandecapri/vision/utils"
+	"os"
 )
 
 var scale_factor = 5
@@ -51,7 +52,11 @@ func main(){
 	accumulator_channels := process.UpdateFeatureSpaceBuilder(subspace_channel_containers, sorter, done)
 	preprocess.WindowTimeSlide(ch, accumulator_channels, done)
 
-	handleRead, err := pcap.OpenOffline("C:\\Users\\Jack\\Downloads\\201705021400.pcap")
+	pcap_file_path := os.Getenv("PCAP_FILE")
+	if pcap_file_path == ""{
+		pcap_file_path = "C:\\Users\\Jack\\Downloads\\201705021400.pcap"
+	}
+	handleRead, err := pcap.OpenOffline(pcap_file_path)
 
 	if(err != nil){
 		log.Fatal(err)
