@@ -48,3 +48,7 @@
 [[constraint]]
   branch = "master"
   name = "github.com/lucasb-eyer/go-colorful"
+
+[[constraint]]
+  name = "github.com/mattn/go-sqlite3"
+  version = "1.6.0"
