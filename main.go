@@ -29,7 +29,7 @@ func getSorter() []string{
 }
 
 func main(){
-	log_path := os.Getenv("LOG_PATH")
+	log_path := os.Getenv("LOG_FILE")
 	if log_path == ""{
 		log_path = "C:\\Users\\Jack\\go\\src\\github.com\\jagandecapri\\vision\\logs\\lumber_log.log"
 	}
