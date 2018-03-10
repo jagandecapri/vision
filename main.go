@@ -29,8 +29,13 @@ func getSorter() []string{
 }
 
 func main(){
+	log_path := os.Getenv("LOG_PATH")
+	if log_path == ""{
+		log_path = "C:\\Users\\Jack\\go\\src\\github.com\\jagandecapri\\vision\\logs\\lumber_log.log"
+	}
+
 	log.SetOutput(&lumberjack.Logger{
-		Filename:   "C:\\Users\\Jack\\go\\src\\github.com\\jagandecapri\\vision\\logs\\lumber_log.log",
+		Filename:   log_path,
 		MaxSize:    500, // megabytes
 		MaxBackups: 3,
 		MaxAge:     28, //days
