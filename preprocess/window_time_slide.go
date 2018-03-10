@@ -38,8 +38,6 @@ func WindowTimeSlide(ch chan PacketData, acc_c AccumulatorChannels, done chan st
 						acc = NewAccumulator()
 					}
 
-					fmt.Println(time_counter, packet_time, time_counter.Add(delta_t), time_counter.IsZero(), packet_time.After(time_counter.Add(delta_t)))
-
 					if !time_counter.IsZero() && packet_time.After(time_counter.Add(delta_t)){
 						fmt.Println("packet_time > time_counter")
 						X := acc.GetMicroSlot()
