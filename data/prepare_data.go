@@ -10,73 +10,12 @@ import (
 	"os"
 	"time"
 	"fmt"
-	"database/sql"
 )
 
 var delta_t = 300 * time.Millisecond
 var window = 15 * time.Second
 var WINDOW_ARR_LEN = int(window.Seconds()/delta_t.Seconds())
 var Point_ctr = 0
-
-func WriteToDb(acc_c preprocess.AccumulatorChannel){
-	os.Remove("./foo.db")
-
-	db, err := sql.Open("sqlite3", "./foo.db")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer db.Close()
-
-	create_agg_src := `CREATE TABLE IF NOT EXISTS agg_src (
-	id	INTEGER PRIMARY KEY AUTOINCREMENT,
-	flow_data	TEXT,
-	last_packet_timestamp	NUMERIC
-);`
-	_, err = db.Exec(create_agg_src)
-	if err != nil {
-		log.Printf("%q: %s\n", err, create_agg_src)
-		return
-	}
-
-	create_agg_dst := `CREATE TABLE IF NOT EXISTS agg_src (
-	id	INTEGER PRIMARY KEY AUTOINCREMENT,
-	flow_data	TEXT,
-	last_packet_timestamp	NUMERIC
-);`
-	_, err = db.Exec(create_agg_dst)
-	if err != nil {
-		log.Printf("%q: %s\n", err, create_agg_dst)
-		return
-	}
-
-	create_agg_srcdst := `CREATE TABLE IF NOT EXISTS agg_src (
-	id	INTEGER PRIMARY KEY AUTOINCREMENT,
-	flow_data	TEXT,
-	last_packet_timestamp	NUMERIC
-);`
-	_, err = db.Exec(create_agg_src)
-	if err != nil {
-		log.Printf("%q: %s\n", err, create_agg_srcdst)
-		return
-	}
-
-	tx, err := db.Begin()
-	if err != nil {
-		log.Fatal(err)
-	}
-	stmt, err := tx.Prepare("insert into foo(id, name) values(?, ?)")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer stmt.Close()
-	for i := 0; i < 100; i++ {
-		_, err = stmt.Exec(i, fmt.Sprintf("こんにちわ世界%03d", i))
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-	tx.Commit()
-}
 
 func WindowTimeSlide(ch chan preprocess.PacketData, acc_c preprocess.AccumulatorChannels, done chan struct{}){
 
@@ -116,15 +55,22 @@ func WindowTimeSlide(ch chan preprocess.PacketData, acc_c preprocess.Accumulator
 	}()
 }
 
-func main(){
+func Run(){
 	ch := make(chan preprocess.PacketData)
 	done := make(chan struct{})
+	acc_c := preprocess.AccumulatorChannels{
+		AggSrc:    make(chan preprocess.MicroSlot),
+		AggDst:    make(chan preprocess.MicroSlot),
+		AggSrcDst: make(chan preprocess.MicroSlot),
+	}
 
 	pcap_file_path := os.Getenv("PCAP_FILE")
 	if pcap_file_path == ""{
 		pcap_file_path = "C:\\Users\\Jack\\Downloads\\201705021400.pcap"
 	}
 
+	WindowTimeSlide(ch, acc_c, done)
+	NewSQL(acc_c, done, delta_t)
 	handleRead, err := pcap.OpenOffline(pcap_file_path)
 
 	if(err != nil){
