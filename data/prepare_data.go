@@ -21,28 +21,29 @@ func WindowTimeSlide(ch chan preprocess.PacketData, acc_c preprocess.Accumulator
 
 	go func(){
 		acc := preprocess.NewAccumulator()
-		time_init := time.Now()
+		//time_init := time.Now()
 		time_counter := time.Time{}
 
 		for{
 			select{
 			case pd := <- ch:
+				fmt.Printf("*")
 				packet_time := pd.Metadata.Timestamp
 
 				if time_counter.IsZero(){
-					fmt.Println("Initialize Time")
+					//log.Println("Initialize Time")
 					time_counter = packet_time
 					acc = preprocess.NewAccumulator()
 				}
 
 				if !time_counter.IsZero() && packet_time.After(time_counter.Add(delta_t)){
-					fmt.Println("packet_time > time_counter")
+					//log.Println("packet_time > time_counter")
 					X := acc.GetMicroSlot()
 					acc_c.AggSrc <- X.AggSrc
 					acc_c.AggDst <- X.AggDst
 					acc_c.AggSrcDst <- X.AggSrcDst
-					log.Println("Time to read data:", time.Since(time_init))
-					time_init = time.Now()
+					//log.Println("Time to read data:", time.Since(time_init))
+					//time_init = time.Now()
 					time_counter = time.Time{}
 				}
 

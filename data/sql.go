@@ -176,6 +176,7 @@ func (s *SQL) WriteToDb(acc_c preprocess.AccumulatorChannels, done chan struct{}
 		for{
 			select{
 				case X := <-acc_c.AggSrc:
+					log.Println("Writing aggsrc data")
 					tmp = X
 
 					tpl.Reset()
@@ -238,6 +239,7 @@ func (s *SQL) WriteToDb(acc_c preprocess.AccumulatorChannels, done chan struct{}
 					db.Close()
 					batch_counter_agg_src++
 			case X := <-acc_c.AggDst:
+					log.Println("Writing aggdst data")
 					tmp = X
 
 					tpl.Reset()
@@ -300,6 +302,7 @@ func (s *SQL) WriteToDb(acc_c preprocess.AccumulatorChannels, done chan struct{}
 					db.Close()
 					batch_counter_agg_dst++
 				case X := <-acc_c.AggSrcDst:
+					log.Println("Writing aggsrcdst data")
 					tmp = X
 
 					tpl.Reset()
