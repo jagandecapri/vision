@@ -134,23 +134,23 @@ func (a *AggDst) AddPacket(p gopacket.Packet) gopacket.ErrorLayer{
 
 
 func (a *AggDst) GetKey() tree.PointKey {
-	var SrcIP , DstIP []gopacket.Endpoint
-	var SrcPort, DstPort []layers.TCPPort
+	var SrcIP , DstIP []string
+	var SrcPort, DstPort []string
 
 	for src_ip, _ := range a.srcs{
-		SrcIP = append(SrcIP, src_ip)
+		SrcIP = append(SrcIP, src_ip.String())
 	}
 
 	for src_port, _ := range a.srcPorts{
-		SrcPort = append(SrcPort, src_port)
+		SrcPort = append(SrcPort, src_port.String())
 	}
 
 	for dst_ip, _ := range a.dsts{
-		DstIP = append(DstIP, dst_ip)
+		DstIP = append(DstIP, dst_ip.String())
 	}
 
 	for dst_port, _ := range a.dstPorts{
-		DstPort = append(DstPort, dst_port)
+		DstPort = append(DstPort, dst_port.String())
 	}
 
 	point_key := tree.PointKey{	SrcIP: SrcIP, DstIP: DstIP,

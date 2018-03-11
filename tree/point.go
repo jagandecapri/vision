@@ -2,13 +2,11 @@ package tree
 
 import (
 	"math"
-	"github.com/google/gopacket/layers"
-	"github.com/google/gopacket"
 )
 
 type PointKey struct{
-	SrcIP, DstIP []gopacket.Endpoint
-	SrcPort, DstPort []layers.TCPPort
+	SrcIP, DstIP []string
+	SrcPort, DstPort []string
 }
 
 type Point struct{
