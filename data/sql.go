@@ -372,6 +372,82 @@ func (s *SQL) WriteToDb(acc_c preprocess.AccumulatorChannels, done chan struct{}
 	}()
 }
 
+func (s * SQL) ReadFromDb(acc_c preprocess.AccumulatorChannels) chan struct{}{
+	done := make(chan struct{})
+
+	var batch_counter_agg_src, batch_counter_agg_dst, batch_counter_agg_srcdst int
+
+	db, err := sql.Open("sqlite3", s.db_name)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	rows, err := db.Query("SELECT MAX(batch) FROM " + s.agg_src_table)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for rows.Next() {
+		err = rows.Scan(&batch_counter_agg_src)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	err = rows.Err()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	rows.Close()
+
+	rows, err = db.Query("SELECT MAX(batch) FROM " + s.agg_dst_table)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for rows.Next() {
+		err = rows.Scan(&batch_counter_agg_dst)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	err = rows.Err()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	rows.Close()
+
+	rows, err = db.Query("SELECT MAX(batch) FROM " + s.agg_srcdst_table)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for rows.Next() {
+		err = rows.Scan(&batch_counter_agg_srcdst)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	err = rows.Err()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	rows.Close()
+
+	db.Close()
+
+	go func(){
+		//TODO: SELECT data
+	}()
+
+	return done
+}
+
 func NewSQL(acc_c preprocess.AccumulatorChannels, done chan struct{}, delta_t time.Duration) SQL{
 	now := time.Now()
 	now_string := now.Format(time.RFC3339)
@@ -387,6 +463,58 @@ func NewSQL(acc_c preprocess.AccumulatorChannels, done chan struct{}, delta_t ti
 	}
 	sql.SetupDb()
 	sql.WriteToDb(acc_c, done)
+
+	return sql
+}
+
+func NewSQLRead(delta_t time.Duration) SQL{
+	db_name := "./vision.db"
+	metadata_table := "metadata"
+	var agg_src_table, agg_dst_table, agg_srcdst_table string
+
+	db, err := sql.Open("sqlite3", db_name)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+
+	rows, err := db.Query("SELECT table_name, table_type FROM " +metadata_table + " WHERE delta_t = '" + delta_t.String() + "'")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var table_name string
+		var table_type string
+		err = rows.Scan(&table_name, &table_type)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println(table_name, table_type)
+		switch (table_type){
+		case "agg_src":
+			agg_src_table = table_name
+		case "agg_dst":
+			agg_dst_table = table_name
+		case "agg_srcdst":
+			agg_srcdst_table = table_name
+		}
+	}
+
+	err = rows.Err()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	sql := SQL{
+		db_name: db_name,
+		metadata_table: metadata_table,
+		agg_src_table: agg_src_table,
+		agg_dst_table: agg_dst_table,
+		agg_srcdst_table: agg_srcdst_table,
+		delta_t: delta_t.String(),
+	}
 
 	return sql
 }
