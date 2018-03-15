@@ -380,10 +380,6 @@ func (s *SQL) WriteToDb(acc_c preprocess.AccumulatorChannels, done chan struct{}
 	}()
 }
 
-func (s *SQL) ProcessRowData() []tree.Point{
-
-}
-
 func (s *SQL) ReadFromDb(acc_c preprocess.AccumulatorChannels) chan struct{}{
 	done := make(chan struct{})
 
