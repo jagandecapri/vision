@@ -40,6 +40,7 @@ func (s *SQL) SetupDb(){
 		table_type TEXT,
 		table_name TEXT,
 		time NUMERIC,
+		created_at DATETIME NOT NULL DEFAULT (strftime('%Y-%m-%d %H:%M:%S', 'now', 'localtime')),
 		UNIQUE(delta_t, table_type))`
 
 	_, err = db.Exec(metadata_table)
@@ -96,7 +97,8 @@ func (s *SQL) SetupDb(){
 		perURG REAL,
 		avgPktSize REAL,
 		meanTTL REAL,
-		last_packet_timestamp	NUMERIC
+		last_packet_timestamp	NUMERIC,
+		created_at DATETIME NOT NULL DEFAULT (strftime('%Y-%m-%d %H:%M:%S', 'now', 'localtime'))
 	)`)
 
 	var tpl bytes.Buffer
