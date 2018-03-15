@@ -12,6 +12,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"sync"
 )
 
 type SQL struct{
@@ -81,6 +82,7 @@ func (s *SQL) SetupDb(){
 		flow_key TEXT,
 		agg_src TEXT,
 		agg_dst TEXT,
+		nbPacket REAL,
 		nbSrcPort REAL,
 		nbDstPort REAL,
 		nbSrcs REAL,
@@ -147,6 +149,7 @@ func (s *SQL) WriteToDb(acc_c preprocess.AccumulatorChannels, done chan struct{}
 						agg_src, 
 						agg_dst, 
 						last_packet_timestamp,
+						nbPacket,
 						nbSrcPort, 
 						nbDstPort, 
 						nbSrcs, 
@@ -159,7 +162,7 @@ func (s *SQL) WriteToDb(acc_c preprocess.AccumulatorChannels, done chan struct{}
 						perCWR, 
 						perURG,
 						avgPktSize, 
-						meanTTL) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+						meanTTL) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
 
 
 	var tpl bytes.Buffer
@@ -215,19 +218,20 @@ func (s *SQL) WriteToDb(acc_c preprocess.AccumulatorChannels, done chan struct{}
 						tmp1[2] = strings.Join(p.Key.SrcIP, ",")
 						tmp1[3] = strings.Join(p.Key.DstIP, ",")
 						tmp1[4] = nil
-						tmp1[5] = p.Vec_map["nbSrcPort"]
-						tmp1[6]	= p.Vec_map["nbDstPort"]
-						tmp1[7]	= p.Vec_map["nbSrcs"]
-						tmp1[8]	= p.Vec_map["nbDsts"]
-						tmp1[9]	= p.Vec_map["perSYN"]
-						tmp1[10] = p.Vec_map["perACK"]
-						tmp1[11] = p.Vec_map["perICMP"]
-						tmp1[12] = p.Vec_map["perRST"]
-						tmp1[13] = p.Vec_map["perFIN"]
-						tmp1[14] = p.Vec_map["perCWR"]
-						tmp1[15] = p.Vec_map["perURG"]
-						tmp1[16] = p.Vec_map["avgPktSize"]
-						tmp1[17] = p.Vec_map["meanTTL"]
+						tmp1[5] = p.Vec_map["nbPacket"]
+						tmp1[6] = p.Vec_map["nbSrcPort"]
+						tmp1[7]	= p.Vec_map["nbDstPort"]
+						tmp1[8]	= p.Vec_map["nbSrcs"]
+						tmp1[9]	= p.Vec_map["nbDsts"]
+						tmp1[10] = p.Vec_map["perSYN"]
+						tmp1[11] = p.Vec_map["perACK"]
+						tmp1[12] = p.Vec_map["perICMP"]
+						tmp1[13] = p.Vec_map["perRST"]
+						tmp1[14] = p.Vec_map["perFIN"]
+						tmp1[15] = p.Vec_map["perCWR"]
+						tmp1[16] = p.Vec_map["perURG"]
+						tmp1[17] = p.Vec_map["avgPktSize"]
+						tmp1[18] = p.Vec_map["meanTTL"]
 
 						_, err = stmt.Exec(tmp1...)
 						if err != nil {
@@ -278,19 +282,20 @@ func (s *SQL) WriteToDb(acc_c preprocess.AccumulatorChannels, done chan struct{}
 						tmp1[2] = strings.Join(p.Key.SrcIP, ",")
 						tmp1[3] = strings.Join(p.Key.DstIP, ",")
 						tmp1[4] = nil
-						tmp1[5] = p.Vec_map["nbSrcPort"]
-						tmp1[6]	= p.Vec_map["nbDstPort"]
-						tmp1[7]	= p.Vec_map["nbSrcs"]
-						tmp1[8]	= p.Vec_map["nbDsts"]
-						tmp1[9]	= p.Vec_map["perSYN"]
-						tmp1[10] = p.Vec_map["perACK"]
-						tmp1[11] = p.Vec_map["perICMP"]
-						tmp1[12] = p.Vec_map["perRST"]
-						tmp1[13] = p.Vec_map["perFIN"]
-						tmp1[14] = p.Vec_map["perCWR"]
-						tmp1[15] = p.Vec_map["perURG"]
-						tmp1[16] = p.Vec_map["avgPktSize"]
-						tmp1[17] = p.Vec_map["meanTTL"]
+						tmp1[5] = p.Vec_map["nbPacket"]
+						tmp1[6] = p.Vec_map["nbSrcPort"]
+						tmp1[7]	= p.Vec_map["nbDstPort"]
+						tmp1[8]	= p.Vec_map["nbSrcs"]
+						tmp1[9]	= p.Vec_map["nbDsts"]
+						tmp1[10] = p.Vec_map["perSYN"]
+						tmp1[11] = p.Vec_map["perACK"]
+						tmp1[12] = p.Vec_map["perICMP"]
+						tmp1[13] = p.Vec_map["perRST"]
+						tmp1[14] = p.Vec_map["perFIN"]
+						tmp1[15] = p.Vec_map["perCWR"]
+						tmp1[16] = p.Vec_map["perURG"]
+						tmp1[17] = p.Vec_map["avgPktSize"]
+						tmp1[18] = p.Vec_map["meanTTL"]
 
 						_, err = stmt.Exec(tmp1...)
 						if err != nil {
@@ -341,19 +346,20 @@ func (s *SQL) WriteToDb(acc_c preprocess.AccumulatorChannels, done chan struct{}
 						tmp1[2] = strings.Join(p.Key.SrcIP, ",")
 						tmp1[3] = strings.Join(p.Key.DstIP, ",")
 						tmp1[4] = nil
-						tmp1[5] = p.Vec_map["nbSrcPort"]
-						tmp1[6]	= p.Vec_map["nbDstPort"]
-						tmp1[7]	= p.Vec_map["nbSrcs"]
-						tmp1[8]	= p.Vec_map["nbDsts"]
-						tmp1[9]	= p.Vec_map["perSYN"]
-						tmp1[10] = p.Vec_map["perACK"]
-						tmp1[11] = p.Vec_map["perICMP"]
-						tmp1[12] = p.Vec_map["perRST"]
-						tmp1[13] = p.Vec_map["perFIN"]
-						tmp1[14] = p.Vec_map["perCWR"]
-						tmp1[15] = p.Vec_map["perURG"]
-						tmp1[16] = p.Vec_map["avgPktSize"]
-						tmp1[17] = p.Vec_map["meanTTL"]
+						tmp1[5] = p.Vec_map["nbPacket"]
+						tmp1[6] = p.Vec_map["nbSrcPort"]
+						tmp1[7]	= p.Vec_map["nbDstPort"]
+						tmp1[8]	= p.Vec_map["nbSrcs"]
+						tmp1[9]	= p.Vec_map["nbDsts"]
+						tmp1[10] = p.Vec_map["perSYN"]
+						tmp1[11] = p.Vec_map["perACK"]
+						tmp1[12] = p.Vec_map["perICMP"]
+						tmp1[13] = p.Vec_map["perRST"]
+						tmp1[14] = p.Vec_map["perFIN"]
+						tmp1[15] = p.Vec_map["perCWR"]
+						tmp1[16] = p.Vec_map["perURG"]
+						tmp1[17] = p.Vec_map["avgPktSize"]
+						tmp1[18] = p.Vec_map["meanTTL"]
 
 						_, err = stmt.Exec(tmp1...)
 						if err != nil {
@@ -372,7 +378,11 @@ func (s *SQL) WriteToDb(acc_c preprocess.AccumulatorChannels, done chan struct{}
 	}()
 }
 
-func (s * SQL) ReadFromDb(acc_c preprocess.AccumulatorChannels) chan struct{}{
+func (s *SQL) ProcessRowData() []tree.Point{
+
+}
+
+func (s *SQL) ReadFromDb(acc_c preprocess.AccumulatorChannels) chan struct{}{
 	done := make(chan struct{})
 
 	var batch_counter_agg_src, batch_counter_agg_dst, batch_counter_agg_srcdst int
@@ -442,10 +452,148 @@ func (s * SQL) ReadFromDb(acc_c preprocess.AccumulatorChannels) chan struct{}{
 	db.Close()
 
 	go func(){
-		//TODO: SELECT data
+		var wg sync.WaitGroup
+		wg.Add(3)
+
+		go func(acc_c preprocess.AccumulatorChannels, wg sync.WaitGroup){
+			t := template.New("select data from agg_src")
+			t, _ = t.Parse(`SELECT id, flow_key, nbPacket, nbSrcPort,
+		nbDstPort, nbSrcs, nbDsts, perSYN, perACK, perICMP, perRST, perFIN, perCWR, perURG,
+		avgPktSize, meanTTL FROM ` + "`{{.TableName}}`" + "WHERE batch='{{batch}}'" )
+
+			var buf bytes.Buffer
+			var query string
+
+			for i := 1; i <= batch_counter_agg_src; i++ {
+				if err := t.Execute(&buf, struct{TableName string
+					Batch int}{TableName: s.agg_src_table, Batch: i}); err != nil {
+					log.Fatal(err)
+				}
+
+				query = buf.String()
+				points := s.IterateRows(query)
+				acc_c.AggSrc <- points
+			}
+			wg.Done()
+		}(acc_c, wg)
+
+		go func(acc_c preprocess.AccumulatorChannels, wg sync.WaitGroup){
+				t := template.New("select data from agg_dst")
+				t, _ = t.Parse(`SELECT id, flow_key, nbPacket, nbSrcPort,
+			nbDstPort, nbSrcs, nbDsts, perSYN, perACK, perICMP, perRST, perFIN, perCWR, perURG,
+			avgPktSize, meanTTL FROM ` + "`{{.TableName}}`" + "WHERE batch='{{batch}}'" )
+
+				var buf bytes.Buffer
+				var query string
+
+				for i := 1; i <= batch_counter_agg_dst; i++ {
+					if err := t.Execute(&buf, struct{TableName string
+						Batch int}{TableName: s.agg_dst_table, Batch: i}); err != nil {
+						log.Fatal(err)
+					}
+
+					query = buf.String()
+					points := s.IterateRows(query)
+					acc_c.AggDst <- points
+				}
+				wg.Done()
+		}(acc_c, wg)
+
+		go func(acc_c preprocess.AccumulatorChannels, wg sync.WaitGroup){
+			t := template.New("select data from agg_srcdst")
+			t, _ = t.Parse(`SELECT id, flow_key, nbPacket, nbSrcPort,
+			nbDstPort, nbSrcs, nbDsts, perSYN, perACK, perICMP, perRST, perFIN, perCWR, perURG,
+			avgPktSize, meanTTL FROM ` + "`{{.TableName}}`" + "WHERE batch='{{batch}}'" )
+
+			var buf bytes.Buffer
+			var query string
+
+			for i := 1; i <= batch_counter_agg_srcdst; i++ {
+				if err := t.Execute(&buf, struct{TableName string
+					Batch int}{TableName: s.agg_srcdst_table, Batch: i}); err != nil {
+					log.Fatal(err)
+				}
+
+				query = buf.String()
+				points := s.IterateRows(query)
+				acc_c.AggSrcDst <- points
+			}
+			wg.Done()
+		}(acc_c, wg)
+
+		wg.Wait()
+		close(done)
 	}()
 
 	return done
+}
+
+
+func (s SQL) IterateRows(query string) []tree.Point{
+	db, err := sql.Open("sqlite3", s.db_name)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	rows, err := db.Query(query)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	points := []tree.Point{}
+
+	for rows.Next() {
+		var id int
+		var flow_key sql.RawBytes
+		var nbPacket, nbSrcPort, nbDstPort,
+			nbSrcs, nbDsts, perSYN,
+			perACK, perICMP, perRST,
+			perFIN, perCWR, perURG,
+			avgPktSize, meanTTL float64
+
+		err = rows.Scan(&id, &flow_key, &nbPacket, &nbSrcPort,
+			&nbDstPort, &nbSrcs, &nbDsts,
+				&perSYN, &perACK, &perICMP,
+					&perRST, &perFIN, &perCWR,
+						&perURG, &avgPktSize, &meanTTL)
+
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		x := map[string]float64{
+			"nbPacket": nbPacket,
+			"nbSrcPort": nbSrcPort,
+			"nbDstPort": nbDstPort,
+			"nbSrcs": nbSrcs,
+			"nbDsts": nbDsts,
+			"perSYN": perSYN,
+			"perACK": perACK,
+			"perICMP": perICMP,
+			"perRST": perRST,
+			"perFIN": perFIN,
+			"perCWR": perCWR,
+			"perURG": perURG,
+			"avgPktSize": avgPktSize,
+			"meanTTL": meanTTL,
+		}
+
+		point_key := tree.PointKey{}
+		json.Unmarshal(flow_key, point_key)
+
+		pnt := tree.Point{Id: id, Key: point_key, Vec_map: x}
+		points = append(points, pnt)
+	}
+
+	err = rows.Err()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	rows.Close()
+
+	return points
 }
 
 func NewSQL(acc_c preprocess.AccumulatorChannels, done chan struct{}, delta_t time.Duration) SQL{
