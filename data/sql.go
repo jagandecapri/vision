@@ -390,59 +390,59 @@ func (s *SQL) ReadFromDb(acc_c preprocess.AccumulatorChannels) chan struct{}{
 		log.Fatal(err)
 	}
 
-	rows, err := db.Query("SELECT MAX(batch) FROM " + s.agg_src_table)
+	rows, err := db.Query("SELECT MAX(batch) FROM `" + s.agg_src_table + "`")
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("agg_src max batch:", err)
 	}
 
 	for rows.Next() {
 		err = rows.Scan(&batch_counter_agg_src)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal("agg_src max batch:", err)
 		}
 	}
 
 	err = rows.Err()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("agg_src max batch:", err)
 	}
 
 	rows.Close()
 
-	rows, err = db.Query("SELECT MAX(batch) FROM " + s.agg_dst_table)
+	rows, err = db.Query("SELECT MAX(batch) FROM `" + s.agg_dst_table + "`")
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("agg_dst max batch:", err)
 	}
 
 	for rows.Next() {
 		err = rows.Scan(&batch_counter_agg_dst)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal("agg_dst max batch:", err)
 		}
 	}
 
 	err = rows.Err()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("agg_dst max batch:", err)
 	}
 
 	rows.Close()
 
-	rows, err = db.Query("SELECT MAX(batch) FROM " + s.agg_srcdst_table)
+	rows, err = db.Query("SELECT MAX(batch) FROM `" + s.agg_srcdst_table + "`")
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("agg_srcdst max batch:", err)
 	}
 
 	for rows.Next() {
 		err = rows.Scan(&batch_counter_agg_srcdst)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal("agg_srcdst max batch:", err)
 		}
 	}
 
 	err = rows.Err()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("agg_srcdst max batch:", err)
 	}
 
 	rows.Close()
@@ -457,7 +457,7 @@ func (s *SQL) ReadFromDb(acc_c preprocess.AccumulatorChannels) chan struct{}{
 			t := template.New("select data from agg_src")
 			t, _ = t.Parse(`SELECT id, flow_key, nbPacket, nbSrcPort,
 		nbDstPort, nbSrcs, nbDsts, perSYN, perACK, perICMP, perRST, perFIN, perCWR, perURG,
-		avgPktSize, meanTTL FROM ` + "`{{.TableName}}`" + "WHERE batch='{{batch}}'" )
+		avgPktSize, meanTTL FROM ` + "`{{.TableName}}`" + "WHERE batch={{batch}}" )
 
 			var buf bytes.Buffer
 			var query string
@@ -469,6 +469,7 @@ func (s *SQL) ReadFromDb(acc_c preprocess.AccumulatorChannels) chan struct{}{
 				}
 
 				query = buf.String()
+				log.Println(query)
 				points := s.IterateRows(query)
 				acc_c.AggSrc <- points
 			}
@@ -479,7 +480,7 @@ func (s *SQL) ReadFromDb(acc_c preprocess.AccumulatorChannels) chan struct{}{
 				t := template.New("select data from agg_dst")
 				t, _ = t.Parse(`SELECT id, flow_key, nbPacket, nbSrcPort,
 			nbDstPort, nbSrcs, nbDsts, perSYN, perACK, perICMP, perRST, perFIN, perCWR, perURG,
-			avgPktSize, meanTTL FROM ` + "`{{.TableName}}`" + "WHERE batch='{{batch}}'" )
+			avgPktSize, meanTTL FROM ` + "`{{.TableName}}`" + "WHERE batch={{batch}}" )
 
 				var buf bytes.Buffer
 				var query string
@@ -501,7 +502,7 @@ func (s *SQL) ReadFromDb(acc_c preprocess.AccumulatorChannels) chan struct{}{
 			t := template.New("select data from agg_srcdst")
 			t, _ = t.Parse(`SELECT id, flow_key, nbPacket, nbSrcPort,
 			nbDstPort, nbSrcs, nbDsts, perSYN, perACK, perICMP, perRST, perFIN, perCWR, perURG,
-			avgPktSize, meanTTL FROM ` + "`{{.TableName}}`" + "WHERE batch='{{batch}}'" )
+			avgPktSize, meanTTL FROM ` + "`{{.TableName}}`" + "WHERE batch={{batch}}" )
 
 			var buf bytes.Buffer
 			var query string
