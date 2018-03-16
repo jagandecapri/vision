@@ -213,7 +213,7 @@ func (s *SQL) WriteToDb(acc_c preprocess.AccumulatorChannels, done chan struct{}
 							log.Fatal(err)
 						}
 
-						var tmp1 = make([]interface{}, 18)
+						var tmp1 = make([]interface{}, 19)
 
 						tmp1[0] = batch_counter_agg_src
 						tmp1[1] = string(json_string)
@@ -277,7 +277,7 @@ func (s *SQL) WriteToDb(acc_c preprocess.AccumulatorChannels, done chan struct{}
 							log.Fatal(err)
 						}
 
-						var tmp1 = make([]interface{}, 18)
+						var tmp1 = make([]interface{}, 19)
 
 						tmp1[0] = batch_counter_agg_src
 						tmp1[1] = string(json_string)
@@ -341,7 +341,7 @@ func (s *SQL) WriteToDb(acc_c preprocess.AccumulatorChannels, done chan struct{}
 							log.Fatal(err)
 						}
 
-						var tmp1 = make([]interface{}, 18)
+						var tmp1 = make([]interface{}, 19)
 
 						tmp1[0] = batch_counter_agg_src
 						tmp1[1] = string(json_string)
