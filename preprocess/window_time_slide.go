@@ -3,7 +3,6 @@ package preprocess
 import (
 	"time"
 	"log"
-	"fmt"
 )
 
 
@@ -33,13 +32,13 @@ func WindowTimeSlide(ch chan PacketData, acc_c AccumulatorChannels, done chan st
 					packet_time := pd.Metadata.Timestamp
 
 					if time_counter.IsZero(){
-						fmt.Println("Initialize Time")
+						log.Println("Initialize Time")
 						time_counter = packet_time
 						acc = NewAccumulator()
 					}
 
 					if !time_counter.IsZero() && packet_time.After(time_counter.Add(delta_t)){
-						fmt.Println("packet_time > time_counter")
+						log.Println("packet_time > time_counter")
 						X := acc.GetMicroSlot()
 						acc_c.AggSrc <- X.AggSrc
 						acc_c.AggDst <- X.AggDst
