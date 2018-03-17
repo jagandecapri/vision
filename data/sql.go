@@ -544,7 +544,6 @@ func (s *SQL) ReadFromDb(acc_c preprocess.AccumulatorChannels) chan struct{}{
 		}(acc_c, s.agg_srcdst_table, &wg)
 
 		wg.Wait()
-		log.Println("Wait done")
 		return
 	}()
 
