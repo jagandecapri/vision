@@ -14,6 +14,7 @@ func TestRun(t *testing.T) {
 func TestNewSQLRead(t *testing.T) {
 	delta_t := 300 * time.Millisecond
 	sql := NewSQLRead("201705021400", delta_t)
+	done := make(chan struct{})
 
 	acc_c := preprocess.AccumulatorChannels{
 		AggSrc: make(preprocess.AccumulatorChannel),
@@ -21,7 +22,7 @@ func TestNewSQLRead(t *testing.T) {
 		AggSrcDst: make(preprocess.AccumulatorChannel),
 	}
 
-	done := sql.ReadFromDb(acc_c)
+	sql.ReadFromDb(acc_c, done)
 
 	now_src := time.Now()
 	now_dst := time.Now()

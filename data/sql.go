@@ -379,9 +379,7 @@ func (s *SQL) WriteToDb(acc_c preprocess.AccumulatorChannels, done chan struct{}
 	}()
 }
 
-func (s *SQL) ReadFromDb(acc_c preprocess.AccumulatorChannels) chan struct{}{
-	done := make(chan struct{})
-
+func (s *SQL) ReadFromDb(acc_c preprocess.AccumulatorChannels, done chan struct{}){
 	var batch_counter_agg_src, batch_counter_agg_dst, batch_counter_agg_srcdst int
 
 	log.Println(s.db_name)
@@ -546,8 +544,6 @@ func (s *SQL) ReadFromDb(acc_c preprocess.AccumulatorChannels) chan struct{}{
 		wg.Wait()
 		return
 	}()
-
-	return done
 }
 
 
