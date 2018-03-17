@@ -10,7 +10,6 @@ import (
 	"github.com/jagandecapri/vision/preprocess"
 	"github.com/jagandecapri/vision/tree"
 	"encoding/json"
-	"fmt"
 	"strings"
 	"sync"
 )
@@ -385,64 +384,70 @@ func (s *SQL) ReadFromDb(acc_c preprocess.AccumulatorChannels) chan struct{}{
 
 	var batch_counter_agg_src, batch_counter_agg_dst, batch_counter_agg_srcdst int
 
+	log.Println(s.db_name)
 	db, err := sql.Open("sqlite3", s.db_name)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	rows, err := db.Query("SELECT MAX(batch) FROM `" + s.agg_src_table + "`")
+	var query string
+
+	query = "SELECT MAX(batch) FROM `" + s.agg_src_table + "`"
+	rows, err := db.Query(query)
 	if err != nil {
-		log.Fatal("agg_src max batch:", err)
+		log.Fatal(query, err)
 	}
 
 	for rows.Next() {
 		err = rows.Scan(&batch_counter_agg_src)
 		if err != nil {
-			log.Fatal("agg_src max batch:", err)
+			log.Fatal(query, err)
 		}
 	}
 
 	err = rows.Err()
 	if err != nil {
-		log.Fatal("agg_src max batch:", err)
+		log.Fatal(query, err)
 	}
 
 	rows.Close()
 
-	rows, err = db.Query("SELECT MAX(batch) FROM `" + s.agg_dst_table + "`")
+	query = "SELECT MAX(batch) FROM `" + s.agg_dst_table + "`"
+	rows, err = db.Query(query)
 	if err != nil {
-		log.Fatal("agg_dst max batch:", err)
+		log.Fatal(query, err)
 	}
 
 	for rows.Next() {
 		err = rows.Scan(&batch_counter_agg_dst)
 		if err != nil {
-			log.Fatal("agg_dst max batch:", err)
+			log.Fatal(query, err)
 		}
 	}
 
 	err = rows.Err()
 	if err != nil {
-		log.Fatal("agg_dst max batch:", err)
+		log.Fatal(query, err)
 	}
 
 	rows.Close()
 
-	rows, err = db.Query("SELECT MAX(batch) FROM `" + s.agg_srcdst_table + "`")
+	query = "SELECT MAX(batch) FROM `" + s.agg_srcdst_table + "`"
+	rows, err = db.Query(query)
 	if err != nil {
-		log.Fatal("agg_srcdst max batch:", err)
+		log.Fatal(query, err)
 	}
 
 	for rows.Next() {
 		err = rows.Scan(&batch_counter_agg_srcdst)
 		if err != nil {
-			log.Fatal("agg_srcdst max batch:", err)
+			log.Fatal(query, err)
 		}
 	}
 
 	err = rows.Err()
 	if err != nil {
-		log.Fatal("agg_srcdst max batch:", err)
+		log.Fatal(query, err)
 	}
 
 	rows.Close()
@@ -452,76 +457,95 @@ func (s *SQL) ReadFromDb(acc_c preprocess.AccumulatorChannels) chan struct{}{
 	go func(){
 		var wg sync.WaitGroup
 		wg.Add(3)
+		defer close(done)
 
-		go func(acc_c preprocess.AccumulatorChannels, wg sync.WaitGroup){
-			t := template.New("select data from agg_src")
-			t, _ = t.Parse(`SELECT id, flow_key, nbPacket, nbSrcPort,
-		nbDstPort, nbSrcs, nbDsts, perSYN, perACK, perICMP, perRST, perFIN, perCWR, perURG,
-		avgPktSize, meanTTL FROM ` + "`{{.TableName}}`" + "WHERE batch={{batch}}" )
-
-			var buf bytes.Buffer
-			var query string
-
-			for i := 1; i <= batch_counter_agg_src; i++ {
-				if err := t.Execute(&buf, struct{TableName string
-					Batch int}{TableName: s.agg_src_table, Batch: i}); err != nil {
+		go func(acc_c preprocess.AccumulatorChannels, table string, wg *sync.WaitGroup){
+				defer wg.Done()
+				t := template.New("select data from agg_src")
+				t, err = t.Parse(`SELECT id, flow_key, nbPacket, nbSrcPort,
+			nbDstPort, nbSrcs, nbDsts, perSYN, perACK, perICMP, perRST, perFIN, perCWR, perURG,
+			avgPktSize, meanTTL FROM ` + "`{{.TableName}}`" + " WHERE batch={{.Batch}}" )
+				if err != nil{
 					log.Fatal(err)
 				}
 
-				query = buf.String()
-				log.Println(query)
-				points := s.IterateRows(query)
-				acc_c.AggSrc <- points
-			}
-			wg.Done()
-		}(acc_c, wg)
+				var buf bytes.Buffer
+				var query string
 
-		go func(acc_c preprocess.AccumulatorChannels, wg sync.WaitGroup){
+				for i := 1; i <= batch_counter_agg_src; i++ {
+					tpl_data := struct{TableName template.HTML
+						Batch int}{TableName: template.HTML(table), Batch: i}
+					if err := t.Execute(&buf, tpl_data); err != nil {
+						log.Fatal("batch looping src err: ", err)
+					}
+
+					query = buf.String()
+					points := s.IterateRows(query)
+					acc_c.AggSrc <- points
+					buf.Reset()
+				}
+				return
+		}(acc_c, s.agg_src_table, &wg)
+
+		go func(acc_c preprocess.AccumulatorChannels, table string, wg *sync.WaitGroup){
+				defer wg.Done()
 				t := template.New("select data from agg_dst")
-				t, _ = t.Parse(`SELECT id, flow_key, nbPacket, nbSrcPort,
+				t, err = t.Parse(`SELECT id, flow_key, nbPacket, nbSrcPort,
 			nbDstPort, nbSrcs, nbDsts, perSYN, perACK, perICMP, perRST, perFIN, perCWR, perURG,
-			avgPktSize, meanTTL FROM ` + "`{{.TableName}}`" + "WHERE batch={{batch}}" )
+			avgPktSize, meanTTL FROM ` + "`{{.TableName}}`" + " WHERE batch={{.Batch}}" )
+				if err != nil{
+					log.Fatal(err)
+				}
 
 				var buf bytes.Buffer
 				var query string
 
 				for i := 1; i <= batch_counter_agg_dst; i++ {
-					if err := t.Execute(&buf, struct{TableName string
-						Batch int}{TableName: s.agg_dst_table, Batch: i}); err != nil {
-						log.Fatal(err)
+					tpl_data := struct{TableName template.HTML
+						Batch int}{TableName: template.HTML(table), Batch: i}
+					if err := t.Execute(&buf, tpl_data); err != nil {
+						log.Fatal("batch looping dst err: ",err)
 					}
 
 					query = buf.String()
 					points := s.IterateRows(query)
 					acc_c.AggDst <- points
+					buf.Reset()
 				}
-				wg.Done()
-		}(acc_c, wg)
+				return
+		}(acc_c, s.agg_dst_table, &wg)
 
-		go func(acc_c preprocess.AccumulatorChannels, wg sync.WaitGroup){
+		go func(acc_c preprocess.AccumulatorChannels, table string, wg *sync.WaitGroup){
+			defer wg.Done()
 			t := template.New("select data from agg_srcdst")
-			t, _ = t.Parse(`SELECT id, flow_key, nbPacket, nbSrcPort,
+			t, err = t.Parse(`SELECT id, flow_key, nbPacket, nbSrcPort,
 			nbDstPort, nbSrcs, nbDsts, perSYN, perACK, perICMP, perRST, perFIN, perCWR, perURG,
-			avgPktSize, meanTTL FROM ` + "`{{.TableName}}`" + "WHERE batch={{batch}}" )
+			avgPktSize, meanTTL FROM ` + "`{{.TableName}}`" + " WHERE batch={{.Batch}}" )
+			if err != nil{
+				log.Fatal("batch looping srcdst err: ",err)
+			}
 
 			var buf bytes.Buffer
 			var query string
 
 			for i := 1; i <= batch_counter_agg_srcdst; i++ {
-				if err := t.Execute(&buf, struct{TableName string
-					Batch int}{TableName: s.agg_srcdst_table, Batch: i}); err != nil {
+				tpl_data := struct{TableName template.HTML
+					Batch int}{TableName: template.HTML(table), Batch: i}
+				if err := t.Execute(&buf, tpl_data); err != nil {
 					log.Fatal(err)
 				}
 
 				query = buf.String()
 				points := s.IterateRows(query)
 				acc_c.AggSrcDst <- points
+				buf.Reset()
 			}
-			wg.Done()
-		}(acc_c, wg)
+			return
+		}(acc_c, s.agg_srcdst_table, &wg)
 
 		wg.Wait()
-		close(done)
+		log.Println("Wait done")
+		return
 	}()
 
 	return done
@@ -598,7 +622,6 @@ func (s SQL) IterateRows(query string) []tree.Point{
 func NewSQL(acc_c preprocess.AccumulatorChannels, done chan struct{}, delta_t time.Duration) SQL{
 	now := time.Now()
 	now_string := now.Format(time.RFC3339)
-	fmt.Println(now_string)
 	sql := SQL{
 		db_name: "./vision.db",
 		metadata_table: "metadata",
@@ -625,7 +648,8 @@ func NewSQLRead(delta_t time.Duration) SQL{
 	}
 	defer db.Close()
 
-	rows, err := db.Query("SELECT table_name, table_type FROM " +metadata_table + " WHERE delta_t = '" + delta_t.String() + "'")
+	query := "SELECT table_name, table_type FROM " +metadata_table + " WHERE delta_t = '" + delta_t.String() + "'"
+	rows, err := db.Query(query)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -638,7 +662,6 @@ func NewSQLRead(delta_t time.Duration) SQL{
 		if err != nil {
 			log.Fatal(err)
 		}
-		fmt.Println(table_name, table_type)
 		switch (table_type){
 		case "agg_src":
 			agg_src_table = table_name

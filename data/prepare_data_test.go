@@ -4,6 +4,7 @@ import (
 	"testing"
 	"github.com/jagandecapri/vision/preprocess"
 	"time"
+	"log"
 )
 
 func TestRunt(t *testing.T) {
@@ -24,9 +25,12 @@ func TestNewSQLRead(t *testing.T) {
 
 	for{
 		select{
-			case <-acc_c.AggSrc:
+			case res := <-acc_c.AggSrc:
+				log.Println("Received aggsrc data", res)
 			case <-acc_c.AggDst:
+				log.Println("Received aggdst data")
 			case <-acc_c.AggSrcDst:
+				log.Println("Received aggsrcdst data")
 			case <-done:
 				return
 		}
