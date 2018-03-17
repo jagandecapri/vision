@@ -15,6 +15,8 @@ import (
 	"github.com/jagandecapri/vision/anomalies"
 	"github.com/jagandecapri/vision/utils"
 	"os"
+	"github.com/jagandecapri/vision/data"
+	"time"
 )
 
 var scale_factor = 5
@@ -45,42 +47,59 @@ func main(){
 	num_cpu := flag.Int("num-cpu", 0, "Number of CPUs to use")
 	flag.Parse()
 
-	data := make(chan server.HttpData)
-	ch := make(chan preprocess.PacketData)
+	http_data := make(chan server.HttpData)
 	done := make(chan struct{})
 
 	sorter:= getSorter()
 	config := utils.Config{Min_dense_points: 10, Min_cluster_points: 15, Execution_type: utils.PARALLEL, Num_cpu: *num_cpu}
 
-	BootServer(data)
+	delta_t := 300 * time.Millisecond
+
+	BootServer(http_data)
 	subspace_channel_containers := anomalies.ClusteringBuilder(config, done)
-	accumulator_channels := process.UpdateFeatureSpaceBuilder(subspace_channel_containers, sorter, done)
-	preprocess.WindowTimeSlide(ch, accumulator_channels, done)
 
-	pcap_file_path := os.Getenv("PCAP_FILE")
-	if pcap_file_path == ""{
-		pcap_file_path = "C:\\Users\\Jack\\Downloads\\201705021400.pcap"
+	acc_c_receive := preprocess.AccumulatorChannels{
+		AggSrc: make(preprocess.AccumulatorChannel),
+		AggDst: make(preprocess.AccumulatorChannel),
+		AggSrcDst: make(preprocess.AccumulatorChannel),
 	}
 
-	handleRead, err := pcap.OpenOffline(pcap_file_path)
+	sql := data.NewSQLRead("201705021400", delta_t)
+	sql.ReadFromDb(acc_c_receive, done)
 
-	if(err != nil){
-		log.Fatal(err)
-	}
+	acc_c_send := process.UpdateFeatureSpaceBuilder(subspace_channel_containers, sorter, done)
+	preprocess.WindowTimeSlideSimulator(acc_c_receive, acc_c_send, delta_t, done)
 
-	for {
-		data, ci, err := handleRead.ReadPacketData()
-		if err != nil && err != io.EOF {
-			close(done)
-			log.Fatal(err)
-		} else if err == io.EOF {
-			close(done)
-			break
-		} else {
-			packet := gopacket.NewPacket(data, layers.LayerTypeEthernet, gopacket.Default)
-			ch <- preprocess.PacketData{Data: packet, Metadata: ci}
-		}
-	}
+	// ch := make(chan preprocess.PacketData)
+	// BootServer(http_data)
+	//subspace_channel_containers := anomalies.ClusteringBuilder(config, done)
+	//accumulator_channels := process.UpdateFeatureSpaceBuilder(subspace_channel_containers, sorter, done)
+	//preprocess.WindowTimeSlide(ch, accumulator_channels, done)
+	//
+	//pcap_file_path := os.Getenv("PCAP_FILE")
+	//if pcap_file_path == ""{
+	//	pcap_file_path = "C:\\Users\\Jack\\Downloads\\201705021400.pcap"
+	//}
+	//
+	//handleRead, err := pcap.OpenOffline(pcap_file_path)
+	//
+	//if(err != nil){
+	//	log.Fatal(err)
+	//}
+	//
+	//for {
+	//	data, ci, err := handleRead.ReadPacketData()
+	//	if err != nil && err != io.EOF {
+	//		close(done)
+	//		log.Fatal(err)
+	//	} else if err == io.EOF {
+	//		close(done)
+	//		break
+	//	} else {
+	//		packet := gopacket.NewPacket(data, layers.LayerTypeEthernet, gopacket.Default)
+	//		ch <- preprocess.PacketData{Data: packet, Metadata: ci}
+	//	}
+	//}
 
 	//if handle, err := pcap.OpenLive("eth0", 1600, true, pcap.BlockForever); err != nil {
 	//	panic(err)
