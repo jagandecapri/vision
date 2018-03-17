@@ -71,7 +71,7 @@ func Run(){
 	}
 
 	WindowTimeSlide(ch, acc_c, done)
-	NewSQL(acc_c, done, delta_t)
+	NewSQL("201705021400", acc_c, done, delta_t)
 	handleRead, err := pcap.OpenOffline(pcap_file_path)
 
 	if(err != nil){

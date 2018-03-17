@@ -7,13 +7,13 @@ import (
 	"log"
 )
 
-func TestRunt(t *testing.T) {
+func TestRun(t *testing.T) {
 	Run()
 }
 
 func TestNewSQLRead(t *testing.T) {
 	delta_t := 300 * time.Millisecond
-	sql := NewSQLRead(delta_t)
+	sql := NewSQLRead("201705021400", delta_t)
 
 	acc_c := preprocess.AccumulatorChannels{
 		AggSrc: make(preprocess.AccumulatorChannel),

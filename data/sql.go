@@ -184,7 +184,7 @@ func (s *SQL) WriteToDb(acc_c preprocess.AccumulatorChannels, done chan struct{}
 					tmp = X
 
 					tpl.Reset()
-					if err := t.Execute(&tpl, struct{TableName string}{TableName: s.agg_src_table}); err != nil {
+					if err := t.Execute(&tpl, struct{TableName template.HTML}{TableName: template.HTML(s.agg_src_table)}); err != nil {
 						log.Fatal(err)
 					}
 
@@ -248,7 +248,7 @@ func (s *SQL) WriteToDb(acc_c preprocess.AccumulatorChannels, done chan struct{}
 					tmp = X
 
 					tpl.Reset()
-					if err := t.Execute(&tpl, struct{TableName string}{TableName: s.agg_dst_table}); err != nil {
+					if err := t.Execute(&tpl, struct{TableName template.HTML}{TableName: template.HTML(s.agg_dst_table)}); err != nil {
 						log.Fatal(err)
 					}
 
@@ -312,7 +312,7 @@ func (s *SQL) WriteToDb(acc_c preprocess.AccumulatorChannels, done chan struct{}
 					tmp = X
 
 					tpl.Reset()
-					if err := t.Execute(&tpl, struct{TableName string}{TableName: s.agg_srcdst_table}); err != nil {
+					if err := t.Execute(&tpl, struct{TableName template.HTML}{TableName: template.HTML(s.agg_srcdst_table)}); err != nil {
 						log.Fatal(err)
 					}
 
@@ -619,11 +619,11 @@ func (s SQL) IterateRows(query string) []tree.Point{
 	return points
 }
 
-func NewSQL(acc_c preprocess.AccumulatorChannels, done chan struct{}, delta_t time.Duration) SQL{
+func NewSQL(db_name string, acc_c preprocess.AccumulatorChannels, done chan struct{}, delta_t time.Duration) SQL{
 	now := time.Now()
 	now_string := now.Format(time.RFC3339)
 	sql := SQL{
-		db_name: "./vision.db",
+		db_name: db_name,
 		metadata_table: "metadata",
 		agg_src_table: "agg_src_" + now_string,
 		agg_dst_table: "agg_dst_" + now_string,
@@ -637,8 +637,7 @@ func NewSQL(acc_c preprocess.AccumulatorChannels, done chan struct{}, delta_t ti
 	return sql
 }
 
-func NewSQLRead(delta_t time.Duration) SQL{
-	db_name := "./vision.db"
+func NewSQLRead(db_name string, delta_t time.Duration) SQL{
 	metadata_table := "metadata"
 	var agg_src_table, agg_dst_table, agg_srcdst_table string
 
