@@ -103,7 +103,7 @@ func (s *SQL) SetupDb(){
 	var tpl bytes.Buffer
 	var result string
 
-	if err := t.Execute(&tpl, struct{TableName string}{TableName: s.agg_src_table}); err != nil {
+	if err := t.Execute(&tpl, struct{TableName template.HTML}{TableName: template.HTML(s.agg_src_table)}); err != nil {
 		log.Println(err)
 	}
 
@@ -116,7 +116,7 @@ func (s *SQL) SetupDb(){
 	}
 
 	tpl.Reset()
-	if err := t.Execute(&tpl, struct{TableName string}{TableName: s.agg_dst_table}); err != nil {
+	if err := t.Execute(&tpl, struct{TableName template.HTML}{TableName: template.HTML(s.agg_dst_table)}); err != nil {
 		log.Println(err)
 	}
 
@@ -129,7 +129,7 @@ func (s *SQL) SetupDb(){
 	}
 
 	tpl.Reset()
-	if err := t.Execute(&tpl, struct{TableName string}{TableName: s.agg_srcdst_table}); err != nil {
+	if err := t.Execute(&tpl, struct{TableName template.HTML}{TableName: template.HTML(s.agg_srcdst_table)}); err != nil {
 		log.Println(err)
 	}
 
@@ -603,7 +603,7 @@ func (s SQL) IterateRows(query string) []tree.Point{
 		}
 
 		point_key := tree.PointKey{}
-		json.Unmarshal(flow_key, point_key)
+		json.Unmarshal(flow_key, &point_key)
 
 		pnt := tree.Point{Id: id, Key: point_key, Vec_map: x}
 		points = append(points, pnt)

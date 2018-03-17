@@ -25,8 +25,8 @@ func TestNewSQLRead(t *testing.T) {
 
 	for{
 		select{
-			case res := <-acc_c.AggSrc:
-				log.Println("Received aggsrc data", res)
+			case <-acc_c.AggSrc:
+				log.Println("Received aggsrc data")
 			case <-acc_c.AggDst:
 				log.Println("Received aggdst data")
 			case <-acc_c.AggSrcDst:
