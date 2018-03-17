@@ -6,9 +6,15 @@ import (
 	"fmt"
 )
 
-var aggsrc_anomalies = map[string]AnomaliesInterface{}
+var aggsrc_anomalies = map[string]AnomaliesInterface{
+	"network_scan_syn": NewNetworkScanSYN(),
+}
 
-var aggsrc_dis_vector = map[[2]string][] chan DissimilarityVectorContainer{}
+var aggsrc_dis_vector = map[[2]string][] chan DissimilarityVectorContainer{
+	[2]string{"perSYN", "nbDstPort"}: {aggsrc_anomalies["network_scan_syn"].GetChannel([2]string{"perSYN", "nbDstPort"})},
+	[2]string{"nbDstPort", "nbDsts"}: {aggsrc_anomalies["network_scan_syn"].GetChannel([2]string{"nbDstPort", "nbDsts"})},
+	[2]string{"nbDstPort", "avgPktSize"}: {aggsrc_anomalies["network_scan_syn"].GetChannel([2]string{"nbDstPort", "avgPktSize"})},
+}
 
 var aggsrc_subspaces = map[[2]string] chan ProcessPackage{}
 
