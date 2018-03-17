@@ -23,14 +23,24 @@ func TestNewSQLRead(t *testing.T) {
 
 	done := sql.ReadFromDb(acc_c)
 
+	now_src := time.Now()
+	now_dst := time.Now()
+	now_srcdst := time.Now()
+
 	for{
 		select{
 			case <-acc_c.AggSrc:
-				log.Println("Received aggsrc data")
+				tmp := time.Since(now_src)
+				log.Println("Aggsrc data received in ", tmp)
+				now_src = time.Now()
 			case <-acc_c.AggDst:
-				log.Println("Received aggdst data")
+				tmp := time.Since(now_dst)
+				log.Println("Aggdst data received in ", tmp)
+				now_dst = time.Now()
 			case <-acc_c.AggSrcDst:
-				log.Println("Received aggsrcdst data")
+				tmp := time.Since(now_srcdst)
+				log.Println("Aggsrcdst data received in ", tmp)
+				now_srcdst = time.Now()
 			case <-done:
 				return
 		}
