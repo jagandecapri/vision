@@ -7,7 +7,7 @@ import (
 
 
 var delta_t = 300 * time.Millisecond
-var window = 15 * time.Second
+var window = 600 * time.Millisecond
 var WINDOW_ARR_LEN = int(window.Seconds()/delta_t.Seconds())
 var Point_ctr = 0
 
