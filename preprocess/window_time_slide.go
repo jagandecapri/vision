@@ -59,54 +59,69 @@ func WindowTimeSlide(ch chan PacketData, acc_c AccumulatorChannels, done chan st
 
 func WindowTimeSlideSimulator(acc_c_receive AccumulatorChannels, acc_c_send AccumulatorChannels, delta_t time.Duration, done chan struct{}){
 
-	go func(){
-		timer := time.NewTimer(delta_t)
+	go func(acc_c_receive AccumulatorChannels, acc_c_send AccumulatorChannels, delta_t time.Duration){
+		ticker := time.NewTicker(delta_t)
 		tmp_c := make(chan MicroSlot, 2)
 		for{
 			select{
 			case pts := <-acc_c_receive.AggSrc:
 				tmp_c <- pts
-				log.Println("Received aggsrc data")
-			case <-timer.C:
-				pts_from_buffer := <-tmp_c
-				acc_c_send.AggSrc <- pts_from_buffer
+				//log.Println("Received aggsrc data")
+			case <-ticker.C:
+				select{
+					case pts_from_buffer := <-tmp_c:
+						acc_c_send.AggSrc <- pts_from_buffer
+					default:
+				}
 			case <-done:
+				ticker.Stop()
 				return
+			default:
 			}
 		}
-	}()
+	}(acc_c_receive, acc_c_send, delta_t)
 
-	go func(){
-		timer := time.NewTimer(delta_t)
+	go func(acc_c_receive AccumulatorChannels, acc_c_send AccumulatorChannels, delta_t time.Duration){
+		ticker := time.NewTicker(delta_t)
 		tmp_c := make(chan MicroSlot, 2)
 		for{
 			select{
 			case pts := <-acc_c_receive.AggDst:
 				tmp_c <- pts
-				log.Println("Received aggdst data")
-			case <-timer.C:
-				pts_from_buffer := <-tmp_c
-				acc_c_send.AggDst <- pts_from_buffer
+				//log.Println("Received aggdst data")
+			case <-ticker.C:
+				select{
+					case pts_from_buffer := <-tmp_c:
+						acc_c_send.AggDst <- pts_from_buffer
+					default:
+				}
 			case <-done:
+				ticker.Stop()
 				return
+			default:
 			}
 		}
-	}()
+	}(acc_c_receive, acc_c_send, delta_t)
 
-	go func(){
-		timer := time.NewTimer(delta_t)
+	go func(acc_c_receive AccumulatorChannels, acc_c_send AccumulatorChannels, delta_t time.Duration){
+		ticker := time.NewTicker(delta_t)
 		tmp_c := make(chan MicroSlot, 2)
 		for{
 			select{
 			case pts := <-acc_c_receive.AggSrcDst:
 				tmp_c <- pts
-				log.Println("Received aggsrcdst data")
-			case <-timer.C:
-				pts_from_buffer := <-tmp_c
-				acc_c_send.AggSrcDst <- pts_from_buffer
+				//log.Println("Received aggsrcdst data")
+			case <-ticker.C:
+				select{
+					case pts_from_buffer := <-tmp_c:
+						acc_c_send.AggSrcDst <- pts_from_buffer
+					default:
+				}
 			case <-done:
+				ticker.Stop()
 				return
+			default:
 			}
 		}
-	}()
+	}(acc_c_receive, acc_c_send, delta_t)
 }
