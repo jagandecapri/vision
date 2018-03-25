@@ -278,7 +278,7 @@ func (s *SQL) WriteToDb(acc_c preprocess.AccumulatorChannels, done chan struct{}
 
 						var tmp1 = make([]interface{}, 19)
 
-						tmp1[0] = batch_counter_agg_src
+						tmp1[0] = batch_counter_agg_dst
 						tmp1[1] = string(json_string)
 						tmp1[2] = strings.Join(p.Key.SrcIP, ",")
 						tmp1[3] = strings.Join(p.Key.DstIP, ",")
@@ -342,7 +342,7 @@ func (s *SQL) WriteToDb(acc_c preprocess.AccumulatorChannels, done chan struct{}
 
 						var tmp1 = make([]interface{}, 19)
 
-						tmp1[0] = batch_counter_agg_src
+						tmp1[0] = batch_counter_agg_srcdst
 						tmp1[1] = string(json_string)
 						tmp1[2] = strings.Join(p.Key.SrcIP, ",")
 						tmp1[3] = strings.Join(p.Key.DstIP, ",")
