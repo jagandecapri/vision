@@ -64,10 +64,10 @@ func TestAccumulator_GetMicroSlot(t *testing.T) {
 	assert.InDelta(t, 0.6666, output.PerACK(), 0.1)
 	assert.InDelta(t, 0.3333, output.PerICMP(), 0.1)
 
-	srcIP :=  []gopacket.Endpoint{netflow.Src()}
-	dstIP := []gopacket.Endpoint{netflow.Dst()}
-	srcPort := []layers.TCPPort{layers.TCPPort(443), layers.TCPPort(1234)}
-	dstPort := []layers.TCPPort{layers.TCPPort(5678)}
+	srcIP :=  []string{netflow.Src().String()}
+	dstIP := []string{netflow.Dst().String()}
+	srcPort := []string{layers.TCPPort(443).String(), layers.TCPPort(1234).String()}
+	dstPort := []string{layers.TCPPort(5678).String()}
 
 	key :=  output.GetKey()
 	assert.ElementsMatch(t, srcIP, key.SrcIP)
