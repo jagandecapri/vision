@@ -10,7 +10,11 @@ type DimMinMax struct{
 }
 
 func norm_mat(elem float64, col_min float64, col_max float64) float64{
-	return (elem - col_min)/(col_max - col_min)
+	if col_max == col_min{
+		return 0.0
+	} else {
+		return (elem - col_min)/(col_max - col_min)
+	}
 }
 
 func Normalize(mat []tree.Point, sorter []string) []tree.Point {
@@ -37,16 +41,11 @@ func Normalize(mat []tree.Point, sorter []string) []tree.Point {
 			col_min := dim_min_max[c].Min
 			col_max := dim_min_max[c].Max
 			elem := mat[i].Vec_map[c]
-			if col_min == 0 && col_max == 0{
-				mat[i].Vec_map[c] = elem
-			} else {
-				tmp := norm_mat(elem, col_min, col_max)
-				if tmp == 1.0{
-					mat[i].Vec_map[c] = tmp - 0.0000001 //Trick for points having highs at 1.0
-				} else {
-					mat[i].Vec_map[c] = norm_mat(elem, col_min, col_max)
-				}
+			tmp := norm_mat(elem, col_min, col_max)
+			if tmp == 1.0{
+				tmp = tmp - 0.0000001
 			}
+			mat[i].Vec_map[c] = tmp
 		}
 	}
 

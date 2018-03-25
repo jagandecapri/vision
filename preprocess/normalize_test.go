@@ -76,3 +76,29 @@ func TestNormalize2(t *testing.T) {
 	assert.Equal(t, normalized_points, norm_points)
 }
 
+func TestNormalize3(t *testing.T) {
+	points := []tree.Point{{Id: 1, Vec_map: map[string]float64{
+		"first": 1,
+		"second": 1,
+	}},
+		{Id: 2, Vec_map: map[string]float64{
+			"first": 1,
+			"second": 1,
+		}},
+	}
+
+	normalized_points := []tree.Point{{Id: 1, Vec_map: map[string]float64{
+		"first": 0,
+		"second": 0,
+	}},
+		{Id: 2, Vec_map: map[string]float64{
+			"first": 0,
+			"second": 0,
+		}},
+	}
+
+	sorter := []string{"first", "second"}
+
+	norm_points := Normalize(points, sorter)
+	assert.Equal(t, normalized_points, norm_points)
+}
