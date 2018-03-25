@@ -57,71 +57,43 @@ func WindowTimeSlide(ch chan PacketData, acc_c AccumulatorChannels, done chan st
 	}()
 }
 
-func WindowTimeSlideSimulator(acc_c_receive AccumulatorChannels, acc_c_send AccumulatorChannels, delta_t time.Duration, done chan struct{}){
+func simulator(acc_c_receive AccumulatorChannel, acc_c_send AccumulatorChannel, delta_t time.Duration){
+	ticker := time.NewTicker(delta_t)
+	//tmp_c := make(chan MicroSlot, 2)
+	defer func(){
+		log.Println("close updatefeaturespace channel")
+		close(acc_c_send)
+		ticker.Stop()
+	}()
 
-	go func(acc_c_receive AccumulatorChannels, acc_c_send AccumulatorChannels, delta_t time.Duration){
-		ticker := time.NewTicker(delta_t)
-		tmp_c := make(chan MicroSlot, 2)
-		for{
-			select{
-			case pts := <-acc_c_receive.AggSrc:
-				tmp_c <- pts
-				//log.Println("Received aggsrc data")
-			case <-ticker.C:
-				select{
-					case pts_from_buffer := <-tmp_c:
-						acc_c_send.AggSrc <- pts_from_buffer
-					default:
-				}
-			case <-done:
-				ticker.Stop()
+	for{
+		select{
+		case pts, open := <-acc_c_receive:
+			if open{
+				log.Println("value received")
+				acc_c_send <- pts
+			} else{
+				log.Println("close acc_c_receive")
 				return
-			default:
 			}
+		case <-ticker.C:
+			//select{
+			//case pts_from_buffer := <-tmp_c:
+			//	if pts_from_buffer != nil{
+			//		log.Println("value sent to update feature space")
+			//		acc_c_send <- pts_from_buffer
+			//	} else {
+			//
+			//	}
+			//default:
+			//}
+		default:
 		}
-	}(acc_c_receive, acc_c_send, delta_t)
+	}
+}
 
-	go func(acc_c_receive AccumulatorChannels, acc_c_send AccumulatorChannels, delta_t time.Duration){
-		ticker := time.NewTicker(delta_t)
-		tmp_c := make(chan MicroSlot, 2)
-		for{
-			select{
-			case pts := <-acc_c_receive.AggDst:
-				tmp_c <- pts
-				//log.Println("Received aggdst data")
-			case <-ticker.C:
-				select{
-					case pts_from_buffer := <-tmp_c:
-						acc_c_send.AggDst <- pts_from_buffer
-					default:
-				}
-			case <-done:
-				ticker.Stop()
-				return
-			default:
-			}
-		}
-	}(acc_c_receive, acc_c_send, delta_t)
-
-	go func(acc_c_receive AccumulatorChannels, acc_c_send AccumulatorChannels, delta_t time.Duration){
-		ticker := time.NewTicker(delta_t)
-		tmp_c := make(chan MicroSlot, 2)
-		for{
-			select{
-			case pts := <-acc_c_receive.AggSrcDst:
-				tmp_c <- pts
-				//log.Println("Received aggsrcdst data")
-			case <-ticker.C:
-				select{
-					case pts_from_buffer := <-tmp_c:
-						acc_c_send.AggSrcDst <- pts_from_buffer
-					default:
-				}
-			case <-done:
-				ticker.Stop()
-				return
-			default:
-			}
-		}
-	}(acc_c_receive, acc_c_send, delta_t)
+func WindowTimeSlideSimulator(acc_c_receive AccumulatorChannels, acc_c_send AccumulatorChannels, delta_t time.Duration){
+	go simulator(acc_c_receive.AggSrc, acc_c_send.AggSrc, delta_t)
+	go simulator(acc_c_receive.AggDst, acc_c_send.AggDst, delta_t)
+	go simulator(acc_c_receive.AggSrcDst, acc_c_send.AggSrcDst, delta_t)
 }

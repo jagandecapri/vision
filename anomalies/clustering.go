@@ -3,7 +3,9 @@ package anomalies
 import (
 	"github.com/jagandecapri/vision/tree"
 	"github.com/jagandecapri/vision/utils"
-	"fmt"
+	//"log"
+	"log"
+	"sync"
 )
 
 var aggsrc_anomalies = map[string]AnomaliesInterface{
@@ -61,21 +63,29 @@ func Cluster(subspace tree.Subspace, config utils.Config, done chan struct{}, ou
 	go func() {
 			for {
 				select {
-				case processPackage := <-in:
-					x_old := processPackage.X_old
-					x_new_update := processPackage.X_new_update
-					subspace.ComputeSubspace(x_old, x_new_update)
-					subspace.Cluster(config.Min_dense_points, config.Min_cluster_points)
-					dissimilarity_vectors := ComputeDissmilarityVector(subspace)
-					if len(subspace.GetOutliers()) > 0 {
-						fmt.Println("key:", subspace.Subspace_key, "outliers:", subspace.GetOutliers(), "clusters:", subspace.GetClusters())
+				case processPackage, open := <-in:
+					if open{
+						x_old := processPackage.X_old
+						x_new_update := processPackage.X_new_update
+						subspace.ComputeSubspace(x_old, x_new_update)
+						subspace.Cluster(config.Min_dense_points, config.Min_cluster_points)
+						dissimilarity_vectors := ComputeDissmilarityVector(subspace)
+						if len(subspace.GetOutliers()) > 0 {
+							log.Println("counter: ", counter, " key:", subspace.Subspace_key, "outliers:", len(subspace.GetOutliers()), "clusters:", subspace.GetClusters())
+						} else {
+							log.Println("counter: ", counter, " key:", subspace.Subspace_key, " No outliers Cluster: ", subspace.GetClusters())
+						}
+						log.Println("value received for processing")
+						for _, out := range outs {
+							out <- DissimilarityVectorContainer{Id: counter, DissimilarityVectors: dissimilarity_vectors}
+						}
+						counter++
+					} else{
+						for _, out := range outs{
+							close(out)
+						}
+						return
 					}
-					for _, out := range outs {
-						out <- DissimilarityVectorContainer{Id: counter, DissimilarityVectors: dissimilarity_vectors}
-					}
-					counter++
-				case <-done:
-					return
 				default:
 				}
 			}
@@ -111,6 +121,7 @@ func BuildSubspace(subspace_key [2]string) tree.Subspace{
 }
 
 func ClusteringBuilder(config utils.Config, done chan struct{}) SubspaceChannelsContainer {
+
 	for subspace_key, channels := range aggsrc_dis_vector{
 		subspace := BuildSubspace(subspace_key)
 		in := Cluster(subspace, config, done, channels...)
@@ -129,17 +140,26 @@ func ClusteringBuilder(config utils.Config, done chan struct{}) SubspaceChannels
 		aggsrcdst_subspaces[subspace_key] = in
 	}
 
+	var wg sync.WaitGroup
+	wg.Add(len(aggsrc_anomalies) + len(aggdst_anomalies) + len(aggsrcdst_anomalies))
+	
 	for _, anomaly := range aggsrc_anomalies{
-		anomaly.WaitOnChannels(done)
+		anomaly.WaitOnChannels(&wg)
 	}
 
 	for _, anomaly := range aggdst_anomalies{
-		anomaly.WaitOnChannels(done)
+		anomaly.WaitOnChannels(&wg)
 	}
 
 	for _, anomaly := range aggsrcdst_anomalies{
-		anomaly.WaitOnChannels(done)
+		anomaly.WaitOnChannels(&wg)
 	}
+
+	go func(){
+		wg.Wait()
+		log.Println("Signal anomalies done. Closing done channel")
+		close(done)
+	}()
 
 	return subspace_channels
 }

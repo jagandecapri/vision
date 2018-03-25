@@ -3,11 +3,7 @@ package main
 import (
 	"github.com/jagandecapri/vision/preprocess"
 	"github.com/jagandecapri/vision/process"
-	"github.com/google/gopacket/pcap"
 	"log"
-	"io"
-	"github.com/google/gopacket"
-	"github.com/google/gopacket/layers"
 	"sort"
 	"github.com/jagandecapri/vision/server"
 	"flag"
@@ -49,7 +45,6 @@ func main(){
 
 	http_data := make(chan server.HttpData)
 	done := make(chan struct{})
-
 	sorter:= getSorter()
 	config := utils.Config{Min_dense_points: 10, Min_cluster_points: 15, Execution_type: utils.PARALLEL, Num_cpu: *num_cpu}
 
@@ -64,12 +59,12 @@ func main(){
 		AggSrcDst: make(preprocess.AccumulatorChannel),
 	}
 
-	sql := data.NewSQLRead("201705021400", delta_t)
-	sql.ReadFromDb(acc_c_receive, done)
+	sql := data.NewSQLRead("./201705021400.db", delta_t)
+	sql.ReadFromDb(acc_c_receive)
 
-	acc_c_send := process.UpdateFeatureSpaceBuilder(subspace_channel_containers, sorter, done)
-	preprocess.WindowTimeSlideSimulator(acc_c_receive, acc_c_send, delta_t, done)
-
+	acc_c_send := process.UpdateFeatureSpaceBuilder(subspace_channel_containers, sorter)
+	preprocess.WindowTimeSlideSimulator(acc_c_receive, acc_c_send, delta_t)
+	<-done
 	// ch := make(chan preprocess.PacketData)
 	// BootServer(http_data)
 	//subspace_channel_containers := anomalies.ClusteringBuilder(config, done)

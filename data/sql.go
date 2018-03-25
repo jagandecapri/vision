@@ -379,7 +379,7 @@ func (s *SQL) WriteToDb(acc_c preprocess.AccumulatorChannels, done chan struct{}
 	}()
 }
 
-func (s *SQL) ReadFromDb(acc_c preprocess.AccumulatorChannels, done chan struct{}){
+func (s *SQL) ReadFromDb(acc_c preprocess.AccumulatorChannels){
 	var batch_counter_agg_src, batch_counter_agg_dst, batch_counter_agg_srcdst int
 
 	log.Println(s.db_name)
@@ -452,13 +452,19 @@ func (s *SQL) ReadFromDb(acc_c preprocess.AccumulatorChannels, done chan struct{
 
 	db.Close()
 
+	batch_counter_agg_src, batch_counter_agg_dst, batch_counter_agg_srcdst = 1,1,1
+
 	go func(){
 		var wg sync.WaitGroup
 		wg.Add(3)
-		defer close(done)
 
-		go func(acc_c preprocess.AccumulatorChannels, table string, wg *sync.WaitGroup){
-				defer wg.Done()
+		read_fn := func(acc_c preprocess.AccumulatorChannel, table string, wg *sync.WaitGroup){
+				defer func(){
+					log.Println("close windowtimeslider channel")
+					close(acc_c)
+					wg.Done()
+				}()
+
 				t := template.New("select data from agg_src")
 				t, err = t.Parse(`SELECT id, flow_key, nbPacket, nbSrcPort,
 			nbDstPort, nbSrcs, nbDsts, perSYN, perACK, perICMP, perRST, perFIN, perCWR, perURG,
@@ -471,6 +477,7 @@ func (s *SQL) ReadFromDb(acc_c preprocess.AccumulatorChannels, done chan struct{
 				var query string
 
 				for i := 1; i <= batch_counter_agg_src; i++ {
+					log.Println("Read loop: ", i)
 					tpl_data := struct{TableName template.HTML
 						Batch int}{TableName: template.HTML(table), Batch: i}
 					if err := t.Execute(&buf, tpl_data); err != nil {
@@ -479,67 +486,15 @@ func (s *SQL) ReadFromDb(acc_c preprocess.AccumulatorChannels, done chan struct{
 
 					query = buf.String()
 					points := s.IterateRows(query)
-					acc_c.AggSrc <- points
+					acc_c <- points
 					buf.Reset()
 				}
 				return
-		}(acc_c, s.agg_src_table, &wg)
+		}
 
-		go func(acc_c preprocess.AccumulatorChannels, table string, wg *sync.WaitGroup){
-				defer wg.Done()
-				t := template.New("select data from agg_dst")
-				t, err = t.Parse(`SELECT id, flow_key, nbPacket, nbSrcPort,
-			nbDstPort, nbSrcs, nbDsts, perSYN, perACK, perICMP, perRST, perFIN, perCWR, perURG,
-			avgPktSize, meanTTL FROM ` + "`{{.TableName}}`" + " WHERE batch={{.Batch}}" )
-				if err != nil{
-					log.Fatal(err)
-				}
-
-				var buf bytes.Buffer
-				var query string
-
-				for i := 1; i <= batch_counter_agg_dst; i++ {
-					tpl_data := struct{TableName template.HTML
-						Batch int}{TableName: template.HTML(table), Batch: i}
-					if err := t.Execute(&buf, tpl_data); err != nil {
-						log.Fatal("batch looping dst err: ",err)
-					}
-
-					query = buf.String()
-					points := s.IterateRows(query)
-					acc_c.AggDst <- points
-					buf.Reset()
-				}
-				return
-		}(acc_c, s.agg_dst_table, &wg)
-
-		go func(acc_c preprocess.AccumulatorChannels, table string, wg *sync.WaitGroup){
-			defer wg.Done()
-			t := template.New("select data from agg_srcdst")
-			t, err = t.Parse(`SELECT id, flow_key, nbPacket, nbSrcPort,
-			nbDstPort, nbSrcs, nbDsts, perSYN, perACK, perICMP, perRST, perFIN, perCWR, perURG,
-			avgPktSize, meanTTL FROM ` + "`{{.TableName}}`" + " WHERE batch={{.Batch}}" )
-			if err != nil{
-				log.Fatal("batch looping srcdst err: ",err)
-			}
-
-			var buf bytes.Buffer
-			var query string
-
-			for i := 1; i <= batch_counter_agg_srcdst; i++ {
-				tpl_data := struct{TableName template.HTML
-					Batch int}{TableName: template.HTML(table), Batch: i}
-				if err := t.Execute(&buf, tpl_data); err != nil {
-					log.Fatal(err)
-				}
-
-				query = buf.String()
-				points := s.IterateRows(query)
-				acc_c.AggSrcDst <- points
-				buf.Reset()
-			}
-			return
-		}(acc_c, s.agg_srcdst_table, &wg)
+		go read_fn(acc_c.AggSrc, s.agg_src_table, &wg)
+		go read_fn(acc_c.AggDst, s.agg_dst_table, &wg)
+		go read_fn(acc_c.AggSrcDst, s.agg_srcdst_table, &wg)
 
 		wg.Wait()
 		return
@@ -574,7 +529,6 @@ func (s SQL) IterateRows(query string) []tree.Point{
 				&perSYN, &perACK, &perICMP,
 					&perRST, &perFIN, &perCWR,
 						&perURG, &avgPktSize, &meanTTL)
-
 
 		if err != nil {
 			log.Fatal(err)
@@ -638,7 +592,7 @@ func NewSQLRead(db_name string, delta_t time.Duration) SQL{
 
 	db, err := sql.Open("sqlite3", db_name)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Open database err: ", err)
 	}
 	defer db.Close()
 
