@@ -10,14 +10,14 @@ import (
 
 func UpdateFeatureSpaceBuilder(subspace_channel_container anomalies.SubspaceChannelsContainer, sorter []string) preprocess.AccumulatorChannels{
 	tmp := preprocess.AccumulatorChannels{
-		AggSrc:    UpdateFeatureSpace(subspace_channel_container.AggSrc, sorter),
-		AggDst:    UpdateFeatureSpace(subspace_channel_container.AggDst, sorter),
-		AggSrcDst: UpdateFeatureSpace(subspace_channel_container.AggSrcDst, sorter),
+		AggSrc:    UpdateFeatureSpace(subspace_channel_container.AggSrc, sorter, "agg_src"),
+		AggDst:    UpdateFeatureSpace(subspace_channel_container.AggDst, sorter, "agg_dst"),
+		AggSrcDst: UpdateFeatureSpace(subspace_channel_container.AggSrcDst, sorter, "agg_srcdst"),
 	}
 	return tmp
 }
 
-func UpdateFeatureSpace(subspace_channels anomalies.SubspaceChannels, sorter []string) preprocess.AccumulatorChannel{
+func UpdateFeatureSpace(subspace_channels anomalies.SubspaceChannels, sorter []string, agg_key string) preprocess.AccumulatorChannel{
 	Xs := []preprocess.MicroSlot{}
 	acc_c := make(chan preprocess.MicroSlot)
 
