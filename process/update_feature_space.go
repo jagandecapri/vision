@@ -105,7 +105,7 @@ func UpdateFeatureSpace(subspace_channels anomalies.SubspaceChannels, sorter []s
 									},
 								}
 
-								tmp2_x_new_update[subspace_keys] = append(tmp1_x_old[subspace_keys], point)
+								tmp2_x_new_update[subspace_keys] = append(tmp2_x_new_update[subspace_keys], point)
 							}
 						}
 
