@@ -41,8 +41,8 @@ func IntervalBuilder(ranges []Range,  scale_factor int) map[Range]IntervalContai
 	return intervals
 }
 
-func UnitsBuilder(ranges []Range, dim int) map[Range]Unit{
-	units := make(map[Range]Unit)
+func UnitsBuilder(ranges []Range, dim int) map[Range]*Unit{
+	units := make(map[Range]*Unit)
 	for idx, rg := range ranges{
 		units[rg] = NewUnit(idx, dim, rg)
 	}

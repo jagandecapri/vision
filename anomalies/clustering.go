@@ -60,30 +60,43 @@ type ProcessPackage struct{
 func Cluster(subspace tree.Subspace, config utils.Config, done chan struct{}, outs ...chan DissimilarityVectorContainer) chan ProcessPackage{
 	in := make(chan ProcessPackage)
 	counter := 1
+
 	go func() {
+			defer func(){
+				log.Println("Closing anomalies channels")
+				for _, out := range outs{
+					close(out)
+				}
+			}()
+
 			for {
 				select {
 				case processPackage, open := <-in:
 					if open{
 						x_old := processPackage.X_old
 						x_new_update := processPackage.X_new_update
+						log.Println("Start Cluster: ", subspace.Subspace_key)
 						subspace.ComputeSubspace(x_old, x_new_update)
 						subspace.Cluster(config.Min_dense_points, config.Min_cluster_points)
 						dissimilarity_vectors := ComputeDissmilarityVector(subspace)
 						if len(subspace.GetOutliers()) > 0 {
 							log.Println("counter: ", counter, " key:", subspace.Subspace_key, "outliers:", len(subspace.GetOutliers()), "clusters:", subspace.GetClusters())
 						} else {
-							log.Println("counter: ", counter, " key:", subspace.Subspace_key, " No outliers Cluster: ", subspace.GetClusters())
+							log.Println("counter: ", counter, " key:", subspace.Subspace_key, " No outliers Cluster: ")
+							clusters := subspace.GetClusters()
+							for _, cluster := range clusters{
+								log.Printf("cluster ID: %+v", cluster.Cluster_id)
+								for rg, unit := range cluster.ListOfUnits{
+									log.Printf(" unit ID: %+v rg: %+v", unit.Id, rg)
+								}
+								log.Printf("\n")
+							}
 						}
-						log.Println("value received for processing")
 						for _, out := range outs {
 							out <- DissimilarityVectorContainer{Id: counter, DissimilarityVectors: dissimilarity_vectors}
 						}
 						counter++
 					} else{
-						for _, out := range outs{
-							close(out)
-						}
 						return
 					}
 				default:
@@ -113,7 +126,7 @@ func BuildSubspace(subspace_key [2]string) tree.Subspace{
 	}
 
 	for _, unit := range units{
-		grid.AddUnit(&unit)
+		grid.AddUnit(unit)
 	}
 	grid.SetupGrid(interval_length)
 
@@ -142,7 +155,7 @@ func ClusteringBuilder(config utils.Config, done chan struct{}) SubspaceChannels
 
 	var wg sync.WaitGroup
 	wg.Add(len(aggsrc_anomalies) + len(aggdst_anomalies) + len(aggsrcdst_anomalies))
-	
+
 	for _, anomaly := range aggsrc_anomalies{
 		anomaly.WaitOnChannels(&wg)
 	}

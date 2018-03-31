@@ -24,7 +24,7 @@ func TestSubspace_ComputeSubspace(t *testing.T) {
 	}
 
 	for _, unit := range units{
-		grid.AddUnit(&unit)
+		grid.AddUnit(unit)
 	}
 
 	subspace := Subspace{interval_tree: &int_tree,

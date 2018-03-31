@@ -41,7 +41,7 @@ func TestGrid_AddPoint(t *testing.T) {
 	rg := Range{Low: [2]float64{0, 0}, High: [2]float64{0.5, 0.5}}
 	grid := NewGrid()
 	unit := NewUnit(1, 2, rg)
-	grid.Store[rg] = &unit
+	grid.Store[rg] = unit
 	grid.AddPoint(p, rg)
 	assert.Equal(t, grid.point_unit_map[1], rg)
 	assert.Equal(t, grid.Store[rg].Points[1].Id, 1)
@@ -57,7 +57,7 @@ func TestGrid_RemovePoint(t *testing.T) {
 	rg := Range{Low: [2]float64{0, 0}, High: [2]float64{0.5, 0.5}}
 	grid := NewGrid()
 	unit := NewUnit(1, 2, rg)
-	grid.Store[rg] = &unit
+	grid.Store[rg] = unit
 	grid.AddPoint(p, rg)
 	grid.RemovePoint(p, rg)
 	var ok bool
@@ -77,11 +77,11 @@ func TestGrid_UpdatePoint(t *testing.T) {
 	cur_rg := Range{Low: [2]float64{0, 0}, High: [2]float64{0.5, 0.5}}
 	grid := NewGrid()
 	unit := NewUnit(1, 2, cur_rg)
-	grid.Store[cur_rg] = &unit
+	grid.Store[cur_rg] = unit
 	grid.AddPoint(p, cur_rg)
 	new_rg := Range{Low: [2]float64{0.5, 0.5}, High: [2]float64{1.0, 1.0}}
 	unit1 := NewUnit(1, 2, new_rg)
-	grid.Store[new_rg] = &unit1
+	grid.Store[new_rg] = unit1
 	grid.UpdatePoint(p, new_rg)
 	var ok bool
 	_, ok = grid.point_unit_map[1]
@@ -103,8 +103,8 @@ func TestGrid_RecomputeDenseUnits(t *testing.T) {
 	unit1 := NewUnit(1,2,rg1)
 
 	grid := NewGrid()
-	grid.Store[rg] = &unit
-	grid.Store[rg1] = &unit1
+	grid.Store[rg] = unit
+	grid.Store[rg1] = unit1
 
 	var ok bool
 	var listNewDenseUnits, listOldDenseUnits map[Range]*Unit
@@ -181,7 +181,7 @@ func TestGrid_ProcessOldDenseUnits(t *testing.T) {
 	c := Cluster{Cluster_id:0, ListOfUnits: list_of_units}
 	grid.AddUpdateCluster(c)
 
-	listOldDenseUnits := map[Range]*Unit{{Low: [2]float64{1, 1}, High: [2]float64{2, 2}}: &unit}
+	listOldDenseUnits := map[Range]*Unit{{Low: [2]float64{1, 1}, High: [2]float64{2, 2}}: unit}
 
 	listUnitToRep := grid.ProcessOldDenseUnits(listOldDenseUnits)
 

@@ -66,8 +66,8 @@ func (u *Unit) Dim() int {
 	return len(u.Center.Vec)
 }
 
-func NewUnit(id int, dimension int, rg Range) Unit{
-	unit := Unit{
+func NewUnit(id int, dimension int, rg Range) *Unit{
+	unit := &Unit{
 		Id: id,
 		Dimension: dimension,
 		neighbour_units: make(map[Range]*Unit),
