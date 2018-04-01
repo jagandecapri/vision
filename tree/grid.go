@@ -1,5 +1,10 @@
 package tree
 
+import (
+	"log"
+	"github.com/jagandecapri/vision/utils"
+)
+
 type Grid struct{
 	Store              map[Range]*Unit
 	ClusterContainer
@@ -170,32 +175,39 @@ func (us *Grid) GetNeighbouringUnits(rg Range, interval_l float64) map[Range]*Un
 	|n2|U |n7|
 	|n1|n4|n6|
 	 */
-	n1 := Range{Low:[2]float64{rg.Low[0] - interval_l, rg.Low[1] - interval_l},
-		High: [2]float64{rg.Low[0], rg.Low[1]}}
-	n2 := Range{Low:[2]float64{rg.Low[0] - interval_l, rg.Low[1]},
-		High: [2]float64{rg.Low[0], rg.High[1]}}
-	n3 := Range{Low:[2]float64{rg.Low[0] - interval_l, rg.High[1]},
-		High: [2]float64{rg.Low[0], rg.High[1] + interval_l}}
 
-	n4 := Range{Low:[2]float64{rg.Low[0], rg.Low[1] - interval_l},
+	 tmp1 := utils.Round(rg.Low[0] - interval_l, 0.1)
+	 tmp2 := utils.Round(rg.Low[1] - interval_l, 0.1)
+	 tmp3 := utils.Round(rg.High[0] + interval_l, 0.1)
+	 tmp4 := utils.Round(rg.High[1] + interval_l, 0.1)
+
+	n1 := Range{Low:[2]float64{tmp1, tmp2},
+		High: [2]float64{rg.Low[0], rg.Low[1]}}
+	n2 := Range{Low:[2]float64{tmp1, rg.Low[1]},
+		High: [2]float64{rg.Low[0], rg.High[1]}}
+	n3 := Range{Low:[2]float64{tmp1, rg.High[1]},
+		High: [2]float64{rg.Low[0], tmp4}}
+
+	n4 := Range{Low:[2]float64{rg.Low[0], tmp2},
 		High: [2]float64{rg.High[0], rg.Low[1]}}
 	n5 := Range{Low:[2]float64{rg.Low[0], rg.High[1]},
-		High: [2]float64{rg.High[0], rg.High[1] + interval_l}}
+		High: [2]float64{rg.High[0], tmp4}}
 
-	n6 := Range{Low:[2]float64{rg.High[0], rg.Low[1] - interval_l},
-		High: [2]float64{rg.High[0] + interval_l, rg.Low[1]}}
+	n6 := Range{Low:[2]float64{rg.High[0], tmp2},
+		High: [2]float64{tmp3, rg.Low[1]}}
 	n7 := Range{Low:[2]float64{rg.High[0], rg.Low[1]},
-		High: [2]float64{rg.High[0] + interval_l, rg.High[1]}}
+		High: [2]float64{tmp3, rg.High[1]}}
 	n8 := Range{Low:[2]float64{rg.High[0], rg.High[1]},
-		High: [2]float64{rg.High[0] + interval_l, rg.High[1] + interval_l}}
+		High: [2]float64{tmp3, tmp4}}
 
 	tmp := [8]Range{n1,n2,n3,n4,n5,n6,n7,n8}
 
 	neighbour_units := make(map[Range]*Unit)
 
-	for _, rg := range tmp{
-		if unit, ok := us.Store[rg]; ok{
-			neighbour_units[rg] = unit
+	for _, rg_search := range tmp{
+		unit, ok := us.Store[rg_search]
+		if ok{
+			neighbour_units[rg_search] = unit
 		}
 	}
 
