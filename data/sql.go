@@ -452,8 +452,6 @@ func (s *SQL) ReadFromDb(acc_c preprocess.AccumulatorChannels){
 
 	db.Close()
 
-	batch_counter_agg_src, batch_counter_agg_dst, batch_counter_agg_srcdst = 1,1,1
-
 	go func(){
 		var wg sync.WaitGroup
 		wg.Add(3)
