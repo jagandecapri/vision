@@ -2,13 +2,11 @@ package tree
 
 import (
 	"github.com/jagandecapri/vision/utils"
+	"log"
 )
 
 const UNCLASSIFIED = 0
 const NOISE = -1
-
-const OUTLIER_CLUSTER = -3
-const NON_OUTLIER_CLUSTER = -4
 
 const SUCCESS = -10
 const FAILURE = -11
@@ -28,6 +26,7 @@ func IGDCA(grid Grid, min_dense_points int, min_cluster_points int) (map[Range]*
 					}
 
 					if isClusterTooSmall(min_cluster_points, cluster) == true{
+						log.Println("Cluster to remove: ", cluster.Cluster_id)
 						grid.RemoveCluster(cluster.Cluster_id)
 					} else {
 						grid.AddUpdateCluster(cluster)
@@ -49,15 +48,15 @@ func isClusterTooSmall(min_cluster_points int, cluster Cluster) bool{
 
 func NewCluster(unit *Unit, rg Range, cluster_id int, min_dense_points int) (Cluster){
 	cluster := Cluster{Cluster_id: cluster_id, ListOfUnits: make(map[Range]*Unit)}
-	num_points_cluster := expand(unit, rg, cluster_id, min_dense_points, cluster)
-	cluster.Num_of_points = num_points_cluster
+	cluster = expand(unit, rg, cluster_id, min_dense_points, cluster)
 	return cluster
 }
 
 func AbsorbIntoCluster(grid Grid, unit *Unit, min_dense_points int) (int, Cluster, []int){
 	ret_value := FAILURE
-	cluster_ids := []int{}
-	cluster := Cluster{}
+	var cluster_ids []int
+	var cluster Cluster
+	var ok bool
 
 	for _, neighbour_unit := range unit.GetNeighbouringUnits() {
 		if isDenseUnit(neighbour_unit, min_dense_points) && neighbour_unit.Cluster_id != UNCLASSIFIED &&
@@ -67,8 +66,8 @@ func AbsorbIntoCluster(grid Grid, unit *Unit, min_dense_points int) (int, Cluste
 	}
 
 	cluster_ids = utils.UniqInt(cluster_ids)
-	unit_cluster_id := 0
-	cluster_id_to_be_merged := []int{}
+	var unit_cluster_id int
+	var cluster_id_to_be_merged []int
 
 	if len(cluster_ids) > 0{
 		unit_cluster_id = cluster_ids[0]
@@ -76,9 +75,23 @@ func AbsorbIntoCluster(grid Grid, unit *Unit, min_dense_points int) (int, Cluste
 		ret_value = SUCCESS
 
 		unit.Cluster_id = unit_cluster_id
-		cluster, _ = grid.GetCluster(unit_cluster_id) //ok value here need to tbe taken into account if want to avoid nil panic
-		cluster.ListOfUnits[unit.Range] = unit
-		cluster.Num_of_points += unit.GetNumberOfPoints()
+		cluster, ok = grid.GetCluster(unit_cluster_id) //ok value here need to tbe taken into account if want to avoid nil panic
+		if ok{
+			cluster.ListOfUnits[unit.Range] = unit
+			cluster.Num_of_points += unit.GetNumberOfPoints()
+		} else {
+			clusters := grid.GetClusters()
+			log.Printf("Cluster id requested: %v Cluster ID available: ", unit_cluster_id)
+			for _, cluster := range clusters{
+				log.Printf("%v ", cluster.Cluster_id)
+			}
+			for _, neighbour_unit := range unit.GetNeighbouringUnits() {
+				if isDenseUnit(neighbour_unit, min_dense_points) && neighbour_unit.Cluster_id == unit_cluster_id{
+					log.Printf(" Rogue neighbour unit: %v ", neighbour_unit.Id)
+				}
+			}
+			log.Printf("\n")
+		}
 	}
 	return ret_value, cluster, cluster_id_to_be_merged
 }
@@ -95,6 +108,7 @@ func MergeClusters(grid Grid, cluster Cluster, cluster_ids_to_be_merged []int) (
 				cluster.Num_of_points += unit.GetNumberOfPoints()
 			}
 			ret_value = SUCCESS
+			log.Println("Cluster to remove after merge: ", cluster_id)
 			grid.RemoveCluster(cluster_id)
 		}
 	}
@@ -107,7 +121,7 @@ type Seed struct{
 	rg Range
 }
 
-func expand(unit *Unit, rg Range, cluster_id int, min_dense_points int, cluster Cluster) (int){
+func expand(unit *Unit, rg Range, cluster_id int, min_dense_points int, cluster Cluster) (Cluster){
 	point_count_acc := 0
 
 	seeds := []Seed{}
@@ -123,13 +137,14 @@ func expand(unit *Unit, rg Range, cluster_id int, min_dense_points int, cluster 
 	unit.Cluster_id = cluster_id
 	point_count_acc += unit.GetNumberOfPoints()
 	cluster.ListOfUnits[rg] = unit
-	point_count_acc = spread(point_count_acc, seeds, cluster_id, min_dense_points, cluster)
-	return point_count_acc
+	cluster.Num_of_points += unit.GetNumberOfPoints()
+	cluster = spread(point_count_acc, seeds, cluster_id, min_dense_points, cluster)
+	return cluster
 }
 
-func spread(point_count_acc int, seeds []Seed, cluster_id int, min_dense_points int, cluster Cluster) int{
+func spread(point_count_acc int, seeds []Seed, cluster_id int, min_dense_points int, cluster Cluster) (Cluster){
 	if len(seeds) == 0{
-		return point_count_acc
+		return cluster
 	}
 	var seed Seed
 	var unit *Unit
@@ -138,8 +153,8 @@ func spread(point_count_acc int, seeds []Seed, cluster_id int, min_dense_points 
 
 	if unit.Cluster_id == UNCLASSIFIED || unit.Cluster_id == NOISE{
 		unit.Cluster_id = cluster_id
-		point_count_acc += unit.GetNumberOfPoints()
 		cluster.ListOfUnits[seed.rg] = unit
+		cluster.Num_of_points += unit.GetNumberOfPoints()
 
 		for rg, neighbour_unit := range unit.GetNeighbouringUnits() {
 			if isDenseUnit(neighbour_unit, min_dense_points){
