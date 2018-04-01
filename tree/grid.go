@@ -129,6 +129,7 @@ func (us *Grid) ProcessOldDenseUnits(listOldDenseUnits map[Range]*Unit) map[Rang
 		if count_neighbour_same_cluster >= 2 {
 			src := us.RemoveCluster(cluster_id)
 			for rg, unit := range src.ListOfUnits{
+				unit.Cluster_id = UNCLASSIFIED
 				listUnitToRep[rg] = unit
 			}
 		}
