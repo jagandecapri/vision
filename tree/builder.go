@@ -2,8 +2,7 @@ package tree
 
 import (
 	"github.com/Workiva/go-datastructures/augmentedtree"
-	"strconv"
-	"math/big"
+	"github.com/jagandecapri/vision/utils"
 )
 
 func RangeBuilder(min float64, max float64, interval_length float64) []Range{
@@ -12,18 +11,18 @@ func RangeBuilder(min float64, max float64, interval_length float64) []Range{
 	for i < max{
 		j := min
 		for j < max{
+			tmp_i := utils.Round(i + interval_length, 0.1)
+			tmp_j := utils.Round(j + interval_length, 0.1)
 			tmp := Range{Low: [2]float64{i, j},
-				High: [2]float64{i + interval_length,
-					j + interval_length}}
+				High: [2]float64{tmp_i,
+					tmp_j}}
 			ranges = append(ranges, tmp)
-			j += interval_length
-			j, _ = strconv.ParseFloat(new(big.Float).SetFloat64(j).Text('f', 1), 64)
+			j = utils.Round(j + interval_length, 0.1)
 			if j >= max{
 				break
 			}
 		}
-		i += interval_length
-		i, _ = strconv.ParseFloat(new(big.Float).SetFloat64(i).Text('f', 1), 64)
+		i = utils.Round(i + interval_length, 0.1)
 		if i >= max{
 			break
 		}
