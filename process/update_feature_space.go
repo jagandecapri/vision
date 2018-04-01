@@ -42,18 +42,25 @@ func UpdateFeatureSpace(subspace_channels anomalies.SubspaceChannels, sorter []s
 						var x_old, x_new_update []tree.Point
 
 						if len(Xs) == preprocess.WINDOW_ARR_LEN {
-							//fmt.Println("before flow processing data", preprocess.WINDOW_ARR_LEN, len(base_matrix))
-							//fmt.Println("before flow processing")
+							//log.Println("before flow processing data", preprocess.WINDOW_ARR_LEN, len(base_matrix))
+							//log.Println("before flow processing")
 							x_old = []tree.Point{}
 
 							tmp := preprocess.MicroSlot{}
 							for _, X := range Xs {
 								tmp = append(tmp, X...)
 							}
+							//log.Println(len(Xs), len(Xs[0]), len(X))
 							x_new_update = preprocess.Normalize(tmp, sorter)
+
+							//DEBUGGING
+							//log.Println(agg_key)
+							//for _, pt := range x_new_update{
+							//	log.Println(pt.Id, " ", pt.Vec, pt.Vec_map)
+							//}
 						} else if len(Xs) > preprocess.WINDOW_ARR_LEN {
-							//fmt.Println("flow processing data", preprocess.WINDOW_ARR_LEN, len(base_matrix))
-							//fmt.Println("flow processing")
+							//log.Println("flow processing data", preprocess.WINDOW_ARR_LEN, len(base_matrix))
+							//log.Println("flow processing")
 							x_old = Xs[0]
 							Xs = Xs[1:]
 
@@ -110,6 +117,7 @@ func UpdateFeatureSpace(subspace_channels anomalies.SubspaceChannels, sorter []s
 						}
 
 						for subspace_keys, channel := range subspace_channels {
+							//log.Println("agg_key: ", agg_key, " subspace_keys: ", subspace_keys, " x_old: ", tmp1_x_old[subspace_keys], " x_new_update: ", tmp2_x_new_update[subspace_keys])
 							anom := anomalies.ProcessPackage{
 								X_old:        tmp1_x_old[subspace_keys],
 								X_new_update: tmp2_x_new_update[subspace_keys],
