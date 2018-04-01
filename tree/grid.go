@@ -195,7 +195,6 @@ func (us *Grid) GetNeighbouringUnits(rg Range, interval_l float64) map[Range]*Un
 
 	for _, rg := range tmp{
 		if unit, ok := us.Store[rg]; ok{
-			//neighbour_units = append(neighbour_units, unit)
 			neighbour_units[rg] = unit
 		}
 	}
