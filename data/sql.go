@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	_ "github.com/mattn/go-sqlite3"
 	"time"
-	"html/template"
+	"text/template"
 	"bytes"
 	"github.com/jagandecapri/vision/preprocess"
 	"github.com/jagandecapri/vision/tree"
@@ -103,7 +103,7 @@ func (s *SQL) SetupDb(){
 	var tpl bytes.Buffer
 	var result string
 
-	if err := t.Execute(&tpl, struct{TableName template.HTML}{TableName: template.HTML(s.agg_src_table)}); err != nil {
+	if err := t.Execute(&tpl, struct{TableName string}{TableName: s.agg_src_table}); err != nil {
 		log.Println(err)
 	}
 
@@ -116,7 +116,7 @@ func (s *SQL) SetupDb(){
 	}
 
 	tpl.Reset()
-	if err := t.Execute(&tpl, struct{TableName template.HTML}{TableName: template.HTML(s.agg_dst_table)}); err != nil {
+	if err := t.Execute(&tpl, struct{TableName string}{TableName: s.agg_dst_table}); err != nil {
 		log.Println(err)
 	}
 
@@ -129,7 +129,7 @@ func (s *SQL) SetupDb(){
 	}
 
 	tpl.Reset()
-	if err := t.Execute(&tpl, struct{TableName template.HTML}{TableName: template.HTML(s.agg_srcdst_table)}); err != nil {
+	if err := t.Execute(&tpl, struct{TableName string}{TableName: s.agg_srcdst_table}); err != nil {
 		log.Println(err)
 	}
 
@@ -184,7 +184,7 @@ func (s *SQL) WriteToDb(acc_c preprocess.AccumulatorChannels, done chan struct{}
 					tmp = X
 
 					tpl.Reset()
-					if err := t.Execute(&tpl, struct{TableName template.HTML}{TableName: template.HTML(s.agg_src_table)}); err != nil {
+					if err := t.Execute(&tpl, struct{TableName string}{TableName: s.agg_src_table}); err != nil {
 						log.Fatal(err)
 					}
 
@@ -248,7 +248,7 @@ func (s *SQL) WriteToDb(acc_c preprocess.AccumulatorChannels, done chan struct{}
 					tmp = X
 
 					tpl.Reset()
-					if err := t.Execute(&tpl, struct{TableName template.HTML}{TableName: template.HTML(s.agg_dst_table)}); err != nil {
+					if err := t.Execute(&tpl, struct{TableName string}{TableName: s.agg_dst_table}); err != nil {
 						log.Fatal(err)
 					}
 
@@ -312,7 +312,7 @@ func (s *SQL) WriteToDb(acc_c preprocess.AccumulatorChannels, done chan struct{}
 					tmp = X
 
 					tpl.Reset()
-					if err := t.Execute(&tpl, struct{TableName template.HTML}{TableName: template.HTML(s.agg_srcdst_table)}); err != nil {
+					if err := t.Execute(&tpl, struct{TableName string}{TableName: s.agg_srcdst_table}); err != nil {
 						log.Fatal(err)
 					}
 
@@ -463,7 +463,7 @@ func (s *SQL) ReadFromDb(acc_c preprocess.AccumulatorChannels){
 					wg.Done()
 				}()
 
-				t := template.New("select data from agg_src")
+				t := template.New("select data from " + table)
 				t, err = t.Parse(`SELECT id, flow_key, nbPacket, nbSrcPort,
 			nbDstPort, nbSrcs, nbDsts, perSYN, perACK, perICMP, perRST, perFIN, perCWR, perURG,
 			avgPktSize, meanTTL FROM ` + "`{{.TableName}}`" + " WHERE batch={{.Batch}}" )
@@ -476,8 +476,8 @@ func (s *SQL) ReadFromDb(acc_c preprocess.AccumulatorChannels){
 
 				for i := 1; i <= batch_counter_agg_src; i++ {
 					log.Println("Read loop: ", i)
-					tpl_data := struct{TableName template.HTML
-						Batch int}{TableName: template.HTML(table), Batch: i}
+					tpl_data := struct{TableName string
+						Batch int}{TableName: table, Batch: i}
 					if err := t.Execute(&buf, tpl_data); err != nil {
 						log.Fatal("batch looping src err: ", err)
 					}
