@@ -1,5 +1,7 @@
 package tree
 
+import "log"
+
 type Cluster struct{
 	Cluster_id int
 	Num_of_points int
@@ -38,4 +40,35 @@ func (c *Cluster) GetNumberOfPoints() int{
 		tmp += unit.GetNumberOfPoints()
 	}
 	return tmp
+}
+
+func ValidateCluster(c Cluster) bool{
+	ret := true
+	if len(c.ListOfUnits) == 1{
+		ret = true
+	} else{
+		for _, unit := range c.ListOfUnits{
+			neighbour_present := false
+			for _, neigh_unit := range unit.GetNeighbouringUnits(){
+				_, ok := c.ListOfUnits[neigh_unit.Range]
+				if ok{
+					neighbour_present = true
+					break
+				}
+			}
+			if neighbour_present == false{
+				log.Printf("Neighbour not present for cluster: %v \n", c.Cluster_id)
+				for _, unit := range c.ListOfUnits{
+					log.Printf("Unit Id: %v Range: %+v", unit.Id, unit.Range)
+					for _, neigh_unit := range unit.GetNeighbouringUnits(){
+						log.Printf("\tUnit Id: %v Range: %+v", neigh_unit.Id, neigh_unit.Range)
+					}
+					log.Printf("\n")
+				}
+				ret = false
+				break
+			}
+		}
+	}
+	return ret
 }
