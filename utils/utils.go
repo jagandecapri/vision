@@ -3,6 +3,7 @@ package utils
 import (
 	"time"
 	"go.uber.org/zap"
+	"math"
 )
 
 func Comb(n, m int, emit func([]int)) {
@@ -75,11 +76,8 @@ func GetKeyComb(sorter []string, feature_cnt int) [][]string {
 }
 
 //Taken from https://stackoverflow.com/questions/39544571/golang-round-to-nearest-0-05
-func Round(x float64, unit float64) float64 {
-	if x > 0 {
-		return float64(int64(x/unit+0.5)) * unit
-	}
-	return float64(int64(x/unit-0.5)) * unit
+func Round(x, unit float64) float64 {
+	return math.Round(x/unit) * unit
 }
 
 func TimeTrack(start time.Time, name string, num_CPU int, logger *zap.Logger) {
