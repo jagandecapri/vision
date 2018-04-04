@@ -51,6 +51,24 @@ func (dmc *DissimilarityMapContainer) Store(key int, value DissimilarityVectorCo
 	dmc.Unlock()
 }
 
+func (dmc *DissimilarityMapContainer) IterateDissimilarityMapContainer(done chan struct{}) chan []DissimilarityVectorContainer {
+	out := make(chan []DissimilarityVectorContainer, 10)
+	dmc.RLock()
+	defer dmc.RUnlock()
+	for _, v := range dmc.internal {
+		select{
+			case <-done:
+				close(out)
+				return nil //TODO: Fix this
+			default:
+		}
+		dmc.RUnlock()
+		out <- v
+		dmc.RLock()
+	}
+	return out
+}
+
 func ComputeDissmilarityVector(subspace tree.Subspace) []DissimilarityVector{
 	dissimilarity_vectors := []DissimilarityVector{}
 
