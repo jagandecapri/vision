@@ -19,6 +19,11 @@ type DissimilarityMapContainer struct{
 	internal map[int][]DissimilarityVectorContainer
 }
 
+type DissimilarityMapPackage struct{
+	Key int
+	Dis_vector []DissimilarityVectorContainer
+}
+
 func NewDissimilarityMapContainer() *DissimilarityMapContainer {
 	return &DissimilarityMapContainer{
 		internal: make(map[int][]DissimilarityVectorContainer),
@@ -51,21 +56,20 @@ func (dmc *DissimilarityMapContainer) Store(key int, value DissimilarityVectorCo
 	dmc.Unlock()
 }
 
-func (dmc *DissimilarityMapContainer) IterateDissimilarityMapContainer(done chan struct{}) chan []DissimilarityVectorContainer {
-	out := make(chan []DissimilarityVectorContainer, 10)
-	dmc.RLock()
-	defer dmc.RUnlock()
-	for _, v := range dmc.internal {
-		select{
-			case <-done:
-				close(out)
-				return nil //TODO: Fix this
-			default:
-		}
-		dmc.RUnlock()
-		out <- v
+func (dmc *DissimilarityMapContainer) IterateDissimilarityMapContainer() chan DissimilarityMapPackage {
+	out := make(chan DissimilarityMapPackage, 10)
+	go func(){
 		dmc.RLock()
-	}
+		defer dmc.RUnlock()
+		for key, dis_vector := range dmc.internal {
+			dmc.RUnlock()
+			out <- DissimilarityMapPackage{
+					Key: key,
+					Dis_vector: dis_vector,
+			}
+			dmc.RLock()
+		}
+	}()
 	return out
 }
 
