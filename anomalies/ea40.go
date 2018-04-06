@@ -69,6 +69,7 @@ func (dmc *DissimilarityMapContainer) IterateDissimilarityMapContainer() chan Di
 			}
 			dmc.RLock()
 		}
+		close(out)
 	}()
 	return out
 }

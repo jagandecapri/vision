@@ -17,7 +17,7 @@ func (d *NetworkScanSYN) WaitOnChannels(wg_channels *sync.WaitGroup){
 	store := NewDissimilarityMapContainer()
 	done := make(chan struct{})
 
-	go func() {
+	go func(chan struct{}) {
 		done_counter := 0
 		defer func(){
 			close(done)
@@ -51,9 +51,9 @@ func (d *NetworkScanSYN) WaitOnChannels(wg_channels *sync.WaitGroup){
 				return
 			}
 		}
-	}()
+	}(done)
 
-	go func(){
+	go func(chan struct{}){
 		for{
 			out := store.IterateDissimilarityMapContainer()
 			for dmp := range out{
@@ -89,7 +89,7 @@ func (d *NetworkScanSYN) WaitOnChannels(wg_channels *sync.WaitGroup){
 			default:
 			}
 		}
-	}()
+	}(done)
 }
 
 func NewNetworkScanSYN() *NetworkScanSYN{
