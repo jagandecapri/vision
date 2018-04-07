@@ -1,7 +1,6 @@
 package tree
 
 import (
-	"log"
 	"github.com/jagandecapri/vision/utils"
 )
 
@@ -145,11 +144,11 @@ func (us *Grid) ProcessOldDenseUnits(listOldDenseUnits map[Range]*Unit) map[Rang
 func (us *Grid) Cluster(min_dense_points int, min_cluster_points int){
 	listNewDenseUnits, listOldDenseUnits := us.RecomputeDenseUnits(min_dense_points)
 	us.tmpUnitToCluster = listNewDenseUnits
-	_ = IGDCA(*us, min_dense_points, min_cluster_points)
+	_ = IGDCA(us, min_dense_points, min_cluster_points)
 
 	listUnitToRep := us.ProcessOldDenseUnits(listOldDenseUnits)
 	us.tmpUnitToCluster = listUnitToRep
-	_ = IGDCA(*us, min_dense_points, min_cluster_points)
+	_ = IGDCA(us, min_dense_points, min_cluster_points)
 }
 
 func (us *Grid) GetOutliers() []Point{

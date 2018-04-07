@@ -32,8 +32,15 @@ func (cc *ClusterContainer) RemoveCluster(cluster_id int) Cluster{
 		tmp[rg] = unit
 	}
 	tmp_cluster := Cluster{Cluster_id: cluster_remove.Cluster_id,
-	//Cluster_type: cluster_remove.Cluster_type,
 	ListOfUnits: tmp}
 	delete(cc.ListOfClusters, cluster_id)
+
+	if cc.BiggestCluster.Cluster_id == cluster_id{
+		for _, cluster := range cc.ListOfClusters{
+			if cluster.Num_of_points >= cc.BiggestCluster.Num_of_points{
+				cc.BiggestCluster = cluster
+			}
+		}
+	}
 	return tmp_cluster
 }

@@ -11,7 +11,7 @@ const NOISE = -1
 const SUCCESS = -10
 const FAILURE = -11
 
-func IGDCA(grid Grid, min_dense_points int, min_cluster_points int) (map[Range]*Unit){
+func IGDCA(grid *Grid, min_dense_points int, min_cluster_points int) (map[Range]*Unit){
 	units := grid.GetUnitsToCluster()
 	cluster_id := grid.GetNextClusterID()
 
@@ -52,7 +52,7 @@ func NewCluster(unit *Unit, rg Range, cluster_id int, min_dense_points int) (Clu
 	return cluster
 }
 
-func AbsorbIntoCluster(grid Grid, unit *Unit, min_dense_points int) (int, Cluster, []int){
+func AbsorbIntoCluster(grid *Grid, unit *Unit, min_dense_points int) (int, Cluster, []int){
 	ret_value := FAILURE
 	var cluster_ids []int
 	var cluster Cluster
@@ -75,7 +75,7 @@ func AbsorbIntoCluster(grid Grid, unit *Unit, min_dense_points int) (int, Cluste
 		ret_value = SUCCESS
 
 		unit.Cluster_id = unit_cluster_id
-		cluster, ok = grid.GetCluster(unit_cluster_id) //ok value here need to tbe taken into account if want to avoid nil panic
+		cluster, ok = grid.GetCluster(unit_cluster_id) //ok value here need to be taken into account if want to avoid nil panic
 		if ok{
 			cluster.ListOfUnits[unit.Range] = unit
 			cluster.Num_of_points += unit.GetNumberOfPoints()
@@ -96,7 +96,7 @@ func AbsorbIntoCluster(grid Grid, unit *Unit, min_dense_points int) (int, Cluste
 	return ret_value, cluster, cluster_id_to_be_merged
 }
 
-func MergeClusters(grid Grid, cluster Cluster, cluster_ids_to_be_merged []int) (int, Cluster){
+func MergeClusters(grid *Grid, cluster Cluster, cluster_ids_to_be_merged []int) (int, Cluster){
 	ret_value := FAILURE
 
 	for _, cluster_id := range cluster_ids_to_be_merged{
