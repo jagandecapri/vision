@@ -1,6 +1,8 @@
 package tree
 
-import "log"
+import (
+	"log"
+)
 
 type Cluster struct{
 	Cluster_id int
@@ -12,8 +14,11 @@ func (c *Cluster) GetCenter() Point {
 	var Center_vec []float64
 
 	for _, unit := range c.ListOfUnits{
-		if Center_vec == nil{
-			Center_vec = make([]float64, unit.Dim())
+		if len(unit.Points) > 0 && Center_vec == nil{
+			for _, p := range unit.Points{
+				Center_vec = make([]float64, p.Dim())
+				break
+			}
 		}
 		for _, p := range unit.Points {
 			for i := 0; i < p.Dim(); i++ {
