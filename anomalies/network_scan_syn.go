@@ -53,16 +53,32 @@ func (d *NetworkScanSYN) WaitOnChannels(wg_channels *sync.WaitGroup){
 		}
 	}(done)
 
-	go func(chan struct{}){
+	go func(done chan struct{}, wg_channels *sync.WaitGroup){
+		defer func(){
+			log.Println("closing iterating channel in network scan syn")
+			wg_channels.Done()
+		}()
+
 		for{
 			out := store.IterateDissimilarityMapContainer()
 			for dmp := range out{
 				if len(dmp.Dis_vector) == len(d.Channels){
 					log.Println("All subspaces processed in disimilarity vector")
 					//TODO: Sort and Calculate Knee here, http_data sending
-					//data_sort := []float64{}
-					//for _, dissimilarity := range dissimilarity_map{
-					//	data_sort = append(data_sort, dissimilarity)
+
+					tmp := make(map[int][]DissimilarityVector)
+
+					for _, dissimilarity_vector_container := range dmp.Dis_vector{
+						for _, dissimilarity_vector := range dissimilarity_vector_container.DissimilarityVectors{
+							tmp[dissimilarity_vector.Id] = append(tmp[dissimilarity_vector.Id], dissimilarity_vector)
+						}
+					}
+
+					log.Println("Data for knee sort in NetworkScanSYN ", tmp)
+					//knee_data := make([]float64, len(tmp))
+					//
+					//for _, distance := range tmp{
+					//	knee_data[]
 					//}
 					//
 					//sort.Float64s(data_sort)
@@ -89,7 +105,7 @@ func (d *NetworkScanSYN) WaitOnChannels(wg_channels *sync.WaitGroup){
 			default:
 			}
 		}
-	}(done)
+	}(done, wg_channels)
 }
 
 func NewNetworkScanSYN() *NetworkScanSYN{
