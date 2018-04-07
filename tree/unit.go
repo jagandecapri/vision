@@ -62,7 +62,7 @@ func (u *Unit) GetID() int {
 	return u.Id
 }
 
-func (u *Unit) Dim() int {
+func (u *Unit) Dim() int { //TODO:Not working at the moment as Center of unit using CalculateCenter is not computed anywhere
 	return len(u.Center.Vec)
 }
 
