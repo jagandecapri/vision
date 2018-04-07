@@ -40,6 +40,7 @@ func (s *Subspace) ComputeSubspace(mat_old []Point, mat_new_update []Point) {
 		if len(interval) > 0{
 			interval_ext := interval[0].(IntervalContainer)
 			p.Unit_id = int(interval[0].ID())
+			p.Vec = Vec[:]
 			cur_rg := s.Grid.GetPointRange(p.GetID())
 			new_rg := interval_ext.Range
 			if cur_rg == (Range{}){
