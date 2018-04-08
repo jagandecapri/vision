@@ -10,6 +10,7 @@ type DissimilarityVector struct{
 	PointKey tree.PointKey
 	Distance float64
 }
+
 type DissimilarityVectorContainer struct{
 	Id int
 	DissimilarityVectors []DissimilarityVector
