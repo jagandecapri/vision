@@ -3,7 +3,6 @@ package anomalies
 import (
 	"github.com/jagandecapri/vision/tree"
 	"github.com/jagandecapri/vision/utils"
-	//"log"
 	"log"
 	"sync"
 )
@@ -80,7 +79,12 @@ func Cluster(subspace tree.Subspace, config utils.Config, done chan struct{}, ou
 						subspace.Cluster(config.Min_dense_points, config.Min_cluster_points)
 						dissimilarity_vectors := ComputeDissmilarityVector(subspace)
 						if len(subspace.GetOutliers()) > 0 {
-							log.Println("counter: ", counter, " key:", subspace.Subspace_key, "outliers:", len(subspace.GetOutliers()), "clusters:", subspace.GetClusters())
+							log.Printf("counter: %v key: %v outliers: %v clusters: %+v", counter, subspace.Subspace_key, len(subspace.GetOutliers()), subspace.GetClusters())
+							for _, cluster := range subspace.GetClusters(){
+								validate_cluster := tree.ValidateCluster(cluster)
+								log.Printf(" cluster %v - validate cluster: %v", cluster.Cluster_id, validate_cluster)
+							}
+							log.Printf("\n")
 						} else {
 							log.Println("counter: ", counter, " key:", subspace.Subspace_key, " No outliers Cluster: ")
 							clusters := subspace.GetClusters()
