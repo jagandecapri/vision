@@ -61,6 +61,8 @@ func (d *NetworkScanSYN) WaitOnChannels(wg_channels *sync.WaitGroup){
 			wg_channels.Done()
 		}()
 
+		counter := 0
+
 		for{
 			out := store.IterateDissimilarityMapContainer()
 			for dmp := range out{
@@ -105,7 +107,7 @@ func (d *NetworkScanSYN) WaitOnChannels(wg_channels *sync.WaitGroup){
 						srcPort := utils.UniqString(val.PointKey.SrcPort)
 						dstPort := utils.UniqString(val.PointKey.DstPort)
 
-						log.Printf("Keys: SrcIP: %+v DstIP: %+v SrcPort: %+v DstPort: %+v Distance: %+v", srcIP, dstIP, srcPort, dstPort, kv.Value)
+						log.Printf("Batch: %v Keys: SrcIP: %+v DstIP: %+v SrcPort: %+v DstPort: %+v Distance: %+v", counter, srcIP, dstIP, srcPort, dstPort, kv.Value)
 					}
 
 					kneedle := Kneedle{}
@@ -120,6 +122,7 @@ func (d *NetworkScanSYN) WaitOnChannels(wg_channels *sync.WaitGroup){
 						//}
 					}
 					store.Delete(dmp.Key)
+					counter++
 				}
 			}
 
