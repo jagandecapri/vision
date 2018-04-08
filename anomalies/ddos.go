@@ -65,36 +65,6 @@ func (d *DDOS) WaitOnChannels(wg_channels *sync.WaitGroup){
 				if len(dmp.Dis_vector) == len(d.Channels){
 					log.Println("All subspaces processed in ddos disimilarity vector")
 					//TODO: Sort and Calculate Knee here, http_data sending
-
-					tmp := make(map[int][]DissimilarityVector)
-
-					for _, dissimilarity_vector_container := range dmp.Dis_vector{
-						for _, dissimilarity_vector := range dissimilarity_vector_container.DissimilarityVectors{
-							tmp[dissimilarity_vector.Id] = append(tmp[dissimilarity_vector.Id], dissimilarity_vector)
-						}
-					}
-
-					log.Println("Data for knee sort in NetworkScanSYN ", tmp)
-					//knee_data := make([]float64, len(tmp))
-					//
-					//for _, distance := range tmp{
-					//	knee_data[]
-					//}
-					//
-					//sort.Float64s(data_sort)
-					//
-					//kneedle := Kneedle{}
-					//
-					//if len(data_sort) > 0{
-					//	knee := kneedle.Run(data_sort, 1, false)
-					//	fmt.Println("data sort:", data_sort)
-					//	fmt.Println("knee:",knee)
-					//	if len(knee) > 0{
-					//		for point_id, dissimilarity := range dissimilarity_map{
-					//
-					//		}
-					//	}
-					//}
 					store.Delete(dmp.Key)
 				}
 			}
