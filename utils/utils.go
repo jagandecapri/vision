@@ -88,3 +88,15 @@ func TimeTrack(start time.Time, name string, num_CPU int, logger *zap.Logger) {
 		zap.Duration("elapsed_time", elapsed),
 	)
 }
+
+func CompareStringSlice(a, b []string) []string {
+	for i := len(a) - 1; i >= 0; i-- {
+		for _, vD := range b {
+			if a[i] == vD {
+				a = append(a[:i], a[i+1:]...)
+				break
+			}
+		}
+	}
+	return a
+}
