@@ -7,7 +7,6 @@ import (
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/jagandecapri/vision/preprocess"
-	"os"
 	"time"
 	"fmt"
 )
@@ -56,7 +55,7 @@ func WindowTimeSlide(ch chan preprocess.PacketData, acc_c preprocess.Accumulator
 	}()
 }
 
-func Run(){
+func Run(pcap_file_path string, db_name string){
 	ch := make(chan preprocess.PacketData)
 	done := make(chan struct{})
 	acc_c := preprocess.AccumulatorChannels{
@@ -65,13 +64,9 @@ func Run(){
 		AggSrcDst: make(chan preprocess.MicroSlot),
 	}
 
-	pcap_file_path := os.Getenv("PCAP_FILE")
-	if pcap_file_path == ""{
-		pcap_file_path = "C:\\Users\\Jack\\Downloads\\201705021400.pcap"
-	}
 
 	WindowTimeSlide(ch, acc_c, done)
-	NewSQL("201705021400", acc_c, done, delta_t)
+	NewSQL(db_name, acc_c, done, delta_t)
 	handleRead, err := pcap.OpenOffline(pcap_file_path)
 
 	if(err != nil){

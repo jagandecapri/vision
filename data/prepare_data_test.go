@@ -5,10 +5,22 @@ import (
 	"github.com/jagandecapri/vision/preprocess"
 	"time"
 	"log"
+	"flag"
+	"os"
 )
 
+var pcap_file_path = flag.String("pcap_file_path", "", "pcap_file_path")
+var db_name = flag.String("db_name", "", "db_name")
+
 func TestRun(t *testing.T) {
-	Run()
+	flag.Parse()
+
+	if *pcap_file_path == "" || *db_name == ""{
+		flag.PrintDefaults()
+		os.Exit(1)
+	}
+
+	Run(*pcap_file_path, *db_name)
 }
 
 func TestNewSQLRead(t *testing.T) {
@@ -22,28 +34,46 @@ func TestNewSQLRead(t *testing.T) {
 		AggSrcDst: make(preprocess.AccumulatorChannel),
 	}
 
-	sql.ReadFromDb(acc_c, done)
+	sql.ReadFromDb(acc_c)
 
 	now_src := time.Now()
 	now_dst := time.Now()
 	now_srcdst := time.Now()
 
+	counter_done := 0
+
 	for{
 		select{
-			case <-acc_c.AggSrc:
-				tmp := time.Since(now_src)
-				log.Println("Aggsrc data received in ", tmp)
-				now_src = time.Now()
-			case <-acc_c.AggDst:
-				tmp := time.Since(now_dst)
-				log.Println("Aggdst data received in ", tmp)
-				now_dst = time.Now()
-			case <-acc_c.AggSrcDst:
-				tmp := time.Since(now_srcdst)
-				log.Println("Aggsrcdst data received in ", tmp)
-				now_srcdst = time.Now()
+			case _, ok := <-acc_c.AggSrc:
+				if ok{
+					tmp := time.Since(now_src)
+					log.Println("Aggsrc data received in ", tmp)
+					now_src = time.Now()
+				} else {
+					counter_done++
+				}
+			case _, ok := <-acc_c.AggDst:
+				if ok{
+					tmp := time.Since(now_dst)
+					log.Println("Aggdst data received in ", tmp)
+					now_dst = time.Now()
+				} else {
+					counter_done++
+				}
+			case _, ok := <-acc_c.AggSrcDst:
+				if ok{
+					tmp := time.Since(now_srcdst)
+					log.Println("Aggsrcdst data received in ", tmp)
+					now_srcdst = time.Now()
+				} else {
+					counter_done++
+				}
 			case <-done:
 				return
+		}
+
+		if counter_done == 3{
+			break
 		}
 	}
 }
