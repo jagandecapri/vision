@@ -13,6 +13,8 @@ import (
 	"os"
 	"github.com/jagandecapri/vision/data"
 	"time"
+	"path/filepath"
+	"fmt"
 )
 
 var scale_factor = 5
@@ -27,21 +29,31 @@ func getSorter() []string{
 }
 
 func main(){
-	log_path := os.Getenv("LOG_FILE")
-	if log_path == ""{
-		log_path = "C:\\Users\\Jack\\go\\src\\github.com\\jagandecapri\\vision\\logs\\lumber_log.log"
+	num_cpu := flag.Int("num_cpu", 0, "Number of CPUs to use")
+	db_name := flag.String("db_name", "", "db_name")
+	log_path := flag.String("log_path", "C:\\Users\\Jack\\go\\src\\github.com\\jagandecapri\\vision\\logs\\lumber_log.log", "log_path")
+
+	flag.Parse()
+
+	if *db_name == ""{
+		flag.PrintDefaults()
+		os.Exit(1)
+	}
+
+	dir, _ := filepath.Split(*log_path)
+
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		fmt.Println("Log path does not exist")
+		os.Exit(1)
 	}
 
 	log.SetOutput(&lumberjack.Logger{
-		Filename:   log_path,
+		Filename:   *log_path,
 		MaxSize:    500, // megabytes
 		MaxBackups: 3,
 		MaxAge:     28, //days
 		Compress:   true, // disabled by default
 	})
-
-	num_cpu := flag.Int("num-cpu", 0, "Number of CPUs to use")
-	flag.Parse()
 
 	http_data := make(chan server.HttpData)
 	done := make(chan struct{})
@@ -59,7 +71,7 @@ func main(){
 		AggSrcDst: make(preprocess.AccumulatorChannel),
 	}
 
-	sql := data.NewSQLRead("./201705021400.db", delta_t)
+	sql := data.NewSQLRead(*db_name, delta_t)
 	sql.ReadFromDb(acc_c_receive)
 
 	acc_c_send := process.UpdateFeatureSpaceBuilder(subspace_channel_containers, sorter)
