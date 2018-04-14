@@ -2,4 +2,22 @@ Wireshark command to split big PCAP file to smaller file
 
 cd C:\Program Files\Wireshark>
 
-editcap.exe -r C:\Users\Jack\Downloads\201705021400.pcap C:\Users\Jack\Downloads\pcap_split\201705021400_split.pcap 1-10000
+editcap.exe -r -S 0 C:\Users\Jack\Downloads\201705021400.pcap C:\Users\Jack\Downloads\pcap_split\201705021400_split.pcap 0-10000
+
+Getting specific Src and Dst IP Address data from PCAP file
+
+TCPDUMP resource - https://danielmiessler.com/study/tcpdump/
+
+tcpdump -r 201711281400.pcap '(src 101.153.157.180 or 58.54.221.13 or 203.189.147.172 or 175.4.177.51 or 223.156.186.71 or 118.129.17.181 or 175.9.65.254 or 222.24.31.148 or 118.133.85.205 or 222.66.165.112 or 115.202.212.156 or 58.237.50.137 or 181.229.23.185 or 189.43.123.254)' -w out_ntscsyn.pcap
+
+tcpdump -r 201711281400.pcap '(src 115.202.212.156)' -w out_ntscsyn.pcap
+
+//SUBSET OF PCAP FILE
+
+editcap -A "2017-11-28 05:03:08" -B "2017-11-28 05:03:09" -v 201711281400.pcap out_03_08_to_03_09.pcap
+
+//COMMAND TO EXECUTE TEST TO WRITE DATA
+go test -run TestRun -timeout=0 -v -args -pcap_file_path="C:\Users\Jack\Downloads\out_03_08_to_03_09.pcap" -db_name="20171128_subset_03_08_03_09"
+
+//COMMAND TO RUN MAIN
+go run main.go app.go -db_name="20171128_subset_03_08_03_09" -log_path="C:\\Users\\Jack\\go\\src\\github.com\\jagandecapri\\vision\\logs\\lumber_log_1.log"
