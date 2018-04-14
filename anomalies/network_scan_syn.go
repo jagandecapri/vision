@@ -113,8 +113,7 @@ func (d *NetworkScanSYN) WaitOnChannels(wg_channels *sync.WaitGroup){
 					kneedle := Kneedle{}
 					if len(knee_data) > 0{
 						knee := kneedle.Run(knee_data, 1, false)
-						log.Println("network_scan_sync data sort: ", knee_data)
-						log.Println("network_scan_sync knee: ",knee)
+						log.Printf("batch: %v network_scan_sync data sort: %v network_scan_sync knee: %v\n", counter, knee_data, knee)
 						//if len(knee) > 0{
 						//	for point_id, dissimilarity := range dissimilarity_map{
 						//
