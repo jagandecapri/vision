@@ -53,29 +53,8 @@ func (d *DDOS) WaitOnChannels(wg_channels *sync.WaitGroup){
 		}
 	}(done)
 
-	go func(done chan struct{}, wg_channels *sync.WaitGroup){
-		defer func(){
-			log.Println("closing iterating channel in ddos")
-			wg_channels.Done()
-		}()
-
-		for{
-			out := store.IterateDissimilarityMapContainer()
-			for dmp := range out{
-				if len(dmp.Dis_vector) == len(d.Channels){
-					log.Println("All subspaces processed in ddos disimilarity vector")
-					//TODO: Sort and Calculate Knee here, http_data sending
-					store.Delete(dmp.Key)
-				}
-			}
-
-			select{
-			case <-done:
-				return
-			default:
-			}
-		}
-	}(done, wg_channels)
+	num_channels := len(d.Channels)
+	EvidenceAccummulationForOutliers("ddos", store, num_channels, done, wg_channels)
 }
 
 func NewDDOS() *DDOS{
