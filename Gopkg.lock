@@ -32,6 +32,12 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/jagandecapri/kneedle"
+  packages = ["."]
+  revision = "263c5640477556c8a287b0253b5ca392d5cb5446"
+
+[[projects]]
+  branch = "master"
   name = "github.com/lucasb-eyer/go-colorful"
   packages = ["."]
   revision = "231272389856c976b7500c4fffcc52ddf06ff4eb"
@@ -41,6 +47,12 @@
   packages = ["."]
   revision = "6c771bb9887719704b210e87e934f08be014bdb1"
   version = "v1.6.0"
+
+[[projects]]
+  name = "github.com/pkg/errors"
+  packages = ["."]
+  revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
+  version = "v0.8.0"
 
 [[projects]]
   name = "github.com/pmezard/go-difflib"
@@ -97,6 +109,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "bfa11aac624c6e847488bdbdf7c1206c8afd43446cedbf6c24abb94f33dab884"
+  inputs-digest = "d6b242e6f9fe903b9a3da45f5a6aeda3155373e37447acf456dba281a466d2e2"
   solver-name = "gps-cdcl"
   solver-version = 1
