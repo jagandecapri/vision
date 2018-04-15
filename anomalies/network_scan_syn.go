@@ -5,6 +5,7 @@ import (
 	"log"
 	"sort"
 	"github.com/jagandecapri/vision/utils"
+	"github.com/jagandecapri/kneedle"
 )
 
 type NetworkScanSYN struct{
@@ -97,28 +98,49 @@ func (d *NetworkScanSYN) WaitOnChannels(wg_channels *sync.WaitGroup){
 						return ss[i].Value < ss[j].Value
 					})
 
-					var knee_data []float64
+					var knee_data [][]float64
 
-					for _, kv := range ss {
-						knee_data = append(knee_data, kv.Value)
-						val := tmp[kv.Key]
-						srcIP := utils.UniqString(val.PointKey.SrcIP)
-						dstIP := utils.UniqString(val.PointKey.DstIP)
-						srcPort := utils.UniqString(val.PointKey.SrcPort)
-						dstPort := utils.UniqString(val.PointKey.DstPort)
+					for i := 0; i < len(ss); i++ {
+						kv := ss[i]
+						knee_data = append(knee_data, []float64{float64(i), kv.Value})
 
-						log.Printf("Batch: %v Keys: SrcIP: %+v DstIP: %+v SrcPort: %+v DstPort: %+v Distance: %+v", counter, srcIP, dstIP, srcPort, dstPort, kv.Value)
+						//val := tmp[kv.Key]
+						//srcIP := utils.UniqString(val.PointKey.SrcIP)
+						//dstIP := utils.UniqString(val.PointKey.DstIP)
+						//srcPort := utils.UniqString(val.PointKey.SrcPort)
+						//dstPort := utils.UniqString(val.PointKey.DstPort)
+						//log.Printf("Batch: %v Keys: SrcIP: %+v DstIP: %+v SrcPort: %+v DstPort: %+v Distance: %+v", counter, srcIP, dstIP, srcPort, dstPort, kv.Value)
 					}
 
-					kneedle := Kneedle{}
 					if len(knee_data) > 0{
-						knee := kneedle.Run(knee_data, 1, false)
-						log.Printf("batch: %v network_scan_sync data sort: %v network_scan_sync knee: %v\n", counter, knee_data, knee)
-						//if len(knee) > 0{
-						//	for point_id, dissimilarity := range dissimilarity_map{
-						//
-						//	}
-						//}
+						knee_points, _ := kneedle.Run(knee_data, 1, 1,true) //finding elbows in data
+
+						log.Printf("batch: %v network_scan_sync data sort: %v network_scan_sync knee: %v\n", counter, knee_data, knee_points)
+						if len(knee_points) > 0{
+							knee_idx := int(knee_points[0][0])
+
+							log.Printf("knee_idx searched: %v knee points: %v", knee_idx, knee_points)
+							anomalies := ss[knee_idx + 1:]
+							for _, anomaly := range anomalies{
+								dis_vec := tmp[anomaly.Key]
+								srcIP := utils.UniqString(dis_vec.PointKey.SrcIP)
+								dstIP := utils.UniqString(dis_vec.PointKey.DstIP)
+								srcPort := utils.UniqString(dis_vec.PointKey.SrcPort)
+								dstPort := utils.UniqString(dis_vec.PointKey.DstPort)
+								log.Printf("Network_scan_syn anomalies: Batch: %v Keys: SrcIP: %+v DstIP: %+v SrcPort: %+v DstPort: %+v Distance: %+v", counter, srcIP, dstIP, srcPort, dstPort, dis_vec.Distance)
+							}
+
+							non_anomalies := ss[:knee_idx + 1]
+
+							for _, non_anomaly := range non_anomalies{
+								dis_vec := tmp[non_anomaly.Key]
+								srcIP := utils.UniqString(dis_vec.PointKey.SrcIP)
+								dstIP := utils.UniqString(dis_vec.PointKey.DstIP)
+								srcPort := utils.UniqString(dis_vec.PointKey.SrcPort)
+								dstPort := utils.UniqString(dis_vec.PointKey.DstPort)
+								log.Printf("Network_scan_syn non_anomalies: Batch: %v Keys: SrcIP: %+v DstIP: %+v SrcPort: %+v DstPort: %+v Distance: %+v", counter, srcIP, dstIP, srcPort, dstPort, dis_vec.Distance)
+							}
+						}
 					}
 					store.Delete(dmp.Key)
 					counter++
