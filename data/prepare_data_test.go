@@ -11,6 +11,7 @@ import (
 
 var pcap_file_path = flag.String("pcap_file_path", "", "pcap_file_path")
 var db_name = flag.String("db_name", "", "db_name")
+var delta_t = flag.Duration("delta_t", 300 * time.Millisecond, "Delta time")
 
 func TestRun(t *testing.T) {
 	flag.Parse()
@@ -20,7 +21,7 @@ func TestRun(t *testing.T) {
 		os.Exit(1)
 	}
 
-	Run(*pcap_file_path, *db_name)
+	Run(*pcap_file_path, *db_name, *delta_t)
 }
 
 func TestNewSQLRead(t *testing.T) {

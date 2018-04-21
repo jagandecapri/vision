@@ -11,12 +11,9 @@ import (
 	"fmt"
 )
 
-var delta_t = 300 * time.Millisecond
-var window = 15 * time.Second
-var WINDOW_ARR_LEN = int(window.Seconds()/delta_t.Seconds())
 var Point_ctr = 0
 
-func WindowTimeSlide(ch chan preprocess.PacketData, acc_c preprocess.AccumulatorChannels, done chan struct{}){
+func WindowTimeSlide(ch chan preprocess.PacketData, acc_c preprocess.AccumulatorChannels, delta_t time.Duration, done chan struct{}){
 
 	go func(){
 		acc := preprocess.NewAccumulator()
@@ -55,7 +52,7 @@ func WindowTimeSlide(ch chan preprocess.PacketData, acc_c preprocess.Accumulator
 	}()
 }
 
-func Run(pcap_file_path string, db_name string){
+func Run(pcap_file_path string, db_name string, delta_t time.Duration){
 	ch := make(chan preprocess.PacketData)
 	done := make(chan struct{})
 	acc_c := preprocess.AccumulatorChannels{
@@ -65,7 +62,7 @@ func Run(pcap_file_path string, db_name string){
 	}
 
 
-	WindowTimeSlide(ch, acc_c, done)
+	WindowTimeSlide(ch, acc_c, delta_t, done)
 	NewSQL(db_name, acc_c, done, delta_t)
 	handleRead, err := pcap.OpenOffline(pcap_file_path)
 
