@@ -32,6 +32,9 @@ func main(){
 	num_cpu := flag.Int("num_cpu", 0, "Number of CPUs to use")
 	db_name := flag.String("db_name", "", "db_name")
 	log_path := flag.String("log_path", "C:\\Users\\Jack\\go\\src\\github.com\\jagandecapri\\vision\\logs\\lumber_log.log", "log_path")
+	min_dense_points := flag.Int("min_dense_points", 10, "Minimum number of points to consider a unit as dense")
+	min_cluster_points := flag.Int("min_cluster_points", 15, "Minimum number of points to considers a cluster as a valid cluster")
+	delta_t := flag.Duration("delta_t", 300 * time.Millisecond, "Delta time")
 
 	flag.Parse()
 
@@ -58,10 +61,7 @@ func main(){
 	http_data := make(chan server.HttpData)
 	done := make(chan struct{})
 	sorter:= getSorter()
-	config := utils.Config{Min_dense_points: 10, Min_cluster_points: 15, Execution_type: utils.PARALLEL, Num_cpu: *num_cpu}
-
-	delta_t := 300 * time.Millisecond
-
+	config := utils.Config{Min_dense_points: *min_dense_points, Min_cluster_points: *min_cluster_points, Execution_type: utils.PARALLEL, Num_cpu: *num_cpu}
 	BootServer(http_data)
 	subspace_channel_containers := anomalies.ClusteringBuilder(config, done)
 
@@ -71,11 +71,11 @@ func main(){
 		AggSrcDst: make(preprocess.AccumulatorChannel),
 	}
 
-	sql := data.NewSQLRead(*db_name, delta_t)
+	sql := data.NewSQLRead(*db_name, *delta_t)
 	sql.ReadFromDb(acc_c_receive)
 
 	acc_c_send := process.UpdateFeatureSpaceBuilder(subspace_channel_containers, sorter)
-	preprocess.WindowTimeSlideSimulator(acc_c_receive, acc_c_send, delta_t)
+	preprocess.WindowTimeSlideSimulator(acc_c_receive, acc_c_send, *delta_t)
 	<-done
 	// ch := make(chan preprocess.PacketData)
 	// BootServer(http_data)
