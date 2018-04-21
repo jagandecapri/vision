@@ -56,7 +56,7 @@ type ProcessPackage struct{
 	X_new_update []tree.Point
 }
 
-func Cluster(subspace tree.Subspace, config utils.Config, done chan struct{}, outs ...chan DissimilarityVectorContainer) chan ProcessPackage{
+func Cluster(subspace tree.Subspace, config utils.Config, outs ...chan DissimilarityVectorContainer) chan ProcessPackage{
 	in := make(chan ProcessPackage)
 	counter := 1
 
