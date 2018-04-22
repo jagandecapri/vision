@@ -141,19 +141,19 @@ func ClusteringBuilder(config utils.Config, done chan struct{}) SubspaceChannels
 
 	for subspace_key, channels := range aggsrc_dis_vector{
 		subspace := BuildSubspace(subspace_key)
-		in := Cluster(subspace, config, done, channels...)
+		in := Cluster(subspace, config, channels...)
 		aggsrc_subspaces[subspace_key] = in
 	}
 
 	for subspace_key, channels := range aggdst_dis_vector{
 		subspace := BuildSubspace(subspace_key)
-		in := Cluster(subspace, config, done, channels...)
+		in := Cluster(subspace, config, channels...)
 		aggdst_subspaces[subspace_key] = in
 	}
 
 	for subspace_key, channels := range aggsrcdst_dis_vector{
 		subspace := BuildSubspace(subspace_key)
-		in := Cluster(subspace, config, done, channels...)
+		in := Cluster(subspace, config, channels...)
 		aggsrcdst_subspaces[subspace_key] = in
 	}
 
