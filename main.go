@@ -5,19 +5,13 @@ import (
 	"github.com/jagandecapri/vision/process"
 	"log"
 	"sort"
-	"github.com/jagandecapri/vision/server"
-	"flag"
 	"gopkg.in/natefinch/lumberjack.v2"
 	"github.com/jagandecapri/vision/anomalies"
 	"github.com/jagandecapri/vision/utils"
-	"os"
 	"github.com/jagandecapri/vision/data"
-	"time"
-	"path/filepath"
-	"fmt"
+	"github.com/jagandecapri/vision/cmd"
 )
 
-var scale_factor = 5
 
 func getSorter() []string{
 	sorter := []string{}
@@ -29,100 +23,42 @@ func getSorter() []string{
 }
 
 func main(){
-	num_cpu := flag.Int("num_cpu", 0, "Number of CPUs to use")
-	db_name := flag.String("db_name", "", "db_name")
-	log_path := flag.String("log_path", "C:\\Users\\Jack\\go\\src\\github.com\\jagandecapri\\vision\\logs\\lumber_log.log", "log_path")
-	min_dense_points := flag.Int("min_dense_points", 10, "Minimum number of points to consider a unit as dense")
-	min_cluster_points := flag.Int("min_cluster_points", 15, "Minimum number of points to considers a cluster as a valid cluster")
-	delta_t := flag.Duration("delta_t", 300 * time.Millisecond, "Delta time")
+	cmd.Execute()
 
-	flag.Parse()
-
-	if *db_name == ""{
-		flag.PrintDefaults()
-		os.Exit(1)
+	if cmd.PrepareData{
+		data.Run(cmd.PcapFilePath, cmd.DbNamePrepareData, cmd.DeltaTPrepareData)
 	}
 
-	dir, _ := filepath.Split(*log_path)
+	if cmd.ClusterData{
+		log.SetOutput(&lumberjack.Logger{
+			Filename:   cmd.LogPath,
+			MaxSize:    500, // megabytes
+			MaxBackups: 3,
+			MaxAge:     28, //days
+			Compress:   true, // disabled by default
+		})
 
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		fmt.Println("Log path does not exist")
-		os.Exit(1)
+		done := make(chan struct{})
+		sorter:= getSorter()
+		config := utils.Config{Min_dense_points: cmd.MinDensePoints, Min_cluster_points: cmd.MinClusterPoints, Num_cpu: cmd.NumCpu}
+		subspace_channel_containers := anomalies.ClusteringBuilder(config, done)
+
+		acc_c_receive := preprocess.AccumulatorChannels{
+			AggSrc: make(preprocess.AccumulatorChannel),
+			AggDst: make(preprocess.AccumulatorChannel),
+			AggSrcDst: make(preprocess.AccumulatorChannel),
+		}
+
+		sql := data.NewSQLRead(cmd.DbNameClusterData, cmd.DeltaTClusterData)
+		sql.ReadFromDb(acc_c_receive)
+
+		acc_c_send := process.UpdateFeatureSpaceBuilder(subspace_channel_containers, sorter)
+		preprocess.WindowTimeSlideSimulator(acc_c_receive, acc_c_send, cmd.DeltaTClusterData)
+		<-done
+		// ch := make(chan preprocess.PacketData)
+		// BootServer(http_data)
 	}
 
-	log.SetOutput(&lumberjack.Logger{
-		Filename:   *log_path,
-		MaxSize:    500, // megabytes
-		MaxBackups: 3,
-		MaxAge:     28, //days
-		Compress:   true, // disabled by default
-	})
 
-	http_data := make(chan server.HttpData)
-	done := make(chan struct{})
-	sorter:= getSorter()
-	config := utils.Config{Min_dense_points: *min_dense_points, Min_cluster_points: *min_cluster_points, Execution_type: utils.PARALLEL, Num_cpu: *num_cpu}
-	BootServer(http_data)
-	subspace_channel_containers := anomalies.ClusteringBuilder(config, done)
 
-	acc_c_receive := preprocess.AccumulatorChannels{
-		AggSrc: make(preprocess.AccumulatorChannel),
-		AggDst: make(preprocess.AccumulatorChannel),
-		AggSrcDst: make(preprocess.AccumulatorChannel),
-	}
-
-	sql := data.NewSQLRead(*db_name, *delta_t)
-	sql.ReadFromDb(acc_c_receive)
-
-	acc_c_send := process.UpdateFeatureSpaceBuilder(subspace_channel_containers, sorter)
-	preprocess.WindowTimeSlideSimulator(acc_c_receive, acc_c_send, *delta_t)
-	<-done
-	// ch := make(chan preprocess.PacketData)
-	// BootServer(http_data)
-	//subspace_channel_containers := anomalies.ClusteringBuilder(config, done)
-	//accumulator_channels := process.UpdateFeatureSpaceBuilder(subspace_channel_containers, sorter, done)
-	//preprocess.WindowTimeSlide(ch, accumulator_channels, done)
-	//
-	//pcap_file_path := os.Getenv("PCAP_FILE")
-	//if pcap_file_path == ""{
-	//	pcap_file_path = "C:\\Users\\Jack\\Downloads\\201705021400.pcap"
-	//}
-	//
-	//handleRead, err := pcap.OpenOffline(pcap_file_path)
-	//
-	//if(err != nil){
-	//	log.Fatal(err)
-	//}
-	//
-	//for {
-	//	data, ci, err := handleRead.ReadPacketData()
-	//	if err != nil && err != io.EOF {
-	//		close(done)
-	//		log.Fatal(err)
-	//	} else if err == io.EOF {
-	//		close(done)
-	//		break
-	//	} else {
-	//		packet := gopacket.NewPacket(data, layers.LayerTypeEthernet, gopacket.Default)
-	//		ch <- preprocess.PacketData{Data: packet, Metadata: ci}
-	//	}
-	//}
-
-	//if handle, err := pcap.OpenLive("eth0", 1600, true, pcap.BlockForever); err != nil {
-	//	panic(err)
-	//} else {
-	//	for {
-	//		data, ci, err := handle.ReadPacketData()
-	//		if err != nil && err != io.EOF {
-	//			quit <- 0
-	//			log.Fatal(err)
-	//		} else if err == io.EOF {
-	//			quit <- 0
-	//			break
-	//		} else {
-	//			packet := gopacket.NewPacket(data, layers.LayerTypeEthernet, gopacket.Default)
-	//			ch <- preprocess.PacketData{packet, ci}
-	//		}
-	//	}
-	//}
 }
