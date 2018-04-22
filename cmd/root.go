@@ -28,8 +28,8 @@ var cfgFile string
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "vision",
-	Short: "A command line tool for the application of incremental cluster in network anomaly detection",
-	Long: `A command line tool for the application of incremental cluster in network anomaly detection.`,
+	Short: "A command line tool for the application of incremental clustering in network anomaly detection",
+	Long: `A command line tool for the application of incremental clustering in network anomaly detection.`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	//	Run: func(cmd *cobra.Command, args []string) { },
