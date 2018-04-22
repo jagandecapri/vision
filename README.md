@@ -6,3 +6,9 @@
 # Accessing app server in browser
 
 1. Navigate to localhost:3001/main.html
+
+# Running from command-line
+
+## Prepare Data
+
+`go run main.go prepareData --db-name="201705021400.db" --pcap-file-path="C:\Users\Jack\Downloads\201705021400.pcap" --delta-t=300ms`
