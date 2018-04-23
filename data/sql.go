@@ -464,7 +464,7 @@ func (s *SQL) ReadFromDb(acc_c preprocess.AccumulatorChannels){
 				}()
 
 				t := template.New("select data from " + table)
-				t, err = t.Parse(`SELECT id, flow_key, nbPacket, nbSrcPort,
+				t, err := t.Parse(`SELECT id, flow_key, nbPacket, nbSrcPort,
 			nbDstPort, nbSrcs, nbDsts, perSYN, perACK, perICMP, perRST, perFIN, perCWR, perURG,
 			avgPktSize, meanTTL FROM ` + "`{{.TableName}}`" + " WHERE batch={{.Batch}}" )
 				if err != nil{
