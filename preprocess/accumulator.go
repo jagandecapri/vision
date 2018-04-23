@@ -4,6 +4,7 @@ import (
 	"github.com/google/gopacket"
 	"github.com/jagandecapri/vision/tree"
 	"github.com/jagandecapri/vision/preprocess/aggregates"
+	"log"
 )
 
 type MicroSlot []tree.Point
@@ -21,32 +22,38 @@ type Accumulator struct{
 }
 
 func (acc *Accumulator) AddPacket(p gopacket.Packet){
-	netFlow := p.NetworkLayer().NetworkFlow()
+	networkLayer := p.NetworkLayer()
 
-	src := netFlow.Src()
-	dst := netFlow.Dst()
-	srcdst := netFlow
+	if networkLayer == nil{
+		log.Println("Packet has no network layer")
+	} else {
+		netFlow := networkLayer.NetworkFlow()
 
-	aggsrc, ok := acc.AggSrc[src]
-	if !ok{
-		aggsrc = aggregates.NewAggSrc(src)
+		src := netFlow.Src()
+		dst := netFlow.Dst()
+		srcdst := netFlow
+
+		aggsrc, ok := acc.AggSrc[src]
+		if !ok{
+			aggsrc = aggregates.NewAggSrc(src)
+		}
+		aggsrc.AddPacket(p)
+		acc.AggSrc[src] = aggsrc
+
+		aggdst, ok := acc.AggDst[dst]
+		if !ok{
+			aggdst = aggregates.NewAggDst(dst)
+		}
+		aggdst.AddPacket(p)
+		acc.AggDst[dst] = aggdst
+
+		aggsrcdst, ok := acc.AggSrcDst[netFlow]
+		if !ok{
+			aggsrcdst = aggregates.NewAggSrcDst(src, dst)
+		}
+		aggsrcdst.AddPacket(p)
+		acc.AggSrcDst[srcdst] = aggsrcdst
 	}
-	aggsrc.AddPacket(p)
-	acc.AggSrc[src] = aggsrc
-
-	aggdst, ok := acc.AggDst[dst]
-	if !ok{
-		aggdst = aggregates.NewAggDst(dst)
-	}
-	aggdst.AddPacket(p)
-	acc.AggDst[dst] = aggdst
-
-	aggsrcdst, ok := acc.AggSrcDst[netFlow]
-	if !ok{
-		aggsrcdst = aggregates.NewAggSrcDst(src, dst)
-	}
-	aggsrcdst.AddPacket(p)
-	acc.AggSrcDst[srcdst] = aggsrcdst
 }
 
 func (acc *Accumulator) extractFeatures(aggInterface aggregates.AggInterface) (tree.Point, error){
