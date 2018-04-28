@@ -12,6 +12,7 @@ import (
 	"encoding/json"
 	"strings"
 	"sync"
+	"math/rand"
 )
 
 type SQL struct{
@@ -75,7 +76,15 @@ func (s *SQL) SetupDb(){
 
 
 	//CREATE TABLES TO STORE DATA
-	t := template.New("create tables")
+	src := rand.NewSource(time.Now().UnixNano())
+	random := rand.New(src)
+
+	t := template.New("create tables").Funcs(
+		template.FuncMap{"Random": func() int{
+			return random.Int()
+		},
+		},
+	)
 	t, _ = t.Parse(`CREATE TABLE IF NOT EXISTS ` + "`{{.TableName}}`" + `(
 		id	INTEGER PRIMARY KEY AUTOINCREMENT,
 		batch INTEGER,
@@ -98,7 +107,7 @@ func (s *SQL) SetupDb(){
 		meanTTL REAL,
 		last_packet_timestamp	NUMERIC,
 		created_at DATETIME NOT NULL DEFAULT (strftime('%Y-%m-%d %H:%M:%S', 'now', 'localtime'))
-	)`)
+	);`+ ` CREATE INDEX batch_{{Random}} `+ " ON `{{.TableName}}`" +` (batch)`)
 
 	var tpl bytes.Buffer
 	var result string
