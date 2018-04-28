@@ -151,7 +151,7 @@ func EvidenceAccummulationForOutliers(identifier string, store *DissimilarityMap
 
 						log.Printf("%v batch: %v data sort: %v knee: %v\n", identifier, counter, knee_data, knee_points)
 						if len(knee_points) > 0{
-							knee_idx := int(knee_points[0][0])
+							knee_idx := int(knee_points[len(knee_points) - 1][0])
 
 							log.Printf("%v knee_idx searched: %v knee points: %v", identifier, knee_idx, knee_points)
 							anomalies := ss[knee_idx + 1:]
