@@ -16,3 +16,9 @@
 ## Cluster Data
 
 `go run main.go clusterData --db-name="2017012281400.db" --log-path="C:\Users\Jack\go\src\github.com\jagandecapri\vision\logs\lumber.log" --num-cpu=0 --min-dense-points=10 --min-cluster-points=10 --delta-t=300ms`
+
+## Extracting Anomalies from Log
+
+Given that network scan of syn type needs to be extracted
+
+`sed -n -e 's/.*network_scan_syn anomalies.*SrcIP: \[\(.*\)] DstIP:.*/\1/p' lumber.log > output_nextwork_scan_syn_srcIP.log`
