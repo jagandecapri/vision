@@ -3,12 +3,9 @@ package preprocess
 import (
 	"time"
 	"log"
+	"github.com/jagandecapri/vision/cmd"
 )
 
-
-var delta_t = 300 * time.Millisecond
-var window = 600 * time.Millisecond
-var WINDOW_ARR_LEN = int(window.Seconds()/delta_t.Seconds())
 var Point_ctr = 0
 
 type AccumulatorChannel chan MicroSlot
@@ -37,7 +34,7 @@ func WindowTimeSlide(ch chan PacketData, acc_c AccumulatorChannels, done chan st
 						acc = NewAccumulator()
 					}
 
-					if !time_counter.IsZero() && packet_time.After(time_counter.Add(delta_t)){
+					if !time_counter.IsZero() && packet_time.After(time_counter.Add(cmd.DeltaTClusterData)){
 						log.Println("packet_time > time_counter")
 						X := acc.GetMicroSlot()
 						acc_c.AggSrc <- X.AggSrc

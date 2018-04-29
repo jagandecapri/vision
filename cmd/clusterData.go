@@ -54,6 +54,7 @@ var NumCpu int
 var MinDensePoints int
 var MinClusterPoints int
 var DeltaTClusterData time.Duration
+var WindowArrayLen int
 
 func init() {
 	rootCmd.AddCommand(clusterDataCmd)
@@ -66,6 +67,7 @@ func init() {
 	clusterDataCmd.Flags().IntVarP(&MinDensePoints, "min-dense-points", "", 10, "Minimum number of points to consider a unit as dense")
 	clusterDataCmd.Flags().IntVarP(&MinClusterPoints, "min-cluster-points", "",10, "Minimum number of points to consider a unit as dense")
 	clusterDataCmd.Flags().DurationVarP(&DeltaTClusterData, "delta-t", "", 300 * time.Millisecond, "Delta time")
+	clusterDataCmd.Flags().IntVarP(&WindowArrayLen, "window-array-len", "", 2, "Number of micro slots for window time sliding")
 
 	// Here you will define your flags and configuration settings.
 

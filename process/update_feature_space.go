@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/jagandecapri/vision/anomalies"
 	"log"
+	"github.com/jagandecapri/vision/cmd"
 )
 
 func UpdateFeatureSpaceBuilder(subspace_channel_container anomalies.SubspaceChannelsContainer, sorter []string) preprocess.AccumulatorChannels{
@@ -35,14 +36,14 @@ func UpdateFeatureSpace(subspace_channels anomalies.SubspaceChannels, sorter []s
 				if open{
 					fmt.Print(".")
 
-					if len(Xs) < preprocess.WINDOW_ARR_LEN-1 {
+					if len(Xs) < cmd.WindowArrayLen-1 {
 						Xs = append(Xs, X)
 					} else {
 						Xs = append(Xs, X)
 						var x_old, x_new_update []tree.Point
 
-						if len(Xs) == preprocess.WINDOW_ARR_LEN {
-							//log.Println("before flow processing data", preprocess.WINDOW_ARR_LEN, len(base_matrix))
+						if len(Xs) == cmd.WindowArrayLen {
+							//log.Println("before flow processing data", cmd.WindowArrayLen)
 							//log.Println("before flow processing")
 							x_old = []tree.Point{}
 
@@ -58,8 +59,8 @@ func UpdateFeatureSpace(subspace_channels anomalies.SubspaceChannels, sorter []s
 							//for _, pt := range x_new_update{
 							//	log.Println(pt.Id, " ", pt.Vec, pt.Vec_map)
 							//}
-						} else if len(Xs) > preprocess.WINDOW_ARR_LEN {
-							//log.Println("flow processing data", preprocess.WINDOW_ARR_LEN, len(base_matrix))
+						} else if len(Xs) > cmd.WindowArrayLen {
+							//log.Println("flow processing data", cmd.WindowArrayLen)
 							//log.Println("flow processing")
 							x_old = Xs[0]
 							Xs = Xs[1:]
