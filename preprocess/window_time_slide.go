@@ -56,37 +56,52 @@ func WindowTimeSlide(ch chan PacketData, acc_c AccumulatorChannels, done chan st
 
 func simulator(acc_c_receive AccumulatorChannel, acc_c_send AccumulatorChannel, delta_t time.Duration){
 	ticker := time.NewTicker(delta_t)
-	//tmp_c := make(chan MicroSlot, 2)
-	defer func(){
-		log.Println("close updatefeaturespace channel")
-		close(acc_c_send)
-		ticker.Stop()
+	tmp_c := make(chan MicroSlot, 2)
+
+	go func(){
+		defer func(){
+			log.Println("close buffered channel read by ticker")
+			close(tmp_c)
+		}()
+		for{
+			select{
+			case pts, open := <-acc_c_receive:
+				if open{
+					log.Println("acc_c_receive value received by simulator")
+					tmp_c <- pts
+				} else{
+					return
+				}
+			default:
+			}
+		}
 	}()
 
-	for{
-		select{
-		case pts, open := <-acc_c_receive:
-			if open{
-				log.Println("value received")
-				acc_c_send <- pts
-			} else{
-				log.Println("close acc_c_receive")
-				return
+	go func(){
+		defer func(){
+			log.Println("close ticker")
+			log.Println("close acc_c_send sending to update_feature_space channel")
+			close(acc_c_send)
+			ticker.Stop()
+		}()
+
+		for{
+			select{
+			case <-ticker.C:
+				select{
+				case pts_from_buffer, open := <-tmp_c:
+					if open {
+						log.Println("value sent to update_feature_space from simulator")
+						acc_c_send <- pts_from_buffer
+					} else {
+						return
+					}
+				default:
+				}
+			default:
 			}
-		case <-ticker.C:
-			//select{
-			//case pts_from_buffer := <-tmp_c:
-			//	if pts_from_buffer != nil{
-			//		log.Println("value sent to update feature space")
-			//		acc_c_send <- pts_from_buffer
-			//	} else {
-			//
-			//	}
-			//default:
-			//}
-		default:
 		}
-	}
+	}()
 }
 
 func WindowTimeSlideSimulator(acc_c_receive AccumulatorChannels, acc_c_send AccumulatorChannels, delta_t time.Duration){
