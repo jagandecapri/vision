@@ -15,7 +15,8 @@
 
 ## Cluster Data
 
-`go run main.go clusterData --db-name="2017012281400.db" --log-path="C:\Users\Jack\go\src\github.com\jagandecapri\vision\logs\lumber.log" --num-cpu=0 --min-dense-points=10 --min-cluster-points=10 --delta-t=300ms`
+`go run main.go clusterData --db-name="2017012281400.db" --log-path="C:\Users\Jack\go\src\github.com\jagandecapri\vision\logs\lumber.log" --num-cpu=0 --min-dense-points=10 --min-cluster-points=10 --delta-t=300ms
+--window-array-len=2 num-knee-flat-points=1 knee-smoothing-window=1 knee-find-elbow=true`
 
 ## Extracting Anomalies from Log
 
