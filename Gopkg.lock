@@ -63,7 +63,7 @@
   branch = "master"
   name = "github.com/jagandecapri/kneedle"
   packages = ["."]
-  revision = "263c5640477556c8a287b0253b5ca392d5cb5446"
+  revision = "6513c3ad4896e5187897d9119eb0f95dcaaf8b40"
 
 [[projects]]
   branch = "master"
