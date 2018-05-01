@@ -55,6 +55,9 @@ var MinDensePoints int
 var MinClusterPoints int
 var DeltaTClusterData time.Duration
 var WindowArrayLen int
+var NumKneeFlatPoints int
+var KneeSmoothingWindow int
+var KneeFindElbow bool
 
 func init() {
 	rootCmd.AddCommand(clusterDataCmd)
@@ -68,7 +71,9 @@ func init() {
 	clusterDataCmd.Flags().IntVarP(&MinClusterPoints, "min-cluster-points", "",10, "Minimum number of points to consider a unit as dense")
 	clusterDataCmd.Flags().DurationVarP(&DeltaTClusterData, "delta-t", "", 300 * time.Millisecond, "Delta time")
 	clusterDataCmd.Flags().IntVarP(&WindowArrayLen, "window-array-len", "", 2, "Number of micro slots for window time sliding")
-
+	clusterDataCmd.Flags().IntVarP(&NumKneeFlatPoints, "num-knee-flat-points", "", 1, "number of 'flat' points that is required before consideringpoint as knee or elbow.")
+	clusterDataCmd.Flags().IntVarP(&KneeSmoothingWindow, "knee-smoothing-window", "", 3, "The smootingWindow parameter is used to indicate the average used for the Gaussian kernel average smoother")
+	clusterDataCmd.Flags().BoolVarP(&KneeFindElbow, "knee-find-elbow", "", false, "Indicates whether to find an elbow or a knee when the value of parameter is true or false respectively")
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
