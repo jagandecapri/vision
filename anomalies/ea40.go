@@ -7,6 +7,7 @@ import (
 	"log"
 	"sort"
 	"github.com/jagandecapri/vision/utils"
+	"github.com/jagandecapri/vision/cmd"
 )
 
 type DissimilarityVector struct{
@@ -147,7 +148,7 @@ func EvidenceAccummulationForOutliers(identifier string, store *DissimilarityMap
 					}
 
 					if len(knee_data) > 0{
-						knee_points, _ := kneedle.Run(knee_data, 1, 1,true) //finding elbows in data
+						knee_points, _ := kneedle.Run(knee_data, cmd.NumKneeFlatPoints, cmd.KneeSmoothingWindow,cmd.KneeFindElbow) //finding elbows in data
 
 						log.Printf("%v batch: %v data sort: %v knee: %v\n", identifier, counter, knee_data, knee_points)
 						if len(knee_points) > 0{
