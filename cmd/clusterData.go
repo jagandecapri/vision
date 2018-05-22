@@ -76,8 +76,8 @@ func init() {
 	clusterDataCmd.Flags().IntVarP(&NumKneeFlatPoints, "num-knee-flat-points", "", 1, "number of 'flat' points that is required before considering a point as knee or elbow.")
 	clusterDataCmd.Flags().IntVarP(&KneeSmoothingWindow, "knee-smoothing-window", "", 3, "The smootingWindow parameter is used to indicate the average used for the Gaussian kernel average smoother")
 	clusterDataCmd.Flags().BoolVarP(&KneeFindElbow, "knee-find-elbow", "", false, "Indicates whether to find an elbow or a knee when the value of parameter is true or false respectively")
-	clusterDataCmd.Flags().BoolVarP(&CpuProfile, "cpuprofile", "", false, "write cpu profile to this file")
-	clusterDataCmd.Flags().BoolVarP(&MemProfile, "memprofile", "", false, "write memory profile to this file")
+	clusterDataCmd.Flags().BoolVarP(&CpuProfile, "cpu-profile", "", false, "write cpu profile to this file")
+	clusterDataCmd.Flags().BoolVarP(&MemProfile, "mem-profile", "", false, "write memory profile to this file")
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
