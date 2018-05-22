@@ -42,10 +42,7 @@ func main(){
 
 		log.SetOutput(&lumberjack.Logger{
 			Filename:   cmd.LogPath,
-			MaxSize:    500, // megabytes
-			MaxBackups: 3,
-			MaxAge:     28, //days
-			Compress:   true, // disabled by default
+			MaxSize:    5000, // megabytes
 		})
 
 		done := make(chan struct{})
