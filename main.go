@@ -10,6 +10,7 @@ import (
 	"github.com/jagandecapri/vision/utils"
 	"github.com/jagandecapri/vision/data"
 	"github.com/jagandecapri/vision/cmd"
+	"github.com/pkg/profile"
 )
 
 
@@ -30,6 +31,15 @@ func main(){
 	}
 
 	if cmd.ClusterData{
+
+		if cmd.CpuProfile{
+			defer profile.Start(profile.CPUProfile).Stop()
+		}
+
+		if cmd.MemProfile{
+			defer profile.Start(profile.MemProfileRate(2048)).Stop()
+		}
+
 		log.SetOutput(&lumberjack.Logger{
 			Filename:   cmd.LogPath,
 			MaxSize:    500, // megabytes
