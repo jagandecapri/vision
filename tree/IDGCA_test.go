@@ -33,7 +33,7 @@ func TestCluster2by2Grid(t *testing.T) {
 	min_dense_points := 2
 	min_cluster_points := 5
 
-	res := IGDCA(grid, min_dense_points, min_cluster_points)
+	res := IGDCA(&grid, min_dense_points, min_cluster_points)
 	assert.True(t, res[r1].Cluster_id == res[r2].Cluster_id && res[r2].Cluster_id == res[r3].Cluster_id,
 		"%v %v %v", res[r1].Cluster_id, res[r2].Cluster_id, res[r3].Cluster_id)
 	assert.Equal(t, 1, len(grid.GetClusters()))
@@ -87,7 +87,7 @@ func TestCluster2by2GridAbsorbCluster(t *testing.T) {
 	grid.AddUpdateCluster(cluster1)
 	grid.AddUpdateCluster(cluster2)
 
-	res, cluster, cluster_ids_to_merge := AbsorbIntoCluster(grid, &u1, min_dense_points)
+	res, cluster, cluster_ids_to_merge := AbsorbIntoCluster(&grid, &u1, min_dense_points)
 	assert.Equal(t, res, SUCCESS)
 	assert.Equal(t, 1, len(cluster_ids_to_merge), "%v", cluster_ids_to_merge)
 	if cluster.Cluster_id == 1{
@@ -146,7 +146,7 @@ func TestCluster2by2GridMergeClusters1(t *testing.T) {
 	grid.AddUpdateCluster(c2)
 
 	cluster_ids_to_be_merged := []int{2}
-	res, cluster := MergeClusters(grid, c1, cluster_ids_to_be_merged)
+	res, cluster := MergeClusters(&grid, c1, cluster_ids_to_be_merged)
 	assert.Equal(t, res, SUCCESS)
 	assert.Equal(t, 1, u1.Cluster_id)
 	assert.Equal(t, 1, u2.Cluster_id)
@@ -205,7 +205,7 @@ func TestCluster2by2GridMergeClusters2(t *testing.T) {
 	grid.AddUpdateCluster(c2)
 
 	cluster_ids_to_be_merged := []int{1}
-	res, cluster := MergeClusters(grid, c2, cluster_ids_to_be_merged)
+	res, cluster := MergeClusters(&grid, c2, cluster_ids_to_be_merged)
 
 	assert.Equal(t, res, SUCCESS)
 	assert.Equal(t, 2, u1.Cluster_id)
@@ -270,7 +270,7 @@ func TestCluster3by3Grid(t *testing.T) {
 	min_dense_points := 2
 	min_cluster_points := 5
 
-	res := IGDCA(grid, min_dense_points, min_cluster_points)
+	res := IGDCA(&grid, min_dense_points, min_cluster_points)
 	assert.True(t, res[r1].Cluster_id == res[r2].Cluster_id && res[r2].Cluster_id == res[r3].Cluster_id,
 	"%v %v %v", res[r1].Cluster_id, res[r2].Cluster_id, res[r3].Cluster_id)
 	for _, unit := range res{
@@ -303,7 +303,7 @@ func TestGDA(t *testing.T){
 	min_dense_points := 2
 	min_cluster_points := 5
 
-	IGDCA(grid, min_dense_points, min_cluster_points)
+	IGDCA(&grid, min_dense_points, min_cluster_points)
 	assert.Equal(t, 1, len(grid.GetClusters()))
 
 }
@@ -323,7 +323,7 @@ func BenchmarkGDA(t *testing.B) {
 		grid.SetupGrid(interval_l)
 		min_dense_points := 2
 		min_cluster_points := 5
-		IGDCA(grid, min_dense_points, min_cluster_points)
+		IGDCA(&grid, min_dense_points, min_cluster_points)
 		assert.Equal(t, 1, len(grid.GetClusters()))
 
 	}
