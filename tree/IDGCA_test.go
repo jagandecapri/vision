@@ -308,7 +308,7 @@ func TestGDA(t *testing.T){
 
 }
 
-func BenchmarkGDA(t *testing.B) {
+func BenchmarkIGDCA(t *testing.B) {
 	for i:=0; i < t.N; i++{
 		grid := NewGrid()
 		interval_l := 1.0
@@ -325,6 +325,5 @@ func BenchmarkGDA(t *testing.B) {
 		min_cluster_points := 5
 		IGDCA(&grid, min_dense_points, min_cluster_points)
 		assert.Equal(t, 1, len(grid.GetClusters()))
-
 	}
 }
