@@ -8,6 +8,7 @@ import (
 	"math"
 	"fmt"
 	"sync"
+	"log"
 )
 
 func TestCluster2by2Grid(t *testing.T) {
@@ -351,8 +352,9 @@ func setupGrids(j int) (grids []*Grid, num_grids, min, max, min_dense_points, mi
 		UnitsBuilder(ranges, dim)
 		units := UnitsBuilder(ranges, dim)
 		rand.Seed(time.Now().UnixNano())
+		rand1 := rand.New(rand.NewSource(1))
 		for rg, unit := range units{
-			num := rand.Intn((max - min) + 1) + min
+			num := rand1.Intn((max - min) + 1) + min
 			for i := 0; i < num; i++{
 				unit.Points[i] = Point{}
 			}
@@ -408,5 +410,85 @@ func BenchmarkIGDCAConcurrent(b *testing.B){
 				wg.Wait()
 			}
 		})
+	}
+}
+
+func TestCustomBenchmarkIDGCASequential(t *testing.T){
+	for j := 0; j <= 3; j++{
+		iteration := 10000
+		times_elapsed := make([]int64, iteration)
+
+		var min, max int
+
+		for n := 0; n < iteration; n++{
+			grids, num_grids, min_tmp, max_tmp, min_dense_points, min_cluster_points := setupGrids(j)
+			min = min_tmp
+			max = max_tmp
+
+			func(){
+				defer func(start time.Time, name string){
+					elapsed := time.Since(start)
+					times_elapsed = append(times_elapsed, int64(elapsed))
+				}(time.Now(), "")
+				for m := 0; m < num_grids; m++{
+					grid := grids[m]
+					IGDCA(grid, min_dense_points, min_cluster_points)
+				}
+				return
+			}()
+		}
+
+		var total int64
+		for _, time := range times_elapsed{
+			total += time
+		}
+
+		average := total/int64(iteration)
+		log.Printf("Sequential/min-max=%d-%d Iteration/%d Average_Time(ns)/%d", min, max, iteration, average)
+	}
+}
+
+func TestCustomBenchmarkIDGCAConcurrent(t *testing.T){
+	for j := 0; j <= 3; j++{
+		iteration := 10000
+		times_elapsed := make([]int64, iteration)
+
+		var min, max int
+
+		for n := 0; n < iteration; n++{
+			grids, num_grids, min_tmp, max_tmp, min_dense_points, min_cluster_points := setupGrids(j)
+			min = min_tmp
+			max = max_tmp
+
+			func(){
+				defer func(start time.Time, name string){
+					elapsed := time.Since(start)
+					times_elapsed = append(times_elapsed, int64(elapsed))
+				}(time.Now(), "")
+
+				wg := sync.WaitGroup{}
+				wg.Add(num_grids)
+
+				for m := 0; m < num_grids; m++{
+					grid := grids[m]
+					go func(){
+						IGDCA(grid, min_dense_points, min_cluster_points)
+						wg.Done()
+						return
+					}()
+				}
+
+				wg.Wait()
+				return
+			}()
+		}
+
+		var total int64
+		for _, time := range times_elapsed{
+			total += time
+		}
+
+		average := total/int64(iteration)
+		log.Printf("Concurrent/min-max=%d-%d Iteration/%d Average_Time(ns)/%d", min, max, iteration, average)
 	}
 }
