@@ -3,6 +3,11 @@ package tree
 import (
 	"testing"
 	"github.com/stretchr/testify/assert"
+	"time"
+	"math/rand"
+	"math"
+	"fmt"
+	"sync"
 )
 
 func TestCluster2by2Grid(t *testing.T) {
@@ -325,5 +330,83 @@ func BenchmarkIGDCA(t *testing.B) {
 		min_cluster_points := 5
 		IGDCA(&grid, min_dense_points, min_cluster_points)
 		assert.Equal(t, 1, len(grid.GetClusters()))
+	}
+}
+
+func setupGrids(j int) (grids []*Grid, num_grids, min, max, min_dense_points, min_cluster_points int) {
+	min = int(math.Pow(10.0, float64(j)))
+	max = int(math.Pow(10.0, float64(j+1)))
+	min_interval := 0.0
+	max_interval := 1.0
+	interval_length := 0.1
+	dim := 2
+	min_dense_points = 10
+	min_cluster_points = 100
+	num_grids = 100
+	grids = []*Grid{}
+
+	for i := 0; i < num_grids; i++{
+		grid := NewGrid()
+		ranges := RangeBuilder(min_interval, max_interval, interval_length)
+		UnitsBuilder(ranges, dim)
+		units := UnitsBuilder(ranges, dim)
+		rand.Seed(time.Now().UnixNano())
+		for rg, unit := range units{
+			num := rand.Intn((max - min) + 1) + min
+			for i := 0; i < num; i++{
+				unit.Points[i] = Point{}
+			}
+			units[rg] = unit
+		}
+
+		for _, unit := range units{
+			grid.AddUnit(unit)
+		}
+		grid.SetupGrid(interval_length)
+		grids = append(grids, &grid)
+	}
+	return
+}
+
+func BenchmarkIGDCASequential(b *testing.B){
+	for j := 0; j <= 3; j++{
+		b.StopTimer()
+		grids, num_grids, min, max, min_dense_points, min_cluster_points := setupGrids(j)
+		b.StartTimer()
+
+		b.Run(fmt.Sprintf("Sequential/min-max=%d-%d", min, max), func(b *testing.B){
+			for n := 0; n < b.N; n++{
+				for m := 0; m < num_grids; m++{
+					grid := grids[m]
+					IGDCA(grid, min_dense_points, min_cluster_points)
+				}
+			}
+		})
+	}
+}
+
+func BenchmarkIGDCAConcurrent(b *testing.B){
+	for j := 0; j <= 3; j++{
+		b.StopTimer()
+		grids, num_grids, min, max, min_dense_points, min_cluster_points := setupGrids(j)
+		b.StartTimer()
+
+		b.Run(fmt.Sprintf("Concurrent/min-max=%d-%d", min, max), func(b *testing.B){
+			for n := 0; n < b.N; n++{
+				wg := sync.WaitGroup{}
+				wg.Add(num_grids)
+
+				for m := 0; m < num_grids; m++{
+					grid := grids[m]
+					go func(){
+						IGDCA(grid, min_dense_points, min_cluster_points)
+						wg.Done()
+						return
+					}()
+				}
+
+				wg.Wait()
+			}
+		})
 	}
 }
