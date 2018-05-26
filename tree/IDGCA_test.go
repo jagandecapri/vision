@@ -351,8 +351,7 @@ func setupGrids(j int) (grids []*Grid, num_grids, min, max, min_dense_points, mi
 		ranges := RangeBuilder(min_interval, max_interval, interval_length)
 		UnitsBuilder(ranges, dim)
 		units := UnitsBuilder(ranges, dim)
-		rand.Seed(time.Now().UnixNano())
-		rand1 := rand.New(rand.NewSource(1))
+		rand1 := rand.New(rand.NewSource(int64(i + 1)))
 		for rg, unit := range units{
 			num := rand1.Intn((max - min) + 1) + min
 			for i := 0; i < num; i++{
