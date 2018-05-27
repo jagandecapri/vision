@@ -569,3 +569,56 @@ func TestCustomBenchmarkIDGCAConcurrentVarySubspaces(t *testing.T){
 		log.Printf("Concurrent/subspaces=%d Iteration/%d Average_Time(ns)/%d", num_grids, iteration, average)
 	}
 }
+
+func worker(id int, min_dense_points int, min_cluster_points int, jobs <-chan *Grid, results chan<- struct{}) {
+	for j := range jobs {
+		IGDCA(j, min_dense_points, min_cluster_points)
+		results <- struct{}{}
+	}
+}
+
+func TestCustomBenchmarkIDGCAWorkerVarySubspaces(t *testing.T){
+	for j := 0; j <= 6; j++{
+		iteration := 1000
+		times_elapsed := make([]int64, iteration)
+
+		var num_grids int
+
+		for n := 0; n < iteration; n++{
+			grids, num_grids_tmp, _, _, min_dense_points, min_cluster_points := setupGrids(1, j)
+			num_grids = num_grids_tmp
+
+			jobs := make(chan *Grid, len(grids))
+			results := make(chan struct{}, len(grids))
+
+			for w := 1; w <= 10; w++ {
+				go worker(w, min_dense_points, min_cluster_points, jobs, results)
+			}
+
+			func(){
+				defer func(start time.Time, name string){
+					elapsed := time.Since(start)
+					times_elapsed = append(times_elapsed, int64(elapsed))
+				}(time.Now(), "")
+				for m := 0; m < num_grids; m++{
+					grid := grids[m]
+					jobs <- grid
+				}
+				close(jobs)
+
+				for m := 0; m < num_grids; m++{
+					<-results
+				}
+				return
+			}()
+		}
+
+		var total int64
+		for _, time := range times_elapsed{
+			total += time
+		}
+
+		average := total/int64(iteration)
+		log.Printf("Concurrent/subspaces=%d Iteration/%d Average_Time(ns)/%d", num_grids, iteration, average)
+	}
+}
