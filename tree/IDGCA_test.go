@@ -334,7 +334,7 @@ func BenchmarkIGDCA(t *testing.B) {
 	}
 }
 
-func setupGrids(point_exponent int, susbpace_exponent int) (grids []*Grid, num_grids, min, max, min_dense_points, min_cluster_points int) {
+func setupGrids(point_exponent int, subspace_exponent int) (grids []*Grid, num_grids, min, max, min_dense_points, min_cluster_points int) {
 	min = int(math.Pow(10.0, float64(point_exponent)))
 	max = int(math.Pow(10.0, float64(point_exponent+1)))
 	min_interval := 0.0
@@ -343,7 +343,7 @@ func setupGrids(point_exponent int, susbpace_exponent int) (grids []*Grid, num_g
 	dim := 2
 	min_dense_points = 10
 	min_cluster_points = 100
-	num_grids = int(math.Pow(2, float64(susbpace_exponent)))
+	num_grids = int(math.Pow(2, float64(subspace_exponent)))
 	grids = []*Grid{}
 
 	for i := 0; i < num_grids; i++{
@@ -470,11 +470,11 @@ func TestCustomBenchmarkIDGCAConcurrentVaryPoints(t *testing.T){
 
 				for m := 0; m < num_grids; m++{
 					grid := grids[m]
-					go func(){
+					go func(grid *Grid, min_dense_points int, min_cluster_points int){
 						IGDCA(grid, min_dense_points, min_cluster_points)
 						wg.Done()
 						return
-					}()
+					}(grid, min_dense_points, min_cluster_points)
 				}
 
 				wg.Wait()
@@ -548,11 +548,11 @@ func TestCustomBenchmarkIDGCAConcurrentVarySubspaces(t *testing.T){
 
 				for m := 0; m < num_grids; m++{
 					grid := grids[m]
-					go func(){
+					go func(grid *Grid, min_dense_points int, min_cluster_points int){
 						IGDCA(grid, min_dense_points, min_cluster_points)
 						wg.Done()
 						return
-					}()
+					}(grid, min_dense_points, min_cluster_points)
 				}
 
 				wg.Wait()
