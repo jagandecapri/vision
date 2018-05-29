@@ -28,3 +28,9 @@ Given that network scan of syn type needs to be extracted
 
 `cd tree`
 `go test -v -bench=BenchmarkIGDCA -run=^a` => `-run=^a` is to avoid running other tests
+
+Alternatively, to build the test binary and run the benchmarks:
+
+`cd tree`
+`go test -c`
+`./test.test.exe -test.v -test.bench=BenchmarkIGDCA -test.run=^a` => `-run=^a` is to avoid running other tests
