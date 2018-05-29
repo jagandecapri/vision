@@ -1,0 +1,37 @@
+goos: windows
+goarch: amd64
+pkg: github.com/jagandecapri/vision/tree
+BenchmarkIGDCAVaryPoints/Sequential/min-max=1-10/num_grids=8-4         	   10000	    122363 ns/op
+BenchmarkIGDCAVaryPoints/Sequential/min-max=10-100/num_grids=8-4       	    2000	    953614 ns/op
+BenchmarkIGDCAVaryPoints/Sequential/min-max=100-1000/num_grids=8-4     	    2000	   1004882 ns/op
+BenchmarkIGDCAVaryPoints/Sequential/min-max=1000-10000/num_grids=8-4   	    2000	    897949 ns/op
+BenchmarkIGDCAVaryPoints/Concurrent/min-max=1-10/num_grids=8-4         	   10000	    126953 ns/op
+BenchmarkIGDCAVaryPoints/Concurrent/min-max=10-100/num_grids=8-4       	    2000	    967771 ns/op
+BenchmarkIGDCAVaryPoints/Concurrent/min-max=100-1000/num_grids=8-4     	    2000	    951658 ns/op
+BenchmarkIGDCAVaryPoints/Concurrent/min-max=1000-10000/num_grids=8-4   	    2000	    862792 ns/op
+BenchmarkIGDCAVaryPoints/Worker/min-max=1-10/num_grids=8-4             	   10000	    119433 ns/op
+BenchmarkIGDCAVaryPoints/Worker/min-max=10-100/num_grids=8-4           	    2000	    803712 ns/op
+BenchmarkIGDCAVaryPoints/Worker/min-max=100-1000/num_grids=8-4         	    2000	    695801 ns/op
+BenchmarkIGDCAVaryPoints/Worker/min-max=1000-10000/num_grids=8-4       	    3000	    626627 ns/op
+BenchmarkIGDCAVarySubspaces/Sequential/min-max=10-100/num_grids=1-4    	   10000	    134472 ns/op
+BenchmarkIGDCAVarySubspaces/Sequential/min-max=10-100/num_grids=2-4    	    5000	    254687 ns/op
+BenchmarkIGDCAVarySubspaces/Sequential/min-max=10-100/num_grids=4-4    	    2000	    526367 ns/op
+BenchmarkIGDCAVarySubspaces/Sequential/min-max=10-100/num_grids=8-4    	    2000	    829101 ns/op
+BenchmarkIGDCAVarySubspaces/Sequential/min-max=10-100/num_grids=16-4   	    1000	   1659178 ns/op
+BenchmarkIGDCAVarySubspaces/Sequential/min-max=10-100/num_grids=32-4   	     500	   3230467 ns/op
+BenchmarkIGDCAVarySubspaces/Sequential/min-max=10-100/num_grids=64-4   	     200	   6723630 ns/op
+BenchmarkIGDCAVarySubspaces/Concurrent/min-max=10-100/num_grids=1-4    	    5000	    246679 ns/op
+BenchmarkIGDCAVarySubspaces/Concurrent/min-max=10-100/num_grids=2-4    	   10000	    388671 ns/op
+BenchmarkIGDCAVarySubspaces/Concurrent/min-max=10-100/num_grids=4-4    	    2000	    641601 ns/op
+BenchmarkIGDCAVarySubspaces/Concurrent/min-max=10-100/num_grids=8-4    	    2000	    998046 ns/op
+BenchmarkIGDCAVarySubspaces/Concurrent/min-max=10-100/num_grids=16-4   	    1000	   1625975 ns/op
+BenchmarkIGDCAVarySubspaces/Concurrent/min-max=10-100/num_grids=32-4   	     500	   2974607 ns/op
+BenchmarkIGDCAVarySubspaces/Concurrent/min-max=10-100/num_grids=64-4   	     300	   5315753 ns/op
+BenchmarkIGDCAVarySubspaces/Worker/min-max=10-100/num_grids=1-4        	    5000	    300195 ns/op
+BenchmarkIGDCAVarySubspaces/Worker/min-max=10-100/num_grids=2-4        	    5000	    399218 ns/op
+BenchmarkIGDCAVarySubspaces/Worker/min-max=10-100/num_grids=4-4        	    3000	    706378 ns/op
+BenchmarkIGDCAVarySubspaces/Worker/min-max=10-100/num_grids=8-4        	    2000	    846681 ns/op
+BenchmarkIGDCAVarySubspaces/Worker/min-max=10-100/num_grids=16-4       	    1000	   1062500 ns/op
+BenchmarkIGDCAVarySubspaces/Worker/min-max=10-100/num_grids=32-4       	    1000	   1594727 ns/op
+BenchmarkIGDCAVarySubspaces/Worker/min-max=10-100/num_grids=64-4       	     500	   2710940 ns/op
+PASS
