@@ -56,10 +56,10 @@ func BenchmarkIGDCAVaryPoints(b *testing.B){
 			min := int(math.Pow(10.0, float64(j)))
 			max := int(math.Pow(10.0, float64(j+1)))
 			b.Run(fmt.Sprintf("%v/min-max=%d-%d/num_grids=%d", test.name, min, max, num_grids), func(b *testing.B){
+				b.StopTimer()
+				grids, min_dense_points, min_cluster_points := setupGrids(min, max, 8)
+				b.StartTimer()
 				for n := 0; n < b.N; n++{
-					b.StopTimer()
-					grids, min_dense_points, min_cluster_points := setupGrids(min, max, 8)
-					b.StartTimer()
 					test.fun(b, grids, min_dense_points, min_cluster_points)
 				}
 			})
@@ -83,10 +83,10 @@ func BenchmarkIGDCAVarySubspaces(b *testing.B){
 			min := 10
 			max := 100
 			b.Run(fmt.Sprintf("%v/min-max=%d-%d/num_grids=%d", test.name, min, max, num_grids), func(b *testing.B){
+				b.StopTimer()
+				grids, min_dense_points, min_cluster_points := setupGrids(10, 100,  num_grids)
+				b.StartTimer()
 				for n := 0; n < b.N; n++{
-					b.StopTimer()
-					grids, min_dense_points, min_cluster_points := setupGrids(10, 100,  num_grids)
-					b.StartTimer()
 					test.fun(b, grids, min_dense_points, min_cluster_points)
 				}
 			})
