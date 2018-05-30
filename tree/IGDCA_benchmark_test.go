@@ -55,7 +55,7 @@ func BenchmarkIGDCAVaryPoints(b *testing.B){
 	num_cpu := runtime.NumCPU()
 
 	for _, test := range tests{
-		for j := 0; j <= 3; j++{
+		for j := 0; j < 4; j++{
 			num_grids := 8
 			min := int(math.Pow(10.0, float64(j)))
 			max := int(math.Pow(10.0, float64(j+1)))
@@ -89,7 +89,7 @@ func BenchmarkIGDCAVarySubspaces(b *testing.B){
 	num_cpu := runtime.NumCPU()
 
 	for _, test := range tests{
-		for j := 0; j < 7; j++{
+		for j := 0; j < 11; j++{
 			num_grids := int(math.Pow(2.0, float64(j)))
 			min := 10
 			max := 100
