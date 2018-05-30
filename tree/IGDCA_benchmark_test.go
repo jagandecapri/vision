@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"fmt"
 	"math"
+	"runtime"
 )
 
 func setupGrids(min_points int, max_points int, num_grids int) (grids []*Grid, min_dense_points, min_cluster_points int) {
@@ -51,6 +52,8 @@ func BenchmarkIGDCAVaryPoints(b *testing.B){
 		{"WorkerPoolUniqueResChannelExecutor", & WorkerPoolUniqueResChannelExecutor{}},
 	}
 
+	num_cpu := runtime.NumCPU()
+
 	for _, test := range tests{
 		for j := 0; j <= 3; j++{
 			num_grids := 8
@@ -59,7 +62,7 @@ func BenchmarkIGDCAVaryPoints(b *testing.B){
 			b.Run(fmt.Sprintf("%v/min-max=%d-%d/num_grids=%d", test.name, min, max, num_grids), func(b *testing.B){
 				b.StopTimer()
 				grids, min_dense_points, min_cluster_points := setupGrids(min, max, 8)
-				test.benchmark.Init(grids, min_dense_points, min_cluster_points)
+				test.benchmark.Init(grids, min_dense_points, min_cluster_points, num_cpu)
 				b.StartTimer()
 				for n := 0; n < b.N; n++{
 					test.benchmark.Run(b, grids, min_dense_points, min_cluster_points)
@@ -83,6 +86,8 @@ func BenchmarkIGDCAVarySubspaces(b *testing.B){
 		{"WorkerPoolUniqueResChannelExecutor", & WorkerPoolUniqueResChannelExecutor{}},
 	}
 
+	num_cpu := runtime.NumCPU()
+
 	for _, test := range tests{
 		for j := 0; j < 7; j++{
 			num_grids := int(math.Pow(2.0, float64(j)))
@@ -91,7 +96,7 @@ func BenchmarkIGDCAVarySubspaces(b *testing.B){
 			b.Run(fmt.Sprintf("%v/min-max=%d-%d/num_grids=%d", test.name, min, max, num_grids), func(b *testing.B){
 				b.StopTimer()
 				grids, min_dense_points, min_cluster_points := setupGrids(10, 100,  num_grids)
-				test.benchmark.Init(grids, min_dense_points, min_cluster_points)
+				test.benchmark.Init(grids, min_dense_points, min_cluster_points, num_cpu)
 				b.StartTimer()
 				for n := 0; n < b.N; n++{
 					test.benchmark.Run(b, grids, min_dense_points, min_cluster_points)
@@ -105,14 +110,14 @@ func BenchmarkIGDCAVarySubspaces(b *testing.B){
 }
 
 type BenchmarkInterface interface{
-	Init([]*Grid, int, int)
+	Init([]*Grid, int, int, int)
 	Run(*testing.B, []*Grid, int, int)
 	Clean()
 }
 
 type SequentialExecutor struct{}
 
-func (s *SequentialExecutor) Init(grids []*Grid, min_dense_points int, min_cluster_points int){}
+func (s *SequentialExecutor) Init(grids []*Grid, min_dense_points int, min_cluster_points int, num_cpu int){}
 
 func (s *SequentialExecutor) Run(b *testing.B, grids []*Grid, min_dense_points int, min_cluster_points int){
 	for m := 0; m < len(grids); m++{
@@ -125,7 +130,7 @@ func (s *SequentialExecutor) Clean(){}
 
 type ConcurrentExecutor struct{}
 
-func (c *ConcurrentExecutor) Init(grids []*Grid, min_dense_points int, min_cluster_points int){}
+func (c *ConcurrentExecutor) Init(grids []*Grid, min_dense_points int, min_cluster_points int, num_cpu int){}
 
 func (c *ConcurrentExecutor) Run(b *testing.B, grids []*Grid, min_dense_points int, min_cluster_points int){
 	wg := sync.WaitGroup{}
@@ -150,10 +155,10 @@ type WorkerPoolSharedResExecutor struct{
 	results chan struct{}
 }
 
-func (w *WorkerPoolSharedResExecutor) Init(grids []*Grid, min_dense_points int, min_cluster_points int){
+func (w *WorkerPoolSharedResExecutor) Init(grids []*Grid, min_dense_points int, min_cluster_points int, num_cpu int){
 	w.jobs = make(chan *Grid, len(grids))
 	w.results = make(chan struct{}, len(grids))
-	num_workers := 4
+	num_workers := num_cpu
 	for i := 0; i < num_workers; i++ {
 		go Worker(i, min_dense_points, min_cluster_points, w.jobs, w.results)
 	}
@@ -197,10 +202,10 @@ type WorkerPoolUniqueResChannelExecutor struct{
 	final_out <-chan struct{}
 }
 
-func (w *WorkerPoolUniqueResChannelExecutor) Init(grids []*Grid, min_dense_points int, min_cluster_points int){
+func (w *WorkerPoolUniqueResChannelExecutor) Init(grids []*Grid, min_dense_points int, min_cluster_points int, num_cpu int){
 	w.jobs = make(chan *Grid, len(grids))
 	w.done = make(chan struct{})
-	num_workers := 4
+	num_workers := num_cpu
 
 	var cs []chan struct{}
 	for i := 0; i < num_workers; i++ {
