@@ -47,7 +47,7 @@ func BenchmarkIGDCAVaryPoints(b *testing.B){
 	}{
 		{"Sequential", &SequentialExecutor{}},
 		{"Concurrent", &ConcurrentExecutor{}},
-		{"WorkerPoolExecutor", &WorkerPoolExecutor{}},
+		{"WorkerPoolSharedResExecutor", &WorkerPoolSharedResExecutor{}},
 		{"WorkerPoolUniqueResChannelExecutor", & WorkerPoolUniqueResChannelExecutor{}},
 	}
 
@@ -79,7 +79,7 @@ func BenchmarkIGDCAVarySubspaces(b *testing.B){
 	}{
 		{"Sequential", &SequentialExecutor{}},
 		{"Concurrent", &ConcurrentExecutor{}},
-		{"WorkerPoolExecutor", &WorkerPoolExecutor{}},
+		{"WorkerPoolSharedResExecutor", &WorkerPoolSharedResExecutor{}},
 		{"WorkerPoolUniqueResChannelExecutor", & WorkerPoolUniqueResChannelExecutor{}},
 	}
 
@@ -145,12 +145,12 @@ func (c *ConcurrentExecutor) Run(b *testing.B, grids []*Grid, min_dense_points i
 
 func (c *ConcurrentExecutor) Clean(){}
 
-type WorkerPoolExecutor struct{
+type WorkerPoolSharedResExecutor struct{
 	jobs chan *Grid
 	results chan struct{}
 }
 
-func (w *WorkerPoolExecutor) Init(grids []*Grid, min_dense_points int, min_cluster_points int){
+func (w *WorkerPoolSharedResExecutor) Init(grids []*Grid, min_dense_points int, min_cluster_points int){
 	w.jobs = make(chan *Grid, len(grids))
 	w.results = make(chan struct{}, len(grids))
 	num_workers := 4
@@ -159,7 +159,7 @@ func (w *WorkerPoolExecutor) Init(grids []*Grid, min_dense_points int, min_clust
 	}
 }
 
-func (w *WorkerPoolExecutor) Run(b *testing.B, grids []*Grid, min_dense_points int, min_cluster_points int){
+func (w *WorkerPoolSharedResExecutor) Run(b *testing.B, grids []*Grid, min_dense_points int, min_cluster_points int){
 	for m := 0; m < len(grids); m++{
 		grid := grids[m]
 		w.jobs <- grid
@@ -186,7 +186,7 @@ func Worker(id int, min_dense_points int, min_cluster_points int, jobs <-chan *G
 }
 
 
-func (w *WorkerPoolExecutor) Clean(){
+func (w *WorkerPoolSharedResExecutor) Clean(){
 	close(w.jobs)
 	close(w.results)
 }
