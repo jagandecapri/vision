@@ -48,7 +48,7 @@ func BenchmarkIGDCAVaryPoints(b *testing.B){
 	}{
 		{"Sequential", &SequentialExecutor{}},
 		{"Concurrent", &ConcurrentExecutor{}},
-		{"WorkerPoolSharedResExecutor", &WorkerPoolSharedResExecutor{}},
+		{"WorkerPoolSharedResChannelExecutor", &WorkerPoolSharedResExecutor{}},
 		{"WorkerPoolUniqueResChannelExecutor", & WorkerPoolUniqueResChannelExecutor{}},
 	}
 
@@ -82,7 +82,7 @@ func BenchmarkIGDCAVarySubspaces(b *testing.B){
 	}{
 		{"Sequential", &SequentialExecutor{}},
 		{"Concurrent", &ConcurrentExecutor{}},
-		{"WorkerPoolSharedResExecutor", &WorkerPoolSharedResExecutor{}},
+		{"WorkerPoolSharedResChannelExecutor", &WorkerPoolSharedResExecutor{}},
 		{"WorkerPoolUniqueResChannelExecutor", & WorkerPoolUniqueResChannelExecutor{}},
 	}
 
