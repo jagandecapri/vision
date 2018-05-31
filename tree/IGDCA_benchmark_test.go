@@ -128,24 +128,47 @@ func (s *SequentialExecutor) Run(b *testing.B, grids []*Grid, min_dense_points i
 
 func (s *SequentialExecutor) Clean(){}
 
-type ConcurrentExecutor struct{}
+type ConcurrentExecutor struct{
+	num_cpu int
+}
 
-func (c *ConcurrentExecutor) Init(grids []*Grid, min_dense_points int, min_cluster_points int, num_cpu int){}
+func (c *ConcurrentExecutor) Init(grids []*Grid, min_dense_points int, min_cluster_points int, num_cpu int){
+	c.num_cpu = num_cpu
+}
 
 func (c *ConcurrentExecutor) Run(b *testing.B, grids []*Grid, min_dense_points int, min_cluster_points int){
-	wg := sync.WaitGroup{}
-	wg.Add(len(grids))
+	mod := len(grids)%c.num_cpu
+	iterations := (len(grids) - (mod))/c.num_cpu
 
-	for m := 0; m < len(grids); m++{
-		grid := grids[m]
-		go func(){
-			IGDCA(grid, min_dense_points, min_cluster_points)
-			wg.Done()
-			return
-		}()
+	if mod > 0{
+		iterations++
 	}
 
-	wg.Wait()
+	for i := 0; i < iterations; i++{
+		wg := sync.WaitGroup{}
+
+		min := i * c.num_cpu
+		max := (i + c.num_cpu) * c.num_cpu
+
+		if max > len(grids){
+			max = len(grids)
+		}
+
+		sub_set := grids[min:max]
+
+		wg.Add(len(sub_set))
+
+		for m := 0; m < len(sub_set); m++{
+			grid := sub_set[m]
+			go func(){
+				IGDCA(grid, min_dense_points, min_cluster_points)
+				wg.Done()
+				return
+			}()
+		}
+
+		wg.Wait()
+	}
 }
 
 func (c *ConcurrentExecutor) Clean(){}
