@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math"
 	"runtime"
+	//"sync/atomic"
 )
 
 func setupGrids(min_points int, max_points int, num_grids int) (grids []*Grid, min_dense_points, min_cluster_points int) {
@@ -57,11 +58,11 @@ func BenchmarkIGDCAVaryPoints(b *testing.B){
 	for _, test := range tests{
 		for j := 0; j < 4; j++{
 			num_grids := 8
-			min := int(math.Pow(10.0, float64(j)))
-			max := int(math.Pow(10.0, float64(j+1)))
-			b.Run(fmt.Sprintf("%v/min-max=%d-%d/num_grids=%d", test.name, min, max, num_grids), func(b *testing.B){
+			min_points := int(math.Pow(10.0, float64(j)))
+			max_points := int(math.Pow(10.0, float64(j+1)))
+			b.Run(fmt.Sprintf("%v/min_points-max_points=%d-%d/num_grids=%d", test.name, min_points, max_points, num_grids), func(b *testing.B){
 				b.StopTimer()
-				grids, min_dense_points, min_cluster_points := setupGrids(min, max, 8)
+				grids, min_dense_points, min_cluster_points := setupGrids(min_points, max_points, 8)
 				test.benchmark.Init(grids, min_dense_points, min_cluster_points, num_cpu)
 				b.StartTimer()
 				for n := 0; n < b.N; n++{
@@ -91,11 +92,11 @@ func BenchmarkIGDCAVarySubspaces(b *testing.B){
 	for _, test := range tests{
 		for j := 0; j < 11; j++{
 			num_grids := int(math.Pow(2.0, float64(j)))
-			min := 10
-			max := 100
-			b.Run(fmt.Sprintf("%v/min-max=%d-%d/num_grids=%d", test.name, min, max, num_grids), func(b *testing.B){
+			min_points := 10
+			max_points := 100
+			b.Run(fmt.Sprintf("%v/min_points-max_points=%d-%d/num_grids=%d", test.name, min_points, max_points, num_grids), func(b *testing.B){
 				b.StopTimer()
-				grids, min_dense_points, min_cluster_points := setupGrids(10, 100,  num_grids)
+				grids, min_dense_points, min_cluster_points := setupGrids(min_points, max_points,  num_grids)
 				test.benchmark.Init(grids, min_dense_points, min_cluster_points, num_cpu)
 				b.StartTimer()
 				for n := 0; n < b.N; n++{
@@ -196,19 +197,27 @@ func (w *WorkerPoolSharedResExecutor) Run(b *testing.B, grids []*Grid, min_dense
 	for m := 0; m < len(grids); m++{
 		<-w.results
 	}
+
+	//b.Log("defaults", atomic.LoadUint64(&defaults))
+	//b.Log("proceeds", atomic.LoadUint64(&proceeds))
 }
+
+//var defaults uint64
+//var proceeds uint64
 
 func Worker(id int, min_dense_points int, min_cluster_points int, jobs <-chan *Grid, results chan<- struct{}) {
 	for{
 		select{
 			case j, ok := <-jobs:
+				//atomic.AddUint64(&proceeds, 1)
 				if ok{
 					IGDCA(j, min_dense_points, min_cluster_points)
 					results <- struct{}{}
 				} else {
 					return
 				}
-			default:
+			//default:
+				//atomic.AddUint64(&defaults, 1)
 		}
 	}
 }
