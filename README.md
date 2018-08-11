@@ -22,7 +22,7 @@
 
 Given that network scan of syn type needs to be extracted
 
-`sed -n -e 's/.*network_scan_syn anomalies.*SrcIP: \[\(.*\)] DstIP:.*/\1/p' lumber.log > output_nextwork_scan_syn_srcIP.log`
+`sed -n -e 's/.*network_scan_syn anomalies.*SrcIP: \[\(.*\)] DstIP:.*/\1/p' lumber.log > output_network_scan_syn_srcIP.log`
 
 ## Benchmarking IGDCA
 
