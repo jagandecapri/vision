@@ -47,7 +47,7 @@ func main(){
 
 		done := make(chan struct{})
 		sorter:= getSorter()
-		config := utils.Config{Min_dense_points: cmd.MinDensePoints, Min_cluster_points: cmd.MinClusterPoints, Num_cpu: cmd.NumCpu}
+		config := utils.Config{Min_dense_points: cmd.MinDensePoints, Min_cluster_points: cmd.MinClusterPoints, Points_mode: cmd.PointsMode, Num_cpu: cmd.NumCpu}
 		subspace_channel_containers := anomalies.ClusteringBuilder(config, done)
 
 		acc_c_receive := preprocess.AccumulatorChannels{

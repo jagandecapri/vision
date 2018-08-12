@@ -5,6 +5,7 @@ import (
 	"github.com/jagandecapri/vision/utils"
 	"log"
 	"sync"
+	"math"
 )
 
 var aggsrc_anomalies = map[string]AnomaliesInterface{
@@ -76,7 +77,14 @@ func Cluster(subspace tree.Subspace, config utils.Config, outs ...chan Dissimila
 						x_new_update := processPackage.X_new_update
 						log.Println("Start Cluster: ", subspace.Subspace_key)
 						subspace.ComputeSubspace(x_old, x_new_update)
-						subspace.Cluster(config.Min_dense_points, config.Min_cluster_points)
+
+						min_dense_points, min_cluster_points := config.Min_dense_points, config.Min_cluster_points
+						if (config.Points_mode == "percentage"){
+							min_dense_points = int(math.Round((float64(min_dense_points)/float64(100))*float64(len(x_new_update))))
+							min_cluster_points = int(math.Round((float64(min_cluster_points)/float64(100))*float64(len(x_new_update))))
+						}
+						subspace.Cluster(min_dense_points, min_cluster_points)
+
 						dissimilarity_vectors := ComputeDissmilarityVector(subspace)
 						if len(subspace.GetOutliers()) > 0 {
 							log.Printf("counter: %v key: %v outliers: %v clusters: %+v", counter, subspace.Subspace_key, len(subspace.GetOutliers()), subspace.GetClusters())
