@@ -150,6 +150,7 @@ func EvidenceAccummulationForOutliers(identifier string, store *DissimilarityMap
 					if len(knee_data) > 0{
 						knee_points, _ := kneedle.Run(knee_data, cmd.NumKneeFlatPoints, cmd.KneeSmoothingWindow,cmd.KneeFindElbow) //finding elbows in data
 
+						log.Printf("num_knee_flat_points: %v knee_smoothing_window %v knee_find_elbow: %v\n", cmd.NumKneeFlatPoints, cmd.KneeSmoothingWindow, cmd.KneeFindElbow)
 						log.Printf("%v batch: %v data sort: %v knee: %v\n", identifier, counter, knee_data, knee_points)
 						if len(knee_points) > 0{
 							knee_idx := int(knee_points[len(knee_points) - 1][0])
