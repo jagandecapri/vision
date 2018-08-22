@@ -14,47 +14,45 @@ func (d *DDOS) GetChannel(subspace_key [2]string) chan DissimilarityVectorContai
 }
 
 func (d *DDOS) WaitOnChannels(wg_channels *sync.WaitGroup){
-	store := NewDissimilarityMapContainer()
-	done := make(chan struct{})
-
-	go func(chan struct{}) {
+	go func() {
 		done_counter := 0
+		num_channels := len(d.Channels)
+		log.Println("num_channels", num_channels)
+		store := NewDissimilarityMapContainer2("ddos", num_channels)
+		done := make(chan struct{})
+
 		defer func(){
 			close(done)
-			log.Println("close ddos out channel")
+			wg_channels.Done()
+			log.Println("close ddos channel")
 		}()
+
+		for id, channel := range d.Channels{
+			go func(id [2]string, store *DissimilarityMapContainer, channel chan DissimilarityVectorContainer){
+				for{
+					select{
+					case dis_vector, open := <-channel:
+						if open{
+							store.Store(dis_vector.Id, dis_vector)
+						} else {
+							done<- struct{}{}
+							return
+						}
+					}
+				}
+			}(id, store, channel)
+		}
 
 		for{
 			select{
-				case dis_vector, open := <-d.Channels[[2]string{"nbSrcs", "avgPktSize"}]:
-					if open{
-						store.Store(dis_vector.Id, dis_vector)
-					} else {
-						done_counter++
-					}
-				case dis_vector, open := <-d.Channels[[2]string{"perICMP", "perSYN"}]:
-					if open{
-						store.Store(dis_vector.Id, dis_vector)
-					} else {
-						done_counter++
-					}
-				case dis_vector, open := <-d.Channels[[2]string{"nbSrcPort", "perICMP"}]:
-					if open{
-						store.Store(dis_vector.Id, dis_vector)
-					} else {
-						done_counter++
-					}
-				default:
-			}
-
-			if done_counter == len(d.Channels){
-				return
+			case <-done:
+				done_counter++
+				if done_counter == len(d.Channels){
+					return
+				}
 			}
 		}
-	}(done)
-
-	num_channels := len(d.Channels)
-	EvidenceAccummulationForOutliers("ddos", store, num_channels, done, wg_channels)
+	}()
 }
 
 func NewDDOS() *DDOS{
