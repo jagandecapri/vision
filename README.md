@@ -34,3 +34,7 @@ Alternatively, to build the test binary and run the benchmarks:
 `cd tree`
 `go test -c`
 `./test.test.exe -test.v -test.bench=BenchmarkIGDCA -test.run=^a` => `-run=^a` is to avoid running other tests
+
+## Extracting Packets from PCAP File Using TCPDump
+
+`tcpdump -r 201711281400.pcap '(src 101.153.157.180 or 58.54.221.13 or 203.189.147.172 or 175.4.177.51 or 223.156.186.71 or 118.129.17.181 or 175.9.65.254 or 222.24.31.148 or 118.133.85.205 or 222.66.165.112 or 115.202.212.156 or 58.237.50.137 or 181.229.23.185 or 189.43.123.254)' -F pcap -w out_ntscsyn_all_21_04_2018.pcap`
