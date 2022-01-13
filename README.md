@@ -1,3 +1,7 @@
+# About
+
+Github repository for my Masters project. Papers written on my work is at [here](http://dx.doi.org/10.14299/ijser.2019.01.03) and [here](10.26782/jmcms.2019.12.00078). This a system written using Go concurrency paradigm to parallelize network anomaly detection.
+
 # Installation
 
 * Install Go following [here](https://golang.org/doc/install)
